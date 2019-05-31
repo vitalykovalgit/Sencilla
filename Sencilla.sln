@@ -3,9 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla", "Sencilla\Sencilla.csproj", "{15876022-88F4-4E4F-9C0D-2A5754CCCE48}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla", "Sencilla\Sencilla.csproj", "{15876022-88F4-4E4F-9C0D-2A5754CCCE48}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Sencilla.Core.csproj", "{3C5B8832-AFD4-44FA-938D-09DD43BEE6A2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Core", "Core\Sencilla.Core.csproj", "{3C5B8832-AFD4-44FA-938D-09DD43BEE6A2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Web", "Web\Sencilla.Web.csproj", "{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Impl", "Impl\Sencilla.Impl.csproj", "{203F8287-A29C-474B-A515-84FCCD0EE72D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Component", "Component", "{1E20ABEB-943D-4651-8C7D-B2DFF3662747}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Config", "Component\Config\Sencilla.Component.Config.csproj", "{F150A5AF-23BC-420A-B782-B4C6F88F9512}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mapper", "Mapper", "{D83ACE0F-B833-44E8-B34F-DCFAF36131FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Mapper.Sql", "Mapper\Sql\Sencilla.Mapper.Sql.csproj", "{D162185D-CEF7-4160-8F60-E9EF7A560C97}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Mapper.Entity", "Mapper\Entity\Sencilla.Mapper.Entity.csproj", "{D6CAFCA3-DB5F-476B-8643-057A16FD0114}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,9 +35,34 @@ Global
 		{3C5B8832-AFD4-44FA-938D-09DD43BEE6A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C5B8832-AFD4-44FA-938D-09DD43BEE6A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C5B8832-AFD4-44FA-938D-09DD43BEE6A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{203F8287-A29C-474B-A515-84FCCD0EE72D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{203F8287-A29C-474B-A515-84FCCD0EE72D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{203F8287-A29C-474B-A515-84FCCD0EE72D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{203F8287-A29C-474B-A515-84FCCD0EE72D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F150A5AF-23BC-420A-B782-B4C6F88F9512}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F150A5AF-23BC-420A-B782-B4C6F88F9512}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F150A5AF-23BC-420A-B782-B4C6F88F9512}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F150A5AF-23BC-420A-B782-B4C6F88F9512}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D162185D-CEF7-4160-8F60-E9EF7A560C97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D162185D-CEF7-4160-8F60-E9EF7A560C97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D162185D-CEF7-4160-8F60-E9EF7A560C97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D162185D-CEF7-4160-8F60-E9EF7A560C97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6CAFCA3-DB5F-476B-8643-057A16FD0114}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6CAFCA3-DB5F-476B-8643-057A16FD0114}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6CAFCA3-DB5F-476B-8643-057A16FD0114}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6CAFCA3-DB5F-476B-8643-057A16FD0114}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F150A5AF-23BC-420A-B782-B4C6F88F9512} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
+		{D162185D-CEF7-4160-8F60-E9EF7A560C97} = {D83ACE0F-B833-44E8-B34F-DCFAF36131FA}
+		{D6CAFCA3-DB5F-476B-8643-057A16FD0114} = {D83ACE0F-B833-44E8-B34F-DCFAF36131FA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5EE15D7B-0AF6-4664-9D0B-7140B5B5961F}
