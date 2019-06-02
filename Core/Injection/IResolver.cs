@@ -21,5 +21,12 @@ namespace Sencilla.Core.Injection
         /// <param name="type"> Type to be resolved </param>
         /// <returns> Instance of specific type </returns>
         object Resolve(Type type);
+
+        /// <summary>
+        /// Register implemention for interface 
+        /// </summary>
+        /// <param name="iterface"></param>
+        /// <param name="implementation"></param>
+        void RegisterType(Type iterface, Type implementation);
     }
 }

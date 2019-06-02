@@ -17,9 +17,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Config",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mapper", "Mapper", "{D83ACE0F-B833-44E8-B34F-DCFAF36131FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Mapper.Sql", "Mapper\Sql\Sencilla.Mapper.Sql.csproj", "{D162185D-CEF7-4160-8F60-E9EF7A560C97}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mapper.Sql", "Mapper\Sql\Sencilla.Mapper.Sql.csproj", "{D162185D-CEF7-4160-8F60-E9EF7A560C97}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Mapper.Entity", "Mapper\Entity\Sencilla.Mapper.Entity.csproj", "{D6CAFCA3-DB5F-476B-8643-057A16FD0114}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mapper.Entity", "Mapper\Entity\Sencilla.Mapper.Entity.csproj", "{D6CAFCA3-DB5F-476B-8643-057A16FD0114}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mapper.Excel", "Mapper\Excel\Sencilla.Mapper.Excel.csproj", "{C07DF10D-7DD1-483D-AF39-CD10B38EECE7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository", "Repository", "{EAFE8751-7E1F-4BFE-82DA-B747451EF49A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Impl.Repository.SqlMapper", "Repository\SqlMapper\Sencilla.Impl.Repository.SqlMapper.csproj", "{FA2F0F7D-0A3B-42E6-AF0E-D539F56647B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Impl.Repository.EntityFramework", "Repository\EntityFramework\Sencilla.Impl.Repository.EntityFramework.csproj", "{AFDA1854-0128-4801-B6F5-7C2494490D38}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +63,18 @@ Global
 		{D6CAFCA3-DB5F-476B-8643-057A16FD0114}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6CAFCA3-DB5F-476B-8643-057A16FD0114}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6CAFCA3-DB5F-476B-8643-057A16FD0114}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C07DF10D-7DD1-483D-AF39-CD10B38EECE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C07DF10D-7DD1-483D-AF39-CD10B38EECE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C07DF10D-7DD1-483D-AF39-CD10B38EECE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C07DF10D-7DD1-483D-AF39-CD10B38EECE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA2F0F7D-0A3B-42E6-AF0E-D539F56647B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA2F0F7D-0A3B-42E6-AF0E-D539F56647B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA2F0F7D-0A3B-42E6-AF0E-D539F56647B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA2F0F7D-0A3B-42E6-AF0E-D539F56647B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFDA1854-0128-4801-B6F5-7C2494490D38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFDA1854-0128-4801-B6F5-7C2494490D38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFDA1854-0128-4801-B6F5-7C2494490D38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFDA1854-0128-4801-B6F5-7C2494490D38}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -63,6 +83,9 @@ Global
 		{F150A5AF-23BC-420A-B782-B4C6F88F9512} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
 		{D162185D-CEF7-4160-8F60-E9EF7A560C97} = {D83ACE0F-B833-44E8-B34F-DCFAF36131FA}
 		{D6CAFCA3-DB5F-476B-8643-057A16FD0114} = {D83ACE0F-B833-44E8-B34F-DCFAF36131FA}
+		{C07DF10D-7DD1-483D-AF39-CD10B38EECE7} = {D83ACE0F-B833-44E8-B34F-DCFAF36131FA}
+		{FA2F0F7D-0A3B-42E6-AF0E-D539F56647B3} = {EAFE8751-7E1F-4BFE-82DA-B747451EF49A}
+		{AFDA1854-0128-4801-B6F5-7C2494490D38} = {EAFE8751-7E1F-4BFE-82DA-B747451EF49A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5EE15D7B-0AF6-4664-9D0B-7140B5B5961F}
