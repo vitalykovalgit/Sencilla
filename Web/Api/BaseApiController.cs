@@ -9,7 +9,7 @@ using Sencilla.Core.Injection;
 using Sencilla.Core.Logging;
 using Sencilla.Core.Web;
 
-namespace Sencilla.PursuitFramework.Impl.WebApi
+namespace Sencilla.Web.Api
 {
     public abstract class BaseApiController : ControllerBase
     {

@@ -1,0 +1,61 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+using Sencilla.Core.Entity;
+
+namespace Sencilla.Component.Files.Entity
+{
+	[Table("File", Schema = "file")]
+	public class File 
+        : IEntityCreateable<long>
+        , IEntityUpdateable<long>
+        , IEntityRemoveable<long>
+        , IEntityDeleteable<long>
+    {
+        [Key]
+		public long Id { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+		public long Size { get; set; }
+
+        /// <summary>
+        /// File name 
+        /// </summary>
+	    public string Name { get; set; }
+
+        /// <summary>
+        /// Mime type 
+        /// </summary>
+        public string MimeType { get; set; }
+
+        /// <summary>
+        /// Storage file type 
+        /// </summary>
+        public long? StorageFileTypeId { get; set; }
+
+        public DateTime CreatedDate { get; set; }
+
+		public DateTime UpdatedDate { get; set; }
+
+        public DateTime? DeletedDate { get; set; }
+
+
+        [ForeignKey(nameof(Id))]
+		public FileContent FileContent { get; set; }
+
+		public File SetContent(byte[] content)
+		{
+			Size = content.Length;
+			FileContent.Content = content;
+			return this;
+		}
+
+		public byte[] Content()
+		{
+		    return FileContent?.Content ?? new byte[] { };
+		}
+	}
+}

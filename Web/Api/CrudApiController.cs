@@ -7,7 +7,7 @@ using Sencilla.Core.Entity;
 using Sencilla.Core.Web;
 using Sencilla.Core.Repo;
 
-namespace Sencilla.PursuitFramework.Impl.WebApi
+namespace Sencilla.Web.Api
 {
     public class EntityCrudApiController<TEntity, TWebEntity, TKey> : BaseApiController
            where TEntity : class, IEntity<TKey>, new()
