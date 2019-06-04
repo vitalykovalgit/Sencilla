@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Sencilla.Core.Entity;
+using Sencilla.Core.Injection;
 using Sencilla.Core.Repo;
 using Sencilla.Infrastructure.SqlMapper.Impl;
 
@@ -14,6 +15,10 @@ namespace Sencilla.Impl.Repository.SqlMapper
            where TEntity : class, IEntity<TKey>, new()
            where TContext : DbContext
     {
+        public ReadRepository(IResolver resolver) : base(resolver)
+        {
+        }
+
         public List<TEntity> GetAll()
         {
             using (var context = Resolve<TContext>())

@@ -9,7 +9,7 @@ using Sencilla.Core.Repo;
 
 namespace Sencilla.Web.Api
 {
-    public class EntityCrudApiController<TEntity, TWebEntity, TKey> : BaseApiController
+    public class EntityCrudApiController<TEntity, TWebEntity, TKey> : ApiController
            where TEntity : class, IEntity<TKey>, new()
            where TWebEntity : IWebEntity<TEntity, TKey>, new()
     {

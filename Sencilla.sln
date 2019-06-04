@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Core", "Core\Senci
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Web", "Web\Sencilla.Web.csproj", "{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Impl", "Impl\Sencilla.Impl.csproj", "{203F8287-A29C-474B-A515-84FCCD0EE72D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Component", "Component", "{1E20ABEB-943D-4651-8C7D-B2DFF3662747}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Config", "Component\Config\Sencilla.Component.Config.csproj", "{F150A5AF-23BC-420A-B782-B4C6F88F9512}"
@@ -29,11 +27,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Impl.Repository.En
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.User", "Component\User\Sencilla.Component.User.csproj", "{8F4E9A41-747E-4133-96F7-DA1122BD7B3C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.File", "Component\File\Sencilla.Component.File.csproj", "{8D6C609D-32FD-4719-BDB1-587343AE4894}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Files", "Component\Files\Sencilla.Component.Files.csproj", "{8D6C609D-32FD-4719-BDB1-587343AE4894}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Injection", "Injection", "{8790B801-C10E-467D-AB0B-203EAFE9C20E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Impl.Injection.Unity", "Injection\Unity\Sencilla.Impl.Injection.Unity.csproj", "{237B0556-B76C-4615-BA8C-F6C454D09A23}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Impl.Injection.Unity", "Injection\Unity\Sencilla.Impl.Injection.Unity.csproj", "{237B0556-B76C-4615-BA8C-F6C454D09A23}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,10 +47,6 @@ Global
 		{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{203F8287-A29C-474B-A515-84FCCD0EE72D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{203F8287-A29C-474B-A515-84FCCD0EE72D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{203F8287-A29C-474B-A515-84FCCD0EE72D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{203F8287-A29C-474B-A515-84FCCD0EE72D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F150A5AF-23BC-420A-B782-B4C6F88F9512}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F150A5AF-23BC-420A-B782-B4C6F88F9512}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F150A5AF-23BC-420A-B782-B4C6F88F9512}.Release|Any CPU.ActiveCfg = Release|Any CPU

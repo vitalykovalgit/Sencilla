@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Sencilla.Core.Entity;
+using Sencilla.Core.Injection;
 using Sencilla.Core.Repo;
 using Sencilla.Infrastructure.SqlMapper.Impl;
 
@@ -43,7 +44,7 @@ namespace Sencilla.Impl.Repository.SqlMapper
             return mReadRepo ?? (mReadRepo = Resolve<ReadRepository<TEntity, TContext, TKey>>());
         }
 
-        public CachedReadRepository(CachePolicy cachePoplicy)
+        public CachedReadRepository(IResolver resolver, CachePolicy cachePoplicy) : base(resolver)
         {
             mCachePoplicy = cachePoplicy;
         }

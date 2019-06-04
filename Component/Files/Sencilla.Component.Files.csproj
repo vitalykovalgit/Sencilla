@@ -6,11 +6,12 @@
 
   <ItemGroup>
     <Folder Include="Contract\" />
-    <Folder Include="Impl\" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
+    <ProjectReference Include="..\..\Mapper\Sql\Sencilla.Mapper.Sql.csproj" />
+    <ProjectReference Include="..\..\Repository\SqlMapper\Sencilla.Impl.Repository.SqlMapper.csproj" />
     <ProjectReference Include="..\..\Web\Sencilla.Web.csproj" />
   </ItemGroup>
 

@@ -7,23 +7,31 @@ namespace Sencilla.Impl.Repository.SqlMapper
     public class BaseRepository<TContext> : IBaseRepository
            where TContext : DbContext
     {
+        public BaseRepository(IResolver resolver)
+        {
+            Resolver = resolver;
+        }
+
         /// <summary>
         /// Container to resolve context, please use resolve instead 
         /// </summary>
-        public IResolver Resolver { get; set; }
+        protected IResolver Resolver { get; set; }
 
         /// <summary>
         /// Context implementation
         /// </summary>
         protected TContext ContextImpl { get; set; }
         
+        /// <summary>
+        /// 
+        /// </summary>
         public void Save()
         {
             ContextImpl?.Commit();
         }
 
         /// <summary>
-        /// Emcapsulates work with Unity container 
+        /// Encapsulates work with Unity container 
         /// </summary>
         /// <typeparam name="T"> Type for which instance will be created </typeparam>
         /// <returns></returns>

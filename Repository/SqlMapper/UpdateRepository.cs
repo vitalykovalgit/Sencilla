@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Sencilla.Core.Entity;
 using Sencilla.Core.Repo;
 using Sencilla.Infrastructure.SqlMapper.Impl;
+using Sencilla.Core.Injection;
 
 namespace Sencilla.Impl.Repository.SqlMapper
 {
@@ -14,6 +15,9 @@ namespace Sencilla.Impl.Repository.SqlMapper
         where TEntity : class, IEntityUpdateable<TKey>, new()
         where TContext : DbContext
     {
+        public UpdateRepository(IResolver resolver) : base(resolver)
+        {
+        }
 
         public TEntity Update(TEntity entity, string ruleSet = null)
         {

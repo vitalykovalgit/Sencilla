@@ -6,7 +6,7 @@ using Sencilla.Core.Entity;
 
 namespace Sencilla.Component.Files.Entity
 {
-	[Table("File", Schema = "file")]
+	[Table("File")]
 	public class File 
         : IEntityCreateable<long>
         , IEntityUpdateable<long>

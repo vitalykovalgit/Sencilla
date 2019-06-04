@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Sencilla.Infrastructure.SqlMapper.Impl;
 using Sencilla.Core.Entity;
 using Sencilla.Core.Repo;
+using Sencilla.Core.Injection;
 
 namespace Sencilla.Impl.Repository.SqlMapper
 {
@@ -13,6 +14,10 @@ namespace Sencilla.Impl.Repository.SqlMapper
         where TEntity : class, IEntityCreateable<TKey>, new()
         where TContext : DbContext
     {
+        public CreateRepository(IResolver resolver) : base(resolver)
+        {
+        }
+
         public TEntity Create(TEntity entity)
         {
             if (entity == null)

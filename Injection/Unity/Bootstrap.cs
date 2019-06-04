@@ -1,14 +1,16 @@
-﻿using Sencilla.Core.Injection;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+using Sencilla.Core.Injection;
 using Sencilla.Impl.Injection.Unity;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Sencilla.Core.Builder
 {
     public static class Bootstrap
     {
-        public static void AddSencillaUnityInjection(this IServiceCollection services)
+        public static IServiceCollection AddInjectionWithUnity(this IServiceCollection builder)
         {
-            //
-            services.AddSingleton<IResolver, UnityResolver>();
+            builder.AddSingleton<IResolver, UnityResolver>();
+            return builder;
         }
     }
 }

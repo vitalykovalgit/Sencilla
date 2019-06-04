@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Sencilla.Infrastructure.SqlMapper.Impl;
 using Sencilla.Core.Entity;
 using Sencilla.Core.Repo;
+using Sencilla.Core.Injection;
 
 namespace Sencilla.Impl.Repository.SqlMapper
 {
@@ -14,7 +15,7 @@ namespace Sencilla.Impl.Repository.SqlMapper
     {
         //protected IDeleteObserver<TEntity, TKey>[] observers;
 
-        public DeleteRepository(/*IDeleteObserver<TEntity, TKey>[] observers*/)
+        public DeleteRepository(IResolver resolver /*IDeleteObserver<TEntity, TKey>[] observers*/) : base(resolver)
         {
             //this.observers = observers;
         }

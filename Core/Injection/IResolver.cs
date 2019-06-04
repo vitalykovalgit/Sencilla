@@ -1,5 +1,5 @@
-﻿
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Sencilla.Core.Injection
 {
@@ -16,6 +16,14 @@ namespace Sencilla.Core.Injection
         TType Resolve<TType>();
 
         /// <summary>
+        /// Resolve type with specofoc instance
+        /// </summary>
+        /// <typeparam name="TType">Type to be resolved </typeparam>
+        /// <param name="name"> Name of the instance </param>
+        /// <returns>Instance of the type</returns>
+        TType Resolve<TType>(string name);
+
+        /// <summary>
         /// Resolve instance of specific type 
         /// </summary>
         /// <param name="type"> Type to be resolved </param>
@@ -23,10 +31,25 @@ namespace Sencilla.Core.Injection
         object Resolve(Type type);
 
         /// <summary>
+        /// Resolve all instance of provided TType 
+        /// </summary>
+        /// <typeparam name="TType">Type to resolve</typeparam>
+        /// <returns> Collection of instances </returns>
+        IEnumerable<TType> ResolveAll<TType>();
+
+        /// <summary>
         /// Register implemention for interface 
         /// </summary>
         /// <param name="iterface"></param>
         /// <param name="implementation"></param>
         void RegisterType(Type iterface, Type implementation);
+
+        /// <summary>
+        /// Register implemention for interface with specific name 
+        /// </summary>
+        /// <param name="iterface"></param>
+        /// <param name="implementation"></param>
+        /// <param name="name"></param>
+        void RegisterType(Type iterface, Type implementation, string name);
     }
 }

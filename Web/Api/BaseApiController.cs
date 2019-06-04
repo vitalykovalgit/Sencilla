@@ -11,7 +11,7 @@ using Sencilla.Core.Web;
 
 namespace Sencilla.Web.Api
 {
-    public abstract class BaseApiController : ControllerBase
+    public abstract class ApiController : ControllerBase
     {
         public ILogger Logger { get; set; }
 
