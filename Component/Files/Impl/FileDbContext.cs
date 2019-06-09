@@ -9,12 +9,12 @@ namespace Sencilla.Component.Files.Impl
     {
         public FileDbContext(IConfiguration config) : base(config)
         {
-            Files = QuerySet<File, long>();
-            FileContents = QuerySet<FileContent, long>();
+            Files = QuerySet<File, ulong>();
+            FileContents = QuerySet<FileContent, ulong>();
         }
 
-        public ISet<File, long> Files { get; }
-        public ISet<FileContent, long> FileContents { get; }
+        public ISet<File, ulong> Files { get; }
+        public ISet<FileContent, ulong> FileContents { get; }
     }
 
 }

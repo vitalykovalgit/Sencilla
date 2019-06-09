@@ -8,13 +8,13 @@ namespace Sencilla.Component.Files.Entity
 {
 	[Table("File")]
 	public class File 
-        : IEntityCreateable<long>
-        , IEntityUpdateable<long>
-        , IEntityRemoveable<long>
-        , IEntityDeleteable<long>
+        : IEntityCreateable<ulong>
+        , IEntityUpdateable<ulong>
+        , IEntityRemoveable<ulong>
+        , IEntityDeleteable<ulong>
     {
         [Key]
-		public long Id { get; set; }
+		public ulong Id { get; set; }
 
         /// <summary>
         /// 
@@ -25,6 +25,11 @@ namespace Sencilla.Component.Files.Entity
         /// File name 
         /// </summary>
 	    public string Name { get; set; }
+
+        /// <summary>
+        /// Path to file on disk 
+        /// </summary>
+        public string Path { get; set; }
 
         /// <summary>
         /// Mime type 

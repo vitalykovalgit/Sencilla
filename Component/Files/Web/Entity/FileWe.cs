@@ -8,9 +8,18 @@ namespace Sencilla.Component.Files.Web.Entity
     /// <summary>
     /// 
     /// </summary>
-    public class FileWe : IWebEntity<File, long>
+    public class FileWe : IWebEntity<File, ulong>
     {
-        public long Id { get; set; }
+        public FileWe() 
+        {
+        }
+
+        public FileWe(File file)
+        {
+            FromEntity(file);
+        }
+
+        public ulong Id { get; set; }
 
         /// <summary>
         /// 
@@ -21,11 +30,6 @@ namespace Sencilla.Component.Files.Web.Entity
         /// File name 
         /// </summary>
 	    public string Name { get; set; }
-
-        /// <summary>
-        /// Mime type 
-        /// </summary>
-        public string MimeType { get; set; }
 
         /// <summary>
         /// 
@@ -50,7 +54,6 @@ namespace Sencilla.Component.Files.Web.Entity
         {
             dbEntity.Name = Name ?? dbEntity.Name;
             dbEntity.Size = Size ?? dbEntity.Size;
-            //dbEntity.Size = Size ?? dbEntity.Size;
             return dbEntity;
         }
     }

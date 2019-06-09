@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Impl\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
+    <ProjectReference Include="..\Geography\Sencilla.Component.Geography.csproj" />
+  </ItemGroup>
+
+</Project>

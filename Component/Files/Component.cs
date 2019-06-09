@@ -14,8 +14,10 @@ namespace Sencilla.Component.Files
 
         public void Init(IResolver resolver)
         {
-            resolver.AddRepositoriesFor<File, long, FileDbContext>();
-            resolver.AddRepositoriesFor<FileContent, long, FileDbContext>();
+            resolver.AddRepositoriesFor<File, ulong, FileDbContext>();
+            resolver.AddRepositoriesFor<FileContent, ulong, FileDbContext>();
+
+            resolver.RegisterType<IFileContentProvider, DiskFileProvider>();
         }
     }
 }

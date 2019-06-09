@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Sencilla.Core.Entity;
 using Sencilla.Core.Web;
 using Sencilla.Core.Repo;
+using Sencilla.Core.Injection;
+using Sencilla.Core.Logging;
 
 namespace Sencilla.Web.Api
 {
@@ -13,7 +15,10 @@ namespace Sencilla.Web.Api
            where TEntity : class, IEntity<TKey>, new()
            where TWebEntity : IWebEntity<TEntity, TKey>, new()
     {
-        
+        public EntityCrudApiController(ILogger logger, IResolver resolver) : base(logger, resolver)
+        {
+        }
+
         /// <summary>
         /// 
         /// </summary>

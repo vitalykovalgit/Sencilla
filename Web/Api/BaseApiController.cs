@@ -17,8 +17,14 @@ namespace Sencilla.Web.Api
 
         public IResolver Resolver { get; set; }
 
+        public ApiController(ILogger logger, IResolver resolver) 
+        {
+            Logger = logger;
+            Resolver = resolver;
+        }
+
         #region Custom Statuses
-        
+
         /// <summary>
         /// Returns response with status forbidden
         /// </summary>
@@ -63,6 +69,11 @@ namespace Sencilla.Web.Api
         public IActionResult ResourceGone(string msg = null)
         {
             return CustomResult(HttpStatusCode.Gone, msg);
+        }
+
+        public IActionResult InternalServerError(Exception ex = null)
+        {
+            return CustomResult(HttpStatusCode.InternalServerError, $"{ex?.Message}\r\n{ex?.StackTrace}");
         }
 
         private IActionResult CustomResult(HttpStatusCode code, string msg = null)
