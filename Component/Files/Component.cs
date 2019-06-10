@@ -2,6 +2,7 @@
 using Sencilla.Core.Injection;
 using Sencilla.Component.Files.Entity;
 using Sencilla.Component.Files.Impl;
+using Sencilla.Component.Files.Impl.ContentProvider;
 
 namespace Sencilla.Component.Files
 {

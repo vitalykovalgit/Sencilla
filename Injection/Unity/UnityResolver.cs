@@ -24,6 +24,11 @@ namespace Sencilla.Impl.Injection.Unity
             mContainer.RegisterType(iterface, implementation, name);
         }
 
+        public void RegisterType<TInterface, TImplementation>(string name = null)
+        {
+            mContainer.RegisterType(typeof(TInterface), typeof(TImplementation), name);
+        }
+
         public TType Resolve<TType>()
         {
             return mContainer.Resolve<TType>();

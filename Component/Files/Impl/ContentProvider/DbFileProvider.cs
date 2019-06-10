@@ -8,12 +8,12 @@ namespace Sencilla.Component.Files.Impl.ContentProvider
 {
     public class DbFileProvider : IFileContentProvider
     {
-        public Task<Entity.File> DeleteFileAsync(Entity.File file, CancellationToken? token = null)
+        public Task<Stream> ReadFileAsync(Entity.File file, CancellationToken? token = null)
         {
             throw new System.NotImplementedException();
         }
 
-        public Task<Stream> ReadFileAsync(CancellationToken? token = null)
+        public Task<Entity.File> DeleteFileAsync(Entity.File file, CancellationToken? token = null)
         {
             throw new System.NotImplementedException();
         }

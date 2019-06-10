@@ -27,6 +27,12 @@ namespace Sencilla.Impl.Repository.SqlMapper
             {
                 entity.CreatedDate = DateTime.UtcNow;
 
+                // 1. check permission 
+
+
+                // 2. check validation 
+
+                // Save to db 
                 var key = context.Set<TEntity, TKey>().Insert(entity);
                 context.Commit();
 
