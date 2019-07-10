@@ -4,6 +4,6 @@ namespace Sencilla.Component.Files.Web.Entity
 {
     public class UploadFileWe
     {
-        public IFormFile FormFile { get; set; }
+        public IFormFile File { get; set; }
     }
 }

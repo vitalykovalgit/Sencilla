@@ -22,10 +22,5 @@ namespace Sencilla.Component.Files.Entity
         /// </summary>
         public byte[] Content { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public string Path { get; set; }
-
     }
 }

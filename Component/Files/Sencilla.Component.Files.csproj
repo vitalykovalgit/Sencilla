@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\Mapper\Sql\Sencilla.Mapper.Sql.csproj" />
     <ProjectReference Include="..\..\Repository\SqlMapper\Sencilla.Impl.Repository.SqlMapper.csproj" />
     <ProjectReference Include="..\..\Web\Sencilla.Web.csproj" />
+    <ProjectReference Include="..\Config\Sencilla.Component.Config.csproj" />
   </ItemGroup>
 
 </Project>

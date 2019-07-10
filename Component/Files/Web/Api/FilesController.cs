@@ -12,6 +12,8 @@ using Sencilla.Core.Injection;
 using Sencilla.Web.Api;
 using Sencilla.Component.Files.Entity;
 using Sencilla.Component.Files.Web.Entity;
+using System.Net.Http.Headers;
+using System.Net.Mime;
 
 namespace Sencilla.Component.Files.Web.Api
 {
@@ -62,13 +64,26 @@ namespace Sencilla.Component.Files.Web.Api
         /// stream 
         /// </summary>
         [HttpGet, Route("{fileId}/stream")]
-        public async Task<FileStreamResult> GetStream(ulong fileId, CancellationToken token)
+        public async Task<IActionResult> GetStream(ulong fileId, CancellationToken token)
         {
             var file = await mReadFileRepo.GetByIdAsync(fileId, token);
             if (file == null)
-                return null;
+                return NotFound();
 
             var stream = await mContentProvider.ReadFileAsync(file, token);
+            if (stream == null)
+                return NotFound();
+
+            // Response...
+            Response.Headers.Add("X-Content-Type-Options", "nosniff");
+            Response.Headers.Add("Content-Disposition", new ContentDisposition
+            {
+                FileName = file.Name,
+                // false = prompt the user for downloading;  
+                // true = browser to try to show the file inline
+                Inline = true
+            }.ToString());
+
             return new FileStreamResult(stream, file.MimeType);
         }
 
@@ -78,26 +93,34 @@ namespace Sencilla.Component.Files.Web.Api
         [HttpPost, Route("")]
         public async Task<IActionResult> Create(UploadFileWe model, CancellationToken token)
         {
-            // Validate model 
-            if (model?.FormFile == null)
-                return BadRequest("Uploaded file is null");
-
-            // Convert to domain model 
-            var uploadedFile = model.FormFile.ToSencillaFile();
-
-            // Save file to storage
-            using (var stream = model.FormFile.OpenReadStream())
+            try
             {
-                uploadedFile = await mContentProvider.WriteFileAsync(uploadedFile, stream, token);
+                // Validate model 
+                if (model?.File == null)
+                    return BadRequest("Uploaded file is null");
+
+                // Convert to domain model 
+                var uploadedFile = model.File.ToSencillaFile();
+
+                // Create file in DB 
+                var createdFile = await mCreateFileRepo.CreateAsync(uploadedFile, token);
+                if (createdFile == null)
+                    return InternalServerError();
+
+                // Save file to storage
+                using (var stream = model.File.OpenReadStream())
+                {
+                    uploadedFile = await mContentProvider.WriteFileAsync(createdFile, stream, token);
+                }
+
+
+                // return created file 
+                return Ok(new FileWe(createdFile));
             }
-
-            // Create file in DB 
-            var createdFile = await mCreateFileRepo.CreateAsync(uploadedFile, token);
-            if (createdFile == null)
-                return InternalServerError();
-
-            // return created file 
-            return Ok(new FileWe(createdFile));
+            catch (Exception ex) 
+            {
+                throw;
+            }
         }
 
         [HttpPut, Route("")]
