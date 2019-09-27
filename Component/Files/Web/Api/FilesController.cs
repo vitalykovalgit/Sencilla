@@ -64,27 +64,29 @@ namespace Sencilla.Component.Files.Web.Api
         /// stream 
         /// </summary>
         [HttpGet, Route("{fileId}/stream")]
-        public async Task<IActionResult> GetStream(ulong fileId, CancellationToken token)
+        public async Task<FileStreamResult> GetStream(ulong fileId, CancellationToken token)
         {
             var file = await mReadFileRepo.GetByIdAsync(fileId, token);
-            if (file == null)
-                return NotFound();
+            //if (file == null)
+            //    return NotFound();
 
             var stream = await mContentProvider.ReadFileAsync(file, token);
-            if (stream == null)
-                return NotFound();
+            //if (stream == null)
+            //    return NotFound();
 
             // Response...
-            Response.Headers.Add("X-Content-Type-Options", "nosniff");
+            //Response.Headers.Add("X-Content-Type-Options", "nosniff");
+            //Response.Headers.Add("Accept-Ranges", "bytes");
             Response.Headers.Add("Content-Disposition", new ContentDisposition
             {
                 FileName = file.Name,
-                // false = prompt the user for downloading;  
-                // true = browser to try to show the file inline
+                //false = prompt the user for downloading;  
+                //true = browser to try to show the file inline
                 Inline = true
             }.ToString());
 
-            return new FileStreamResult(stream, file.MimeType);
+            //return new FileStreamResult(stream, file.MimeType);
+            return File(stream, file.MimeType, true);
         }
 
         /// <summary>
