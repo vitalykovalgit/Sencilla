@@ -1,17 +1,18 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-using Sencilla.Core.Injection;
+﻿using Unity;
 using Sencilla.Impl.Injection.Unity;
 
-namespace Sencilla.Core.Builder
+namespace Sencilla.Core.Injection
 {
     public static class Bootstrap
     {
-        public static IServiceCollection AddInjectionWithUnity(this IServiceCollection builder)
+        /// <summary>
+        /// Retrive new instance of IResolver based on unity container 
+        /// </summary>
+        /// <returns></returns>
+        public static IResolver Instance(this IResolver notUsed)
         {
-            builder.AddSingleton<IResolver, UnityResolver>();
-            return builder;
+            var contatiner = new UnityContainer();
+            return new UnityResolver(contatiner);
         }
     }
 }
-

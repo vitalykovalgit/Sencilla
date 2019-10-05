@@ -58,5 +58,19 @@ namespace Sencilla.Core.Injection
         /// <param name="implementation"></param>
         /// <param name="name"></param>
         void RegisterType(Type iterface, Type implementation, string name);
+
+        /// <summary>
+        /// Register instance for specific interface 
+        /// </summary>
+        /// <param name="iterface"></param>
+        /// <param name="instance"></param>
+        void RegisterInstance(Type iterface, object instance);
+
+        /// <summary>
+        /// Register instance for specific interface 
+        /// </summary>
+        /// <typeparam name="TInterface"></typeparam>
+        /// <param name="instance"></param>
+        void RegisterInstance<TInterface>(TInterface instance);
     }
 }

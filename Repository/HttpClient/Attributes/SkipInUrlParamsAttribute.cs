@@ -1,13 +1,14 @@
-﻿namespace Sencilla.Mobile.Core.Attribute
+﻿
+namespace Sencilla.Impl.Repository.HttpClient.Attributes
 {
     /// <summary>
     /// If this atribute placed on property 
     /// this property will not be serialized 
     /// into query 
     /// </summary>
-    public class ApiSkipInUrlAttribute : System.Attribute
+    public class SkipInUrlParamsAttribute : System.Attribute
     {
-        public ApiSkipInUrlAttribute()
+        public SkipInUrlParamsAttribute()
         {
         }
     }

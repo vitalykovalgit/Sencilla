@@ -14,6 +14,16 @@ namespace Sencilla.Impl.Injection.Unity
             mContainer = container;
         }
 
+        public void RegisterInstance(Type iterface, object instance)
+        {
+            mContainer.RegisterInstance(iterface, instance);
+        }
+
+        public void RegisterInstance<TInterface>(TInterface instance)
+        {
+            mContainer.RegisterInstance<TInterface>(instance);
+        }
+
         public void RegisterType(Type iterface, Type implementation)
         {
             mContainer.RegisterType(iterface, implementation);

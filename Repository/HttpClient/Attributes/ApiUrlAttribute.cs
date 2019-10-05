@@ -1,4 +1,4 @@
-﻿namespace Sencilla.Mobile.Core.Attribute
+﻿namespace Sencilla.Impl.Repository.HttpClient.Attributes
 {
     /// <summary>
     /// 

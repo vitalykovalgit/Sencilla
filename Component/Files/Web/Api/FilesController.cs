@@ -126,7 +126,7 @@ namespace Sencilla.Component.Files.Web.Api
         }
 
         [HttpPut, Route("")]
-        public async Task<IActionResult> Update(FileWe file)
+        public Task<IActionResult> Update(FileWe file)
         {
             throw new NotImplementedException();
         }
