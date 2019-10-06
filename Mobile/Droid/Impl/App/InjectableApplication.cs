@@ -4,6 +4,8 @@ using Android.Content;
 using Android.Runtime;
 
 using Sencilla.Core.Injection;
+using Sencilla.Core.Logging;
+using Sencilla.Mobile.Xamarin.Droid.Impl.Logger;
 
 namespace Android.App
 {
@@ -23,6 +25,7 @@ namespace Android.App
             // Init container 
             DI = DI.Instance();
             DI.RegisterInstance<IApplication>(this);
+            DI.RegisterType<ILogger, DroidLogger>();
             InitContainer(DI);
         }
 

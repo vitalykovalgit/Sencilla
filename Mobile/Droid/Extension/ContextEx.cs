@@ -16,5 +16,10 @@ namespace Android.Content
 
             return app.R<TType>();
         }
+
+        public static TType R<TType>(this Context context)
+        {
+            return context.Resolve<TType>();
+        }
     }
 }

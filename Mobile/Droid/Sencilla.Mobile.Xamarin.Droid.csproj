@@ -46,8 +46,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Contract\IApplication.cs" />
+    <Compile Include="Contract\IService.cs" />
     <Compile Include="Extension\ContextEx.cs" />
-    <Compile Include="Impl\InjectableApplication.cs" />
+    <Compile Include="Impl\App\InjectableApplication.cs" />
+    <Compile Include="Impl\Logger\DroidLogger.cs" />
+    <Compile Include="Impl\Services\SencillaService.cs" />
+    <Compile Include="Impl\Services\SencillaServiceBinder.cs" />
+    <Compile Include="Impl\Services\SencillaServiceConnection.cs" />
+    <Compile Include="Impl\Services\ServiceManager.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
