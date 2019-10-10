@@ -1,5 +1,5 @@
 ﻿
-namespace Sencilla.Impl.Repository.HttpClient.Attributes
+namespace Sencilla.Core.Repo
 {
     /// <summary>
     /// If this atribute placed on property 

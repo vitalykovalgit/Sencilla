@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using Sencilla.Core.Exceptions;
-using Sencilla.Impl.Repository.HttpClient.Attributes;
+using Sencilla.Core.Injection;
+using Sencilla.Core.Repo;
 
 namespace Sencilla.Impl.Repository.HttpClient
 {
@@ -17,6 +18,19 @@ namespace Sencilla.Impl.Repository.HttpClient
     /// </summary>
     public abstract class BaseRepository
     {
+        
+        public BaseRepository(IResolver resolver)
+        {
+            Resolver = resolver;
+        }
+
+        protected IResolver Resolver { get; set; }
+
+        protected TType R<TType>()
+        {
+            return Resolver.Resolve<TType>();
+        }
+
         /// <summary>
         /// 
         /// </summary>

@@ -12,7 +12,9 @@ namespace Sencilla.Core.Injection
         public static IResolver Instance(this IResolver notUsed)
         {
             var contatiner = new UnityContainer();
-            return new UnityResolver(contatiner);
+            contatiner.RegisterSingleton<IResolver, UnityResolver>();
+
+            return contatiner.Resolve<IResolver>();
         }
     }
 }

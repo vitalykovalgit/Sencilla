@@ -1,15 +1,21 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Sencilla.Core.Entity;
 using Sencilla.Core.Repo;
+using Sencilla.Core.Injection;
 
 namespace Sencilla.Impl.Repository.HttpClient
 {
-    public class ReadRepository<TEntity, TKey> : BaseRepository, IReadRepository<TEntity, TKey>
+    public class ReadRepository<TContext, TEntity, TKey> : BaseRepository, IReadRepository<TEntity, TKey>
         where TEntity : class, IEntity<TKey>, new()
+        where TContext: WebContext
     {
+        public ReadRepository(IResolver resolver) : base(resolver)
+        {
+        }
+
         public List<TEntity> GetAll()
         {
             return GetAllAsync().Result;
@@ -17,18 +23,16 @@ namespace Sencilla.Impl.Repository.HttpClient
 
         public List<TEntity> GetAll(params System.Linq.Expressions.Expression<System.Func<TEntity, object>>[] includes)
         {
-            throw new System.NotSupportedException();
+            return GetAllAsync().Result;
         }
 
         public Task<List<TEntity>> GetAllAsync(CancellationToken? token = null)
         {
-            var entities = GetAsync<List<TEntity>>("");
+            var context = R<TContext>();
+            var entities = GetAsync<List<TEntity>>(context.GetAllPath<TEntity>());
             return entities;
         }
 
-        /// <summary>
-        /// Include is ignored in this implementation
-        /// </summary>
         public TEntity GetById(TKey id, params System.Linq.Expressions.Expression<System.Func<TEntity, object>>[] includes)
         {
             return GetByIdAsync(id, includes).Result;
@@ -41,7 +45,8 @@ namespace Sencilla.Impl.Repository.HttpClient
 
         public async Task<TEntity> GetByIdAsync(TKey id, CancellationToken token, params System.Linq.Expressions.Expression<System.Func<TEntity, object>>[] includes)
         {
-            var entity = await GetAsync<TEntity>("", token);
+            var context = R<TContext>();
+            var entity = await GetAsync<TEntity>(context.GetByIdPath<TEntity, TKey>(id), token);
             return entity;
         }
 
@@ -52,7 +57,8 @@ namespace Sencilla.Impl.Repository.HttpClient
 
         public async Task<int> GetCountAsync(CancellationToken? token = null)
         {
-            var count = await GetAsync<int>("", token);
+            var context = R<TContext>();
+            var count = await GetAsync<int>(context.GetCountPath<TEntity>(), token);
             return count;
         }
 

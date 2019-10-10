@@ -1,4 +1,4 @@
-﻿namespace Sencilla.Impl.Repository.HttpClient.Attributes
+﻿namespace Sencilla.Core.Repo
 {
     /// <summary>
     /// 
