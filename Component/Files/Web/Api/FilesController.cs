@@ -135,7 +135,7 @@ namespace Sencilla.Component.Files.Web.Api
         {
             try
             {
-                if (model == null || model.Files.Count == default)
+                if (model == null || model.Files.Count() == default)
                 {
                     return BadRequest("Uploaded files are null");
                 }

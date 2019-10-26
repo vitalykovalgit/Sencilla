@@ -8,6 +8,7 @@ using Sencilla.Core.Web;
 using Sencilla.Core.Repo;
 using Sencilla.Core.Injection;
 using Sencilla.Core.Logging;
+using System.Collections.Generic;
 
 namespace Sencilla.Web.Api
 {
@@ -104,6 +105,29 @@ namespace Sencilla.Web.Api
 
             var dbEntity = entity.ToEntity(new TEntity());
             return HandleAjaxCall<TWebEntity, TEntity, TKey>(() => repoCreate.Create(dbEntity));
+        }
+
+        /// <summary>
+        /// Creates Web Entity
+        /// </summary>
+        /// <param name="entity">entity</param>
+        /// <returns></returns>
+        [HttpPut, Route("multiple")]
+        public virtual IActionResult CreateMany([FromBody] IEnumerable<TWebEntity> entities)
+        {
+            if (entities == null || entities.Count() == default)
+            {
+                return BadRequest("Web entities are null or empty");
+            }
+
+            var repoCreate = Resolver.Resolve<ICreateRepository<TEntity, TKey>>();
+            if (repoCreate == null)
+                return NotImplemented();
+
+            List<TEntity> dbEntities = new List<TEntity>();
+            entities.ToList().ForEach(e => dbEntities.Add(e.ToEntity(new TEntity())));
+
+            return HandleAjaxCall<TWebEntity, TEntity, TKey>(() => repoCreate.Create(dbEntities));
         }
 
 
