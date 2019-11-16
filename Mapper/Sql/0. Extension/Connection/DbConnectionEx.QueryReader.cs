@@ -76,10 +76,18 @@ namespace System.Data.Common
             using (var cmd = connection.CreateCommand(CommandType.Text, sql, transaction, timeout, parameters))
             {
                 //return cmd.ExecuteReaderAsync(token);
-                var reader = await cmd.ExecuteReaderAsync(token);
-                var dt = new DataTable();
-                dt.Load(reader);
-                return dt.CreateDataReader();
+                try
+                {
+                    var reader = await cmd.ExecuteReaderAsync(token);
+                    var dt = new DataTable();
+                    dt.Load(reader);
+                    return dt.CreateDataReader();
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+                
             }
         }
     }

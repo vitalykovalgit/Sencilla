@@ -14,6 +14,8 @@ using Sencilla.Component.Files.Entity;
 using Sencilla.Component.Files.Web.Entity;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Sencilla.Component.Files.Web.Api
 {
@@ -120,6 +122,48 @@ namespace Sencilla.Component.Files.Web.Api
                 return Ok(new FileWe(createdFile));
             }
             catch (Exception ex) 
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Create many files
+        /// </summary>
+        [HttpPost, Route("multiple")]
+        public async Task<IActionResult> CreateMany(UploadFilesWe model, CancellationToken token)
+        {
+            try
+            {
+                if (model == null || model.Files.Count() == default)
+                {
+                    return BadRequest("Uploaded files are null");
+                }
+
+                Dictionary<int, File> uploadedFiles = model.Files.ToSencillaFiles();
+
+                // Create files in DB 
+                var createdFiles = mCreateFileRepo.Create(uploadedFiles.Select(uf => uf.Value));
+                if (createdFiles == null)
+                    return InternalServerError();
+
+                foreach (IFormFile file in model.Files)
+                {
+                    using (System.IO.Stream stream = file.OpenReadStream())
+                    {
+                        File sencillaFile = uploadedFiles.First(uf => uf.Key == file.GetHashCode()).Value;
+                        var uploadedFile1 = await mContentProvider.WriteFileAsync(sencillaFile, stream, token);
+                    }
+                }
+
+                // convert to output result web entities
+                List<FileWe> resultFiles = new List<FileWe>();
+                createdFiles.ToList().ForEach(createdFile => resultFiles.Add(new FileWe(createdFile)));
+                
+                // return created files
+                return Ok(resultFiles);
+            }
+            catch (Exception ex)
             {
                 throw;
             }

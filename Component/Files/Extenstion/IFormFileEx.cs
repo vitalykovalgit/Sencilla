@@ -27,13 +27,37 @@ namespace Microsoft.AspNetCore.Http
             {
                 Size = formFile.Length,
                 Name = formFile.FileName,
-                Path = string.Empty,
+                //Path = string.Empty, // TODO: add path to file
                 // TODO: Specify dictionary with mime types and use it 
                 MimeType = "application/octet-stream",
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow,
                 DeletedDate = null
             };
+        }
+
+        public static Dictionary<int, File> ToSencillaFiles(this IFormFileCollection formFiles)
+        {
+            if (formFiles == null) { return null; }
+
+            Dictionary<int, File> pairs = new Dictionary<int, File>();
+
+            foreach (var formFile in formFiles)
+            {
+                pairs.Add(
+                    formFile.GetHashCode(),
+                    new File
+                    {
+                        Size = formFile.Length,
+                        Name = formFile.FileName,
+                        MimeType = "application/octet-stream",
+                        CreatedDate = DateTime.UtcNow,
+                        UpdatedDate = DateTime.UtcNow,
+                        DeletedDate = null
+                    });
+            }
+
+            return pairs;
         }
     }
 }

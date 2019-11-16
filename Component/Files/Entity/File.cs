@@ -29,7 +29,7 @@ namespace Sencilla.Component.Files.Entity
         /// <summary>
         /// Path to file on disk 
         /// </summary>
-        public string Path { get; set; }
+        //public string Path { get; set; }
 
         /// <summary>
         /// Mime type 

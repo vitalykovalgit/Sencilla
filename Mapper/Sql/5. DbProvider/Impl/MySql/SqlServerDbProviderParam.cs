@@ -18,6 +18,7 @@ namespace MySql.Data
             typeMap[typeof(short)] = MySqlDbType.Int16;
             typeMap[typeof(int)] = MySqlDbType.Int32;
             typeMap[typeof(long)] = MySqlDbType.Int64;
+            typeMap[typeof(ulong)] = MySqlDbType.UInt64;
             typeMap[typeof(float)] = MySqlDbType.Float;
             typeMap[typeof(double)] = MySqlDbType.Double;
             typeMap[typeof(decimal)] = MySqlDbType.Decimal;
