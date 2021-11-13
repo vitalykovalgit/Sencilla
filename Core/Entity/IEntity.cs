@@ -5,6 +5,7 @@ namespace Sencilla.Core.Entity
     /// <summary>
     /// Sometimes need to check if a class is an entity, 
     /// using generic class is very inconvinient for this 
+    /// 
     /// </summary>
     [SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
     public interface IEntity
