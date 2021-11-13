@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Reflection;
 using Android.Content;
 using Android.Runtime;
 
@@ -42,6 +42,33 @@ namespace Android.App
         public TType R<TType>()
         {
             return DI.Resolve<TType>();
+        }
+
+        public void Inject(object objInstance)
+        {
+            var type = objInstance.GetType();
+
+            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            foreach (var p in properties)
+            {
+                var injectAttr = p.GetCustomAttribute<InjectAttribute>(true);
+                if (injectAttr != null)
+                {
+                    var propInstance = DI.Resolve(p.PropertyType);
+                    p.SetValue(objInstance, propInstance);
+                }
+            }
+
+            var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            foreach (var f in fields)
+            {
+                var injectAttr = f.GetCustomAttribute<InjectAttribute>(true);
+                if (injectAttr != null)
+                {
+                    var propInstance = DI.Resolve(f.FieldType);
+                    f.SetValue(objInstance, propInstance);
+                }
+            }
         }
 
         /// <summary>

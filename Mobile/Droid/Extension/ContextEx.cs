@@ -21,5 +21,17 @@ namespace Android.Content
         {
             return context.Resolve<TType>();
         }
+
+        public static void Inject(this Context context, object objInstance)
+        {
+            if (context == null)
+                throw new ArgumentNullException();
+
+            var app = context as IApplication;
+            if (app == null)
+                throw new ArgumentNullException($"Parameter [{nameof(context)}] is not an IApplication");
+
+            app.Inject(objInstance);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Android.Content;
+using System;
 
 namespace Android.App
 {
@@ -23,5 +24,10 @@ namespace Android.App
         /// Retrice instance for provided type 
         /// </summary>
         TType R<TType>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void Inject(object instance);
     }
 }

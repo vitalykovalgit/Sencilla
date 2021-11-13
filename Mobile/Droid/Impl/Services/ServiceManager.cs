@@ -4,7 +4,7 @@ using Android.Content;
 
 namespace Android.App
 {
-    public class ServiceManager
+    public class ServiceManager<TService> where TService: SencillaService
     {
         public ServiceManager()
         {
@@ -24,11 +24,11 @@ namespace Android.App
                 Connection.OnServiceDisconnectedEvent += onServiceDisconnected;
 
                 // Start our main service if it is not started 
-                var startLimeSrv = new Intent(Application.Context, typeof(SencillaService));
+                var startLimeSrv = new Intent(Application.Context, typeof(TService));
                 Application.Context.StartService(startLimeSrv);
 
                 // Bind to lime service 
-                var bindLimeSrv = new Intent(Application.Context, typeof(SencillaService));
+                var bindLimeSrv = new Intent(Application.Context, typeof(TService));
                 Application.Context.BindService(bindLimeSrv, Connection, Bind.AutoCreate);
 
             });
