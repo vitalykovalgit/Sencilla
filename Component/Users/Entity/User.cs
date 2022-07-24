@@ -1,7 +1,7 @@
 ﻿using System;
-using Sencilla.Core.Entity;
+using Sencilla.Core;
 
-namespace Sencilla.Component.Users.Entity
+namespace Sencilla.Component.Users
 {
     public class User 
       : IEntityCreateable<ulong>

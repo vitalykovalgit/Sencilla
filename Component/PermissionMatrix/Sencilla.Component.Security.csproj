@@ -16,8 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
-    <ProjectReference Include="..\..\Web\Sencilla.Web.csproj" />
-    <ProjectReference Include="..\Config\Sencilla.Component.Config.csproj" />
   </ItemGroup>
 
 </Project>

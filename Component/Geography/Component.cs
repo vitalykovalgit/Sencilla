@@ -1,5 +1,4 @@
-﻿using Sencilla.Core.Component;
-using Sencilla.Core.Injection;
+﻿using Sencilla.Core;
 
 namespace Sencilla.Component.Geography
 {
@@ -7,9 +6,8 @@ namespace Sencilla.Component.Geography
     {
         public string Type => nameof(GeographyComponent);
 
-        public void Init(IResolver resolver)
+        public void Init(IRegistrator container)
         {
-            
         }
     }
 }

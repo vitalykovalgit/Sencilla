@@ -1,17 +1,17 @@
 ﻿
-using Sencilla.Core.Entity;
+using Sencilla.Core;
 
 namespace Sencilla.Component.Localization
 {
     /// <summary>
     /// 
     /// </summary>
-    public class Translate : IEntity<ulong>
+    public class Translate : IEntity
     {
         /// <summary>
         /// 
         /// </summary>
-        public ulong Id { get; set; }
+        public int Id { get; set; }
 
         /// <summary>
         /// Language identifier, references to Geography component Language entity

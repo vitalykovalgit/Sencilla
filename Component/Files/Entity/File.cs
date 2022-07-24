@@ -1,19 +1,16 @@
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-using Sencilla.Core.Entity;
+using Sencilla.Core;
 
-namespace Sencilla.Component.Files.Entity
+namespace Sencilla.Component.Files
 {
-	[Table("File")]
 	public class File 
         : IEntityCreateable<ulong>
         , IEntityUpdateable<ulong>
         , IEntityRemoveable<ulong>
         , IEntityDeleteable<ulong>
     {
-        [Key]
 		public ulong Id { get; set; }
 
         /// <summary>

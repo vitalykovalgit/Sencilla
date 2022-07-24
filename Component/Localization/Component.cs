@@ -1,6 +1,5 @@
 ﻿
-using Sencilla.Core.Component;
-using Sencilla.Core.Injection;
+using Sencilla.Core;
 
 namespace Sencilla.Component.Localization
 {
@@ -8,9 +7,8 @@ namespace Sencilla.Component.Localization
     {
         public string Type => nameof(LocalizationComponent);
 
-        public void Init(IResolver resolver)
+        public void Init(IRegistrator container)
         {
-            
         }
     }
 }

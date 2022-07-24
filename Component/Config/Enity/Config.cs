@@ -1,10 +1,10 @@
 ﻿
-using Sencilla.Core.Entity;
+using Sencilla.Core;
 
 namespace Sencilla.Component.Config.Enity
 {
-    public class Config : IEntity<uint>
+    public class Config : IEntity
     {
-        public uint Id { get; set; }
+        public int Id { get; set; }
     }
 }

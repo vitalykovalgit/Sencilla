@@ -1,10 +1,8 @@
-﻿using Sencilla.Core.Component;
-using Sencilla.Core.Injection;
-using Sencilla.Component.Files.Entity;
-using Sencilla.Component.Files.Impl;
+﻿
 using Sencilla.Component.Files.Impl.ContentProvider;
 using Sencilla.Component.Config.Contract;
 using Sencilla.Component.Config.Impl;
+using Sencilla.Core;
 
 namespace Sencilla.Component.Files
 {
@@ -15,14 +13,13 @@ namespace Sencilla.Component.Files
     {
         public string Type => "Sencilla.Component.Files";
 
-        public void Init(IResolver resolver)
+        public void Init(IRegistrator container)
         {
-            resolver.AddRepositoriesFor<File, ulong, FileDbContext>();
-            resolver.AddRepositoriesFor<FileContent, ulong, FileDbContext>();
+            //container.AddRepositoriesFor<File, ulong, FileDbContext>();
+            //container.AddRepositoriesFor<FileContent, ulong, FileDbContext>();
 
-            resolver.RegisterType<IFileContentProvider, DriveFileProvider>();
-
-            resolver.RegisterType<IConfigProvider<DriveFileProviderOption>, AppSettingsJsonConfigProvider<DriveFileProviderOption>>();
+            container.RegisterType<IFileContentProvider, DriveFileProvider>();
+            container.RegisterType<IConfigProvider<DriveFileProviderOption>, AppSettingsJsonConfigProvider<DriveFileProviderOption>>();
         }
     }
 }

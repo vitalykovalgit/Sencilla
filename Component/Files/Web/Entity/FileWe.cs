@@ -1,14 +1,12 @@
 ﻿using System;
+using Sencilla.Core;
 
-using Sencilla.Component.Files.Entity;
-using Sencilla.Core.Web;
-
-namespace Sencilla.Component.Files.Web.Entity
+namespace Sencilla.Component.Files
 {
     /// <summary>
     /// 
     /// </summary>
-    public class FileWe : IWebEntity<File, ulong>
+    public class FileWe : IDtoEntity<File, ulong>
     {
         public FileWe() 
         {

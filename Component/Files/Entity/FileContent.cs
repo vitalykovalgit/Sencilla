@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Sencilla.Core;
 
-using Sencilla.Core.Entity;
-
-namespace Sencilla.Component.Files.Entity
+namespace Sencilla.Component.Files
 {
     /// <summary>
     /// 

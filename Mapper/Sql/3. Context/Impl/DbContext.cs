@@ -45,7 +45,7 @@ namespace Sencilla.Infrastructure.SqlMapper.Impl
         public DbContext(string connectionName, bool useTransaction = true)
         {
             Init();
-            ConnectionString = ConfigurationManager.ConnectionStrings[connectionName]?.ConnectionString;
+            ConnectionString = System.Configuration.ConfigurationManager.ConnectionStrings[connectionName]?.ConnectionString;
             ConnectionPolicy = new ConnectionInternalPolicy(null/*TODO: use config*/, DbProvider, ConnectionString, useTransaction);
         }
 

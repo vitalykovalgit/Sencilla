@@ -1,11 +1,11 @@
 ﻿
-using Sencilla.Core.Entity;
+using Sencilla.Core;
 
-namespace Sencilla.Component.Geography.Entity
+namespace Sencilla.Component.Geography
 {
-    public class Language : IEntity<uint>
+    public class Language : IEntity
     {
-        public uint Id { get; set; }
+        public int Id { get; set; }
 
         public string Name { get; set; }
 

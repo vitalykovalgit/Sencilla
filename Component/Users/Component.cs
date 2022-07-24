@@ -1,7 +1,4 @@
-﻿using Sencilla.Core.Component;
-using Sencilla.Core.Injection;
-using Sencilla.Component.Users.Entity;
-using Sencilla.Component.Users.Impl;
+﻿using Sencilla.Core;
 
 namespace Sencilla.Component.Users
 {
@@ -9,9 +6,8 @@ namespace Sencilla.Component.Users
     {
         public string Type => "Users";
 
-        public void Init(IResolver resolver)
+        public void Init(IRegistrator container)
         {
-            resolver.AddRepositoriesFor<User, ulong, UsersDbContext>();
         }
     }
 }

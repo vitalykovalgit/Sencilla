@@ -1,5 +1,5 @@
 ﻿using System;
-using Sencilla.Core.Entity;
+using Sencilla.Core;
 
 namespace Sencilla.Component.Security.Entity
 {

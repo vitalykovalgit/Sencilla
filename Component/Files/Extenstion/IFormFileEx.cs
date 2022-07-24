@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using Sencilla.Component.Files.Entity;
+﻿
+using Sencilla.Component.Files;
 
 namespace Microsoft.AspNetCore.Http
 {
@@ -21,9 +20,9 @@ namespace Microsoft.AspNetCore.Http
             {".csv", "text/csv"}  
         };
 
-        public static File ToSencillaFile(this IFormFile formFile)
+        public static Sencilla.Component.Files.File? ToSencillaFile(this IFormFile formFile)
         {
-            return formFile == null ? null : new File
+            return formFile == null ? null : new Sencilla.Component.Files.File
             {
                 Size = formFile.Length,
                 Name = formFile.FileName,
@@ -36,17 +35,17 @@ namespace Microsoft.AspNetCore.Http
             };
         }
 
-        public static Dictionary<int, File> ToSencillaFiles(this IFormFileCollection formFiles)
+        public static Dictionary<int, Sencilla.Component.Files.File> ToSencillaFiles(this IFormFileCollection formFiles)
         {
             if (formFiles == null) { return null; }
 
-            Dictionary<int, File> pairs = new Dictionary<int, File>();
+            var pairs = new Dictionary<int, Sencilla.Component.Files.File>();
 
             foreach (var formFile in formFiles)
             {
                 pairs.Add(
                     formFile.GetHashCode(),
-                    new File
+                    new Sencilla.Component.Files.File
                     {
                         Size = formFile.Length,
                         Name = formFile.FileName,

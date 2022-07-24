@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace Sencilla.Component.Files.Web.Entity
+namespace Sencilla.Component.Files
 {
     public class UploadFileWe
     {

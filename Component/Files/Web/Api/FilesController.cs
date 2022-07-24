@@ -3,21 +3,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 
-using Sencilla.Core.Repo;
-using Sencilla.Core.Logging;
-using Sencilla.Core.Injection;
+using Sencilla.Core;
 
 using Sencilla.Web.Api;
-using Sencilla.Component.Files.Entity;
-using Sencilla.Component.Files.Web.Entity;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Sencilla.Component.Files.Web.Api
+namespace Sencilla.Component.Files
 {
     [Route("api/files")]
     public partial class FilesController : ApiController
@@ -55,7 +50,7 @@ namespace Sencilla.Component.Files.Web.Api
         [HttpGet, Route("{fileId}")]
         public async Task<IActionResult> Get(ulong fileId, CancellationToken token)
         {
-            var file = await mReadFileRepo.GetByIdAsync(fileId, token);
+            var file = await mReadFileRepo.GetById(fileId, token);
             if (file == null)
                 return NotFound();
 
@@ -68,7 +63,7 @@ namespace Sencilla.Component.Files.Web.Api
         [HttpGet, Route("{fileId}/stream")]
         public async Task<FileStreamResult> GetStream(ulong fileId, CancellationToken token)
         {
-            var file = await mReadFileRepo.GetByIdAsync(fileId, token);
+            var file = await mReadFileRepo.GetById(fileId, token);
             //if (file == null)
             //    return NotFound();
 
@@ -107,7 +102,7 @@ namespace Sencilla.Component.Files.Web.Api
                 var uploadedFile = model.File.ToSencillaFile();
 
                 // Create file in DB 
-                var createdFile = await mCreateFileRepo.CreateAsync(uploadedFile, token);
+                var createdFile = await mCreateFileRepo.Create(uploadedFile, token);
                 if (createdFile == null)
                     return InternalServerError();
 
@@ -143,7 +138,7 @@ namespace Sencilla.Component.Files.Web.Api
                 Dictionary<int, File> uploadedFiles = model.Files.ToSencillaFiles();
 
                 // Create files in DB 
-                var createdFiles = mCreateFileRepo.Create(uploadedFiles.Select(uf => uf.Value));
+                var createdFiles = await mCreateFileRepo.Create(uploadedFiles.Select(uf => uf.Value));
                 if (createdFiles == null)
                     return InternalServerError();
 
@@ -178,13 +173,13 @@ namespace Sencilla.Component.Files.Web.Api
         [HttpPost, Route("remove")]
         public async Task<IActionResult> Remove(ulong fileId, CancellationToken token)
         {
-            var file = await mReadFileRepo.GetByIdAsync(fileId, token);
+            var file = await mReadFileRepo.GetById(fileId, token);
             if (file == null)
                 return NotFound();
 
             // Remove file 
             // TODO: Think about content 
-            await mRemoveFileRepo.RemoveAsync(fileId, token);
+            await mRemoveFileRepo.Remove(new[] { fileId }, token);
 
             return Ok(fileId);
         }
@@ -192,7 +187,7 @@ namespace Sencilla.Component.Files.Web.Api
         [HttpDelete, Route("")]
         public async Task<IActionResult> Delete(ulong fileId, CancellationToken token)
         {
-            var file = await mDeleteFileRepo.GetByIdAsync(fileId, token);
+            var file = await mDeleteFileRepo.GetById(fileId, token);
             if (file == null)
                 return NotFound();
 
@@ -200,7 +195,7 @@ namespace Sencilla.Component.Files.Web.Api
             await mContentProvider.DeleteFileAsync(file, token);
 
             // Remove from DB 
-            await mDeleteFileRepo.DeleteAsync(token, fileId);
+            await mDeleteFileRepo.Delete(fileId);
 
             return Ok(fileId);
         }

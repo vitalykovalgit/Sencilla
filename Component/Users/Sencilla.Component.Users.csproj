@@ -1,7 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>6.0.0</Version>
+    <Authors>Sencilla</Authors>
+    <IsPackable>true</IsPackable>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,7 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
-    <ProjectReference Include="..\..\Repository\SqlMapper\Sencilla.Repository.SqlMapper.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,28 +2,27 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Sencilla.Component.Files.Entity;
 
 namespace Sencilla.Component.Files.Impl.ContentProvider
 {
     public class DbFileProvider : IFileContentProvider
     {
-        public Task<Stream> ReadFileAsync(Entity.File file, CancellationToken? token = null)
+        public Task<Stream> ReadFileAsync(File file, CancellationToken? token = null)
         {
             throw new System.NotImplementedException();
         }
 
-        public Task<Entity.File> DeleteFileAsync(Entity.File file, CancellationToken? token = null)
+        public Task<File> DeleteFileAsync(File file, CancellationToken? token = null)
         {
             throw new System.NotImplementedException();
         }
 
-        public Task<Entity.File> WriteFileAsync(Entity.File file, byte[] content, CancellationToken? token = null)
+        public Task<File> WriteFileAsync(File file, byte[] content, CancellationToken? token = null)
         {
             throw new System.NotImplementedException();
         }
 
-        public Task<Entity.File> WriteFileAsync(Entity.File file, Stream stream, CancellationToken? token = null)
+        public Task<File> WriteFileAsync(File file, Stream stream, CancellationToken? token = null)
         {
             throw new System.NotImplementedException();
         }

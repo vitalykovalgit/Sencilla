@@ -1,8 +1,10 @@
-﻿namespace Sencilla.Component.Security.Entity
+﻿using Sencilla.Core;
+
+namespace Sencilla.Component.Security.Entity
 {
-    public class Matrix
+    public class Matrix : IEntity
     {
-        public ulong Id { get; set; }
+        public int Id { get; set; }
         public string Role { get; set; }
         public string Entity { get; set; }
         public ulong Area { get; set; }
