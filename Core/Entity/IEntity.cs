@@ -7,7 +7,6 @@ namespace Sencilla.Core.Entity
     /// using generic class is very inconvinient for this 
     /// 
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
     public interface IEntity
     {
     }

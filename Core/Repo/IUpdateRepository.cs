@@ -1,8 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-
-using Sencilla.Core.Entity;
+﻿using Sencilla.Core.Entity;
 
 namespace Sencilla.Core.Repo
 {
@@ -15,7 +11,7 @@ namespace Sencilla.Core.Repo
         /// <param name="entity"></param>
         /// <param name="ruleSet"></param>
         /// <returns></returns>
-        TEntity Update(TEntity entity, string ruleSet = null);
+        TEntity Update(TEntity entity, string? ruleSet = null);
 
         /// <summary>
         /// 
@@ -24,7 +20,7 @@ namespace Sencilla.Core.Repo
         /// <param name="token"></param>
         /// <param name="ruleSet"></param>
         /// <returns></returns>
-        Task<TEntity> UpdateAsync(TEntity entity, CancellationToken? token = null, string ruleSet = null);
+        Task<TEntity> UpdateAsync(TEntity entity, CancellationToken? token = null, string? ruleSet = null);
 
         /// <summary>
         /// 

@@ -18,7 +18,7 @@ namespace Sencilla.Core.Component
         /// </summary>
         /// <param name="type"> Type of the component </param>
         /// <returns> component instance or null if not found </returns>
-        IComponent GetComponent(string type);
+        IComponent? GetComponent(string type);
 
         /// <summary>
         /// Load component to pursuit framework dynamically 
@@ -26,7 +26,7 @@ namespace Sencilla.Core.Component
         /// <param name="path">Path to the component</param>
         /// <returns> Instance to loaded component or threw exception if component can't be loaded </returns>
         /// <exception cref="InvalidArgumentException"></exception>
-        IComponent Load(string path);
+        IComponent? Load(string path);
 
         /// <summary>
         /// Unload component from the system 

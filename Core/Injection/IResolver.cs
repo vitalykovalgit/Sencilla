@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿
 namespace Sencilla.Core.Injection
 {
     /// <summary>
@@ -42,7 +40,7 @@ namespace Sencilla.Core.Injection
         /// </summary>
         /// <param name="iterface"></param>
         /// <param name="implementation"></param>
-        void RegisterType<TInterface, TImplementation>(string name = null);
+        void RegisterType<TInterface, TImplementation>(string? name = null);
 
         /// <summary>
         /// Register implemention for interface 
@@ -57,7 +55,7 @@ namespace Sencilla.Core.Injection
         /// <param name="iterface"></param>
         /// <param name="implementation"></param>
         /// <param name="name"></param>
-        void RegisterType(Type iterface, Type implementation, string name);
+        void RegisterType(Type iterface, Type implementation, string? name);
 
         /// <summary>
         /// Register instance for specific interface 

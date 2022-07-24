@@ -32,7 +32,7 @@ namespace Sencilla.Impl.Component
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public IComponent GetComponent(string type)
+        public IComponent? GetComponent(string type)
         {
             var key = type.ToLower();
             return _components.ContainsKey(key) ? _components[key] : null;
