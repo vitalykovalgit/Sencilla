@@ -1,12 +1,7 @@
-﻿using System.Linq;
-using System.Collections.Generic;
-
-using Sencilla.Core.Component;
-
-namespace Sencilla.Impl.Component
+﻿namespace Sencilla.Core.Impl
 {
     /// <summary>
-    /// Unity implementation of IComponent manager interface
+    /// Implementation of IComponentManager interface
     /// </summary>
     public class ComponentManager : IComponentManager
     {
@@ -36,16 +31,6 @@ namespace Sencilla.Impl.Component
         {
             var key = type.ToLower();
             return _components.ContainsKey(key) ? _components[key] : null;
-        }
-
-        public IComponent Load(string path)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public IComponent Unload()
-        {
-            throw new System.NotImplementedException();
         }
     }
 }

@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Sencilla.Core.Entity;
-using Sencilla.Core.Injection;
+using Sencilla.Core;
 using Sencilla.Core.Repo;
 
 namespace Sencilla.Impl.Repository.HttpClient

@@ -1,5 +1,5 @@
 ﻿
-namespace Sencilla.Core.Security.Impl
+namespace Sencilla.Core.Impl
 {
     class AllowAllPermissions
         : IReadPermission

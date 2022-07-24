@@ -1,12 +1,6 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Linq.Expressions;
-using System.Collections.Generic;
+﻿using System.Linq.Expressions;
 
-using Sencilla.Core.Entity;
-
-namespace Sencilla.Core.Repo
+namespace Sencilla.Core
 {
     /// <summary>
     /// Base read entity interface
@@ -19,22 +13,14 @@ namespace Sencilla.Core.Repo
         /// <summary>
         /// Retrive count of the entities 
         /// </summary>
-        int GetCount();
-
-        /// <summary>
-        /// Retrive count of the entities 
-        /// </summary>
         /// <param name="token"></param>
-        Task<int> GetCountAsync(CancellationToken? token = null);
+        Task<int> GetCount(CancellationToken token = default);
 
-        List<TEntity> GetAll();
-        List<TEntity> GetAll(params Expression<Func<TEntity, object>>[] includes);
-        Task<List<TEntity>> GetAllAsync(CancellationToken? token = null);
+        Task<IEnumerable<TEntity>> GetAll(CancellationToken token = default);
 
-        TEntity GetById(TKey id, params Expression<Func<TEntity, object>>[] includes);
-        Task<TEntity> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes);
-        Task<TEntity> GetByIdAsync(TKey id, CancellationToken token, params Expression<Func<TEntity, object>>[] includes);
+        Task<TEntity?> GetById(TKey id, params Expression<Func<TEntity, object>>[] includes);
+        Task<TEntity?> GetById(TKey id, CancellationToken token, params Expression<Func<TEntity, object>>[] includes);
 
-        List<TEntity> GetMany(IEnumerable<TKey> ids, params Expression<Func<TEntity, object>>[] includes);
+        Task<IEnumerable<TEntity>> GetMany(IEnumerable<TKey> ids, params Expression<Func<TEntity, object>>[] includes);
     }
 }

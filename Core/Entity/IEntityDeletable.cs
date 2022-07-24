@@ -1,20 +1,25 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Sencilla.Core.Entity
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
-    /// 
+    /// Used to check if entity is deleatble
+    /// without generic parameters
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
-    public interface IEntityDeleteable : IEntity
+    public interface IBaseEntityDeleteable : IBaseEntity
     {
     }
 
     /// <summary>
     /// This interface is used to allow deleting of the entity 
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
-	public interface IEntityDeleteable<TKey> : IEntity<TKey>, IEntityDeleteable
+	public interface IEntityDeleteable<TKey> : IEntity<TKey>, IBaseEntityDeleteable
+    {
+    }
+
+    /// <summary>
+    /// Impelement IEntityDeleteable interface with default type as int
+    /// </summary>
+    public interface IEntityDeleteable : IEntityDeleteable<int>
     {
     }
 }

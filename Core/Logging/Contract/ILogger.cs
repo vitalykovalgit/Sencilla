@@ -1,5 +1,5 @@
 ﻿
-namespace Sencilla.Core.Logging
+namespace Sencilla.Core
 {
     /// <summary>
     /// Logger 
@@ -7,14 +7,14 @@ namespace Sencilla.Core.Logging
     public interface ILogger
     {
         void Fatal(string msg);
-        void Fatal(System.Exception ex);
+        void Fatal(Exception ex);
 
         void Error(string msg);
-        void Error(System.Exception ex);
-        void Error(string msg, System.Exception ex);
+        void Error(Exception ex);
+        void Error(string msg, Exception ex);
 
         void Warn(string msg);
-        void Warn(System.Exception ex);
+        void Warn(Exception ex);
 
         void Info(string msg);
 

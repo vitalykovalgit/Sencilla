@@ -1,5 +1,5 @@
 ﻿
-namespace Sencilla.Core.Exceptions
+namespace Sencilla.Core
 {
     /// <summary>
     /// Base exception for all sencilla exceptions 

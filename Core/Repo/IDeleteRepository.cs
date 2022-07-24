@@ -1,8 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Sencilla.Core.Entity;
-
-namespace Sencilla.Core.Repo
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
     /// Items will be hard deleted 
@@ -15,17 +12,15 @@ namespace Sencilla.Core.Repo
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="ids"></param>
         /// <returns></returns>
-        TEntity Delete(params TKey[] id);
-
+        Task<TEntity> Delete(params TKey[] ids);
+        
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="token"></param>
-        /// <param name="id"></param>
+        /// <param name="ids"></param>
         /// <returns></returns>
-        Task<TEntity> DeleteAsync(CancellationToken? token = null, params TKey[] id);
-        
+        Task<TEntity> Delete(IEnumerable<TKey> ids, CancellationToken? token = null);
     }
 }

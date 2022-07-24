@@ -1,5 +1,5 @@
 ﻿
-namespace Sencilla.Core.Exceptions
+namespace Sencilla.Core
 {
     public class BadRequestException : SencillaException
     {

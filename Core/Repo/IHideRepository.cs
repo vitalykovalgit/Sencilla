@@ -1,8 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Sencilla.Core.Entity;
-
-namespace Sencilla.Core.Repo
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
     /// 
@@ -16,8 +13,9 @@ namespace Sencilla.Core.Repo
         /// 
         /// </summary>
         /// <param name="entity"></param>
+        /// <param name="token"></param>
         /// <returns></returns>
-        TEntity Hide(TEntity entity);
+        Task<TEntity> Hide(TEntity entity, CancellationToken? token = null);
 
         /// <summary>
         /// 
@@ -25,21 +23,6 @@ namespace Sencilla.Core.Repo
         /// <param name="entity"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        Task<TEntity> HideAsync(TEntity entity, CancellationToken? token = null);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        TEntity Show(TEntity entity);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        Task<TEntity> ShowAsync(TEntity entity, CancellationToken? token = null);
+        Task<TEntity> Show(TEntity entity, CancellationToken? token = null);
     }
 }

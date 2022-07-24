@@ -1,11 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Sencilla.Core.Entity
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
     /// This interface is used to allow sorting of entity 
     /// </summary>
-    public interface IEntityOrderable : IEntity
+    public interface IBaseEntityOrderable : IBaseEntity
     {   
         /// <summary>
         /// Order of the entity 
@@ -16,8 +15,11 @@ namespace Sencilla.Core.Entity
     /// <summary>
     /// This interface is used to allow sorting of entity 
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
-    public interface IEntityOrderable<TKey> : IEntity<TKey>, IEntityOrderable
+    public interface IEntityOrderable<TKey> : IEntity<TKey>, IBaseEntityOrderable
+    {
+    }
+
+    public interface IEntityOrderable : IEntityOrderable<int>
     {
     }
 }

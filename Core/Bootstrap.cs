@@ -1,9 +1,6 @@
 ﻿using Sencilla.Core;
-using Sencilla.Core.Builder;
-using Sencilla.Core.Builder.Impl;
-using Sencilla.Core.Logging;
-using Sencilla.Core.Logging.Impl;
-using Sencilla.Core.Security.Impl;
+using Sencilla.Core.Impl;
+using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -14,18 +11,56 @@ namespace Microsoft.Extensions.DependencyInjection
         /// ISencillaBuilder must be resolved in configure method to configure sencilla
         /// </summary>
         /// <param name="services"> Service collection </param>
-        public static IServiceCollection AddSencillaFramework(this IServiceCollection builder)
+        public static IServiceCollection AddSencilla(this IServiceCollection builder, IConfiguration configuration)
         {
             // Add builder 
-            builder.AddSingleton<ISencillaBuilder, AspNetCoreSencillaBuilder>();
             builder.AddTransient<ILogger, NoLogger>();
+            builder.AddTransient<IResolver, ServiceCollectionResolver>();
 
             // Security
-            builder.AddTransient<IReadPermission, AllowAllPermissions>();
-            builder.AddTransient<ICreatePermission, AllowAllPermissions>();
-            builder.AddTransient<IUpdatePermission, AllowAllPermissions>();
-            builder.AddTransient<IRemovePermission, AllowAllPermissions>();
-            builder.AddTransient<IDeletePermission, AllowAllPermissions>();
+            //builder.AddTransient<IReadPermission, AllowAllPermissions>();
+            //builder.AddTransient<ICreatePermission, AllowAllPermissions>();
+            //builder.AddTransient<IUpdatePermission, AllowAllPermissions>();
+            //builder.AddTransient<IRemovePermission, AllowAllPermissions>();
+            //builder.AddTransient<IDeletePermission, AllowAllPermissions>();
+
+            // create service collection container 
+            var container = new ServiceCollectionRegistrator(builder);
+
+            // 0. load all types from app
+            var types = AppDomain.CurrentDomain
+                                 .GetAssemblies()
+                                 .SelectMany(x => x.GetTypes());
+
+            // 1. first find all type registrators in app 
+            var registrators = new List<ITypeRegistrator>();
+            var typeRegistrator = typeof(ITypeRegistrator);
+            foreach (var type in types) 
+            {
+                if (typeRegistrator.IsAssignableFrom(type) && type.IsClass && !type.IsAbstract) 
+                {
+                    // create this registrator 
+                    var registrator = Activator.CreateInstance(type) as ITypeRegistrator;
+                    if (registrator != null)
+                    {
+                        registrators.Add(registrator);
+                        container.RegisterInstance(type, registrator);
+                    }
+                }
+            }
+
+            // 2. register all types by registartors
+            foreach (var type in types)
+            {
+                foreach (var r in registrators)
+                {
+                    r.Register(container, type);
+                }
+            }
+
+            // 3. find component registrator and initialize all components 
+            var componentRegistrator = registrators.FirstOrDefault(r => r is ComponentRegistrator) as ComponentRegistrator;
+            componentRegistrator?.InitComponents(container);
 
             return builder;
         }

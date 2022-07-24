@@ -1,11 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Sencilla.Core.Entity
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
     /// 
     /// </summary>
-    public interface IEntityHideable : IEntity
+    public interface IBaseEntityHideable : IBaseEntity
     {
         /// <summary>
         /// True if entity is hidden 
@@ -17,9 +16,14 @@ namespace Sencilla.Core.Entity
     /// This interface is used to 
     /// allow hide show functionality on entity 
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
-    public interface IEntityHideable<TKey> : IEntity<TKey>, IEntityHideable
+    public interface IEntityHideable<TKey> : IEntity<TKey>, IBaseEntityHideable
+    {      
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public interface IEntityHideable : IEntityHideable<int>
     {
-       
     }
 }

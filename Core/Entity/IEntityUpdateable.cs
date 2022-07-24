@@ -1,12 +1,10 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-
-namespace Sencilla.Core.Entity
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
     /// Allow entity to be updatable 
     /// </summary>
-    public interface IEntityUpdateable : IEntity
+    public interface IBaseEntityUpdateable : IBaseEntity
     {
         /// <summary>
         /// Last updated date time 
@@ -18,8 +16,11 @@ namespace Sencilla.Core.Entity
     /// 
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
-    [SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
-	public interface IEntityUpdateable<TKey> : IEntity<TKey>, IEntityUpdateable
+	public interface IEntityUpdateable<TKey> : IEntity<TKey>, IBaseEntityUpdateable
+    {
+    }
+
+    public interface IEntityUpdateable : IEntityUpdateable<int>
     {
     }
 }

@@ -1,7 +1,5 @@
 ﻿
-using System;
-
-namespace Sencilla.Core.Logging.Impl
+namespace Sencilla.Core.Impl
 {
     class NoLogger : ILogger
     {

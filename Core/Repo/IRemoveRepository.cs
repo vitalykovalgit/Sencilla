@@ -1,9 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-using Sencilla.Core.Entity;
-
-namespace Sencilla.Core.Repo
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
     /// 
@@ -16,9 +12,9 @@ namespace Sencilla.Core.Repo
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="ids"></param>
         /// <returns></returns>
-        TEntity Undo(TKey id);
+        Task<TEntity> Undo(params TKey[] ids);
 
         /// <summary>
         /// 
@@ -26,21 +22,6 @@ namespace Sencilla.Core.Repo
         /// <param name="id"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        Task<TEntity> UndoAsync(TKey id, CancellationToken? token = null);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        TEntity Remove(TKey id);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        Task<TEntity> RemoveAsync(TKey id, CancellationToken? token = null);
+        Task<TEntity> Remove(IEnumerable<TKey> ids, CancellationToken? token = null);
 	}
 }

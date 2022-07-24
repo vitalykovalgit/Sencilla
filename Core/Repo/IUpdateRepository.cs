@@ -1,6 +1,5 @@
-﻿using Sencilla.Core.Entity;
-
-namespace Sencilla.Core.Repo
+﻿
+namespace Sencilla.Core
 {
     public interface IUpdateRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
                where TEntity : IEntity<TKey>
@@ -8,26 +7,9 @@ namespace Sencilla.Core.Repo
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="ruleSet"></param>
-        /// <returns></returns>
-        TEntity Update(TEntity entity, string? ruleSet = null);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="token"></param>
-        /// <param name="ruleSet"></param>
-        /// <returns></returns>
-        Task<TEntity> UpdateAsync(TEntity entity, CancellationToken? token = null, string? ruleSet = null);
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="entities"></param>
         /// <returns></returns>
-        IEnumerable<TEntity> Update(IEnumerable<TEntity> entities);
+        Task<TEntity> Update(params TEntity[] entities);
         
         /// <summary>
         /// 

@@ -1,5 +1,5 @@
 ﻿
-namespace Sencilla.Core.Repo
+namespace Sencilla.Core
 {
     /// <summary>
     /// TODO: To be rewieved
@@ -10,6 +10,7 @@ namespace Sencilla.Core.Repo
         /// <summary>
         /// Save changes
         /// </summary>
-        void Save();
+        /// <returns>Count of saved entities</returns>
+        Task<int> Save();
     }
 }

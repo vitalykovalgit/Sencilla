@@ -1,6 +1,4 @@
 ﻿
-using Sencilla.Core.Entity;
-
 namespace Sencilla.Core
 {
     public interface IRemovePermission

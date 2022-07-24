@@ -1,6 +1,5 @@
-﻿using Sencilla.Core.Injection;
-
-namespace Sencilla.Core.Component
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
     /// Base interface for all components 
@@ -15,7 +14,7 @@ namespace Sencilla.Core.Component
         /// <summary>
         /// Initialize the component 
         /// </summary>
-        void Init(IResolver resolver);
+        void Init(IRegistrator container);
         
     }
 }

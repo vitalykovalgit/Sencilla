@@ -1,23 +1,27 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-
-namespace Sencilla.Core.Entity
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
-    /// Interface marker is intentional here 
+    /// Used to check if entity is creatable 
+    /// without generic parameters
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
-    public interface IEntityCreateable : IEntity
+    public interface IBaseEntityCreateable : IBaseEntity
     {
-        
+        DateTime CreatedDate { get; set; }
     }
 
     /// <summary>
     /// 
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
-    public interface IEntityCreateable<TKey> : IEntity<TKey>, IEntityCreateable
+    public interface IEntityCreateable<TKey> : IEntity<TKey>, IBaseEntityCreateable
     {
-        DateTime CreatedDate { get; set; }
+    }
+
+    /// <summary>
+    /// interafce with generic parameters as int by default 
+    /// </summary>
+    public interface IEntityCreateable : IEntityCreateable<int>
+    {
     }
 }

@@ -1,12 +1,10 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-
-namespace Sencilla.Core.Entity
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
     /// Item can be marked in DB as deleted 
     /// </summary>
-    public interface IEntityRemoveable : IEntity
+    public interface IBaseEntityRemoveable : IBaseEntity
     {
         DateTime? DeletedDate { get; set; }
     }
@@ -14,8 +12,15 @@ namespace Sencilla.Core.Entity
     /// <summary>
     /// Item can be marked in DB as deleted 
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
-    public interface IEntityRemoveable<TKey> : IEntity<TKey>, IEntityRemoveable
+    public interface IEntityRemoveable<TKey> : IEntity<TKey>, IBaseEntityRemoveable
     {
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public interface IEntityRemoveable : IEntityRemoveable<int>
+    { 
+    }
+
 }

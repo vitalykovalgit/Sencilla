@@ -1,6 +1,5 @@
 ﻿
-using Sencilla.Core.Entity;
-using Sencilla.Core.Repo;
+using Sencilla.Core;
 using Sencilla.Impl.Repository.SqlMapper;
 
 namespace Sencilla.Core.Injection

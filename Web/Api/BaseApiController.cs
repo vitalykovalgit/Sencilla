@@ -4,10 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-
-using Sencilla.Core.Injection;
-using Sencilla.Core.Logging;
-using Sencilla.Core.Web;
+using Sencilla.Core;
 
 namespace Sencilla.Web.Api
 {
@@ -29,7 +26,7 @@ namespace Sencilla.Web.Api
         /// Returns response with status forbidden
         /// </summary>
         /// <returns></returns>
-        public IActionResult Forbidden(string msg = null)
+        public IActionResult Forbidden(string? msg = null)
         {
             // "You are not authorized to access this item");
             return base.Forbid();
@@ -39,7 +36,7 @@ namespace Sencilla.Web.Api
         /// Returns No Content response
         /// </summary>
         /// <returns></returns>
-        public IActionResult NoContent(string msg = null)
+        public IActionResult NoContent(string? msg = null)
         {
             return base.NoContent();
         }
@@ -48,7 +45,7 @@ namespace Sencilla.Web.Api
         /// Returns not implemented response
         /// </summary>
         /// <returns></returns>
-        public IActionResult NotImplemented(string msg = null)
+        public IActionResult NotImplemented(string? msg = null)
         {
             return CustomResult(HttpStatusCode.NotImplemented, msg);
         }
@@ -57,7 +54,7 @@ namespace Sencilla.Web.Api
         /// Returns not implemented response
         /// </summary>
         /// <returns></returns>
-        public IActionResult NotFound(string msg = null)
+        public IActionResult NotFound(string? msg = null)
         {
             return base.NotFound(msg);
         }
@@ -66,17 +63,17 @@ namespace Sencilla.Web.Api
         /// Already deleted
         /// </summary>
         /// <returns></returns>
-        public IActionResult ResourceGone(string msg = null)
+        public IActionResult ResourceGone(string? msg = null)
         {
             return CustomResult(HttpStatusCode.Gone, msg);
         }
 
-        public IActionResult InternalServerError(Exception ex = null)
+        public IActionResult InternalServerError(Exception? ex = null)
         {
             return CustomResult(HttpStatusCode.InternalServerError, $"{ex?.Message}\r\n{ex?.StackTrace}");
         }
 
-        private IActionResult CustomResult(HttpStatusCode code, string msg = null)
+        private IActionResult CustomResult(HttpStatusCode code, string? msg = null)
         {
             return new ObjectResult(msg) { StatusCode = (int)code };
         }
@@ -231,7 +228,7 @@ namespace Sencilla.Web.Api
         /// <param name="entityHandler"></param>
         ///  <returns></returns>
         protected IActionResult HandleAjaxCall<TWebEntity, TEntity, TKey>(Func<TEntity> entityHandler)
-            where TWebEntity : IWebEntity<TEntity, TKey>, new()
+            where TWebEntity : IDtoEntity<TEntity, TKey>, new()
             where TEntity : class, new()
         {
             try
@@ -260,7 +257,7 @@ namespace Sencilla.Web.Api
         /// <param name="entityHandler"></param>
         ///  <returns></returns>
         protected async Task<IActionResult> HandleAjaxCallAsync<TWebEntity, TEntity, TKey>(Func<Task<TEntity>> entityHandler)
-            where TWebEntity : IWebEntity<TEntity, TKey>, new()
+            where TWebEntity : IDtoEntity<TEntity, TKey>, new()
             where TEntity : class, new()
         {
             try
@@ -289,7 +286,7 @@ namespace Sencilla.Web.Api
         /// <param name="handler"></param>
         ///  <returns></returns>
         protected IActionResult HandleAjaxCall<TWebEntity, TEntity, TKey>(Func<IEnumerable<TEntity>> handler)
-            where TWebEntity : IWebEntity<TEntity, TKey>, new()
+            where TWebEntity : IDtoEntity<TEntity, TKey>, new()
             where TEntity : class, new()
         {
             try
@@ -323,7 +320,7 @@ namespace Sencilla.Web.Api
         /// <param name="handler"></param>
         ///  <returns></returns>
         protected async Task<IActionResult> HandleAjaxCallAsync<TWebEntity, TEntity, TKey>(Func<Task<IEnumerable<TEntity>>> handler)
-            where TWebEntity : IWebEntity<TEntity, TKey>, new()
+            where TWebEntity : IDtoEntity<TEntity, TKey>, new()
             where TEntity : class, new()
         {
             try

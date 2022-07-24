@@ -7,8 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
-using Sencilla.Core.Exceptions;
-using Sencilla.Core.Injection;
+using Sencilla.Core;
 using Sencilla.Core.Repo;
 
 namespace Sencilla.Impl.Repository.HttpClient

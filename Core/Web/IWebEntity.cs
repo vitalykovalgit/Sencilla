@@ -1,12 +1,12 @@
 ﻿
-namespace Sencilla.Core.Web
+namespace Sencilla.Core
 {
     /// <summary>
     /// Generic class for all the DTO/WebEntity classes 
     /// </summary>
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TKey"></typeparam>
-    public interface IWebEntity<TEntity, TKey>
+    public interface IDtoEntity<TEntity, TKey>
     {
         /// <summary>
         /// Id 
@@ -26,5 +26,13 @@ namespace Sencilla.Core.Web
         void FromEntity(TEntity entity);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <typeparam name="TKey"></typeparam>
+    public interface IDtoEntity<TEntity> : IDtoEntity<TEntity, int>
+    {
 
+    }
 }

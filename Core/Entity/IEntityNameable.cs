@@ -1,11 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Sencilla.Core.Entity
+﻿
+namespace Sencilla.Core
 {
     /// <summary>
     /// 
     /// </summary>
-    public interface IEntityNameable : IEntity
+    public interface IBaseEntityNameable : IBaseEntity
     {
         /// <summary>
         /// Name of the entity 
@@ -16,8 +15,7 @@ namespace Sencilla.Core.Entity
     /// <summary>
     /// 
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces")]
-    public interface IEntityNameable<TKey> : IEntity<TKey>, IEntityNameable
+    public interface IEntityNameable<TKey> : IEntity<TKey>, IBaseEntityNameable
     {
         
     }
