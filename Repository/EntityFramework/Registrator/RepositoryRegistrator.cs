@@ -31,7 +31,15 @@ namespace Sencilla.Repository.EntityFramework
                     container.RegisterType(
                         typeof(IReadRepository<,>).MakeGenericType(type, key),
                         typeof(ReadRepository<,,>).MakeGenericType(type, context, key));
+
+                    if (key == typeof(int)) 
+                    {
+                        container.RegisterType(
+                            typeof(IReadRepository<>).MakeGenericType(type),
+                            typeof(ReadRepository<,>).MakeGenericType(type, context));
+                    }
                 }
+
             }
         }
     }
