@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <Folder Include="Contract\" />
+    <Folder Include="Database\Data\" />
+    <Folder Include="Impl\" />
     <Folder Include="Web\Api\" />
     <Folder Include="Web\Entity\" />
   </ItemGroup>

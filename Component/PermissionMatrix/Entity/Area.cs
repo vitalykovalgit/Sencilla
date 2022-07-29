@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace Sencilla.Component.Security.Entity
 {
     [Flags]

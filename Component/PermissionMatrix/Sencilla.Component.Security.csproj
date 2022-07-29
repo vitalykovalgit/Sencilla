@@ -18,4 +18,8 @@
     <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Impl\" />
+  </ItemGroup>
+
 </Project>

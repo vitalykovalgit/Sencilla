@@ -1,17 +1,17 @@
-﻿using System;
-using Sencilla.Core;
+﻿using Sencilla.Core;
 
 namespace Sencilla.Component.Users
 {
     public class User 
-      : IEntityCreateable<ulong>
-      , IEntityUpdateable<ulong>
-      , IEntityRemoveable<ulong>
+      : IEntityCreateable
+      , IEntityUpdateable
+      , IEntityRemoveable
     {
-        public ulong Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Email { get; set; }
+        public int Id { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? FatherName { get; set; }
+        public string? Email { get; set; }
         public ulong Phone { get; set; }
 
         public DateTime CreatedDate { get; set; }

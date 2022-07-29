@@ -12,7 +12,7 @@ namespace Sencilla.Core
     /// <summary>
     /// Item can be marked in DB as deleted 
     /// </summary>
-    public interface IEntityRemoveable<TKey> : IEntity<TKey>, IBaseEntityRemoveable
+    public interface IEntityRemoveable<TKey> : IEntityUpdateable<TKey>, IBaseEntityRemoveable
     {
     }
 

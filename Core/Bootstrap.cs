@@ -17,13 +17,6 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.AddTransient<ILogger, NoLogger>();
             builder.AddTransient<IResolver, ServiceCollectionResolver>();
 
-            // Security
-            //builder.AddTransient<IReadPermission, AllowAllPermissions>();
-            //builder.AddTransient<ICreatePermission, AllowAllPermissions>();
-            //builder.AddTransient<IUpdatePermission, AllowAllPermissions>();
-            //builder.AddTransient<IRemovePermission, AllowAllPermissions>();
-            //builder.AddTransient<IDeletePermission, AllowAllPermissions>();
-
             // create service collection container 
             var container = new ServiceCollectionRegistrator(builder);
 

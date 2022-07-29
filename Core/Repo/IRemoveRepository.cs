@@ -23,8 +23,8 @@ namespace Sencilla.Core
         /// </summary>
         /// <param name="ids"></param>
         /// <returns></returns>
-        Task<TEntity> Undo(TKey id, CancellationToken token = default);
-        Task<TEntity> Undo(IEnumerable<TKey> ids, CancellationToken token = default);
+        Task<TEntity> Undo(TEntity entity, CancellationToken token = default);
+        Task<IEnumerable<TEntity>> Undo(IEnumerable<TEntity> entities, CancellationToken token = default);
 
         /// <summary>
         /// 
@@ -32,14 +32,7 @@ namespace Sencilla.Core
         /// <param name="id"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        Task<TEntity> Remove(TKey id, CancellationToken token = default);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ids"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        Task<TEntity> Remove(IEnumerable<TKey> ids, CancellationToken token = default);
+        Task<TEntity> Remove(TEntity entity, CancellationToken token = default);
+        Task<IEnumerable<TEntity>> Remove(IEnumerable<TEntity> entities, CancellationToken token = default);
     }
 }

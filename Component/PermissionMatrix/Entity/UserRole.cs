@@ -1,5 +1,4 @@
-﻿using System;
-using Sencilla.Core;
+﻿using Sencilla.Core;
 
 namespace Sencilla.Component.Security.Entity
 {
@@ -7,13 +6,15 @@ namespace Sencilla.Component.Security.Entity
     /// 
     /// </summary>
     public class UserRole 
-        : IEntityCreateable<ulong>
-        , IEntityDeleteable<ulong>
+        : IEntityCreateable
+        , IEntityUpdateable
+        , IEntityDeleteable
     {
-        public ulong Id { get; set; }
-        public ulong UserId { get; set; }
-        public string Role { get; set; }
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public string? Role { get; set; }
 
         public DateTime CreatedDate { get; set; }
+        public DateTime UpdatedDate { get; set; }
     }
 }
