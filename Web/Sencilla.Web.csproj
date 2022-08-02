@@ -26,4 +26,8 @@
     <ProjectReference Include="..\Core\Sencilla.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Binder\" />
+  </ItemGroup>
+
 </Project>

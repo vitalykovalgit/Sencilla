@@ -3,6 +3,7 @@
     /// <summary>
     /// Implementation of IComponentManager interface
     /// </summary>
+    [Implement(typeof(IComponentManager))]
     public class ComponentManager : IComponentManager
     {
         private readonly Dictionary<string, IComponent> _components;
@@ -11,7 +12,7 @@
         /// Initialize components 
         /// </summary>
         /// <param name="components"></param>
-        public ComponentManager(IComponent[] components)
+        public ComponentManager(IEnumerable<IComponent> components)
         {
             Components = components;
             _components = components.ToDictionary(c=>c.Type.ToLower());

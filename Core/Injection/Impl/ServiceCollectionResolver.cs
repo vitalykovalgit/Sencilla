@@ -3,7 +3,7 @@ using Sencilla.Core;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public class ServiceCollectionRegistrator : IRegistrator
+    public class ServiceCollectionRegistrator : IContainer
     {
         IServiceCollection Container;
 

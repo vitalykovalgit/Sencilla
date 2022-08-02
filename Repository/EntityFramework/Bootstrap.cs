@@ -6,7 +6,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class Bootstrap
     {
-        public static IServiceCollection AddSencillaEntityFrameworkRepos(this IServiceCollection builder, Action<DbContextOptionsBuilder> action)
+        public static IServiceCollection AddSencillaRepositoryForEF(this IServiceCollection builder, Action<DbContextOptionsBuilder> action)
         {
             builder.AddDbContext<DynamicDbContext>(action);
             return builder;

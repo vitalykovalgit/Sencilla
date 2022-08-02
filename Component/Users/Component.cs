@@ -1,12 +1,12 @@
 ﻿using Sencilla.Core;
 
-namespace Sencilla.Component.Users
+namespace Microsoft.Extensions.DependencyInjection
 {
     public class UsersComponent : IComponent
     {
         public string Type => "Users";
 
-        public void Init(IRegistrator container)
+        public void Init(IContainer container)
         {
         }
     }

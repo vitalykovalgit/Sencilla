@@ -1,5 +1,5 @@
 ﻿
-namespace Sencilla.Component.Config.Contract
+namespace Sencilla.Component.Config
 {
     public interface IConfigProvider<TConfig> where TConfig: class
     {

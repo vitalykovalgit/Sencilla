@@ -1,12 +1,12 @@
 ﻿using Sencilla.Core;
 
-namespace Sencilla.Component.Geography
+namespace Microsoft.Extensions.DependencyInjection
 {
     public class GeographyComponent : IComponent
     {
         public string Type => nameof(GeographyComponent);
 
-        public void Init(IRegistrator container)
+        public void Init(IContainer container)
         {
         }
     }

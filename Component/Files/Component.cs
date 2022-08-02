@@ -1,10 +1,9 @@
 ﻿
-using Sencilla.Component.Files.Impl.ContentProvider;
-using Sencilla.Component.Config.Contract;
-using Sencilla.Component.Config.Impl;
 using Sencilla.Core;
+using Sencilla.Component.Config;
+using Sencilla.Component.Files;
 
-namespace Sencilla.Component.Files
+namespace Microsoft.Extensions.DependencyInjection
 {
     /// <summary>
     /// 
@@ -13,7 +12,7 @@ namespace Sencilla.Component.Files
     {
         public string Type => "Sencilla.Component.Files";
 
-        public void Init(IRegistrator container)
+        public void Init(IContainer container)
         {
             //container.AddRepositoriesFor<File, ulong, FileDbContext>();
             //container.AddRepositoriesFor<FileContent, ulong, FileDbContext>();

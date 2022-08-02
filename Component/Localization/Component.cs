@@ -1,13 +1,12 @@
-﻿
-using Sencilla.Core;
+﻿using Sencilla.Core;
 
-namespace Sencilla.Component.Localization
+namespace Microsoft.Extensions.DependencyInjection
 {
     public class LocalizationComponent : IComponent
     {
         public string Type => nameof(LocalizationComponent);
 
-        public void Init(IRegistrator container)
+        public void Init(IContainer container)
         {
         }
     }

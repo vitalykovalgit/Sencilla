@@ -3,9 +3,9 @@ using Sencilla.Core;
 
 namespace Sencilla.Repository.EntityFramework
 {
-    public class BaseRepository<TContext> : IBaseRepository
-           where TContext : DbContext
+    public class BaseRepository<TContext> : IDisposable, IBaseRepository where TContext : DbContext
     {
+        private TContext? DbContext = null;
         /// <summary>
         /// Container to resolve context, please use resolve instead 
         /// </summary>
@@ -14,7 +14,9 @@ namespace Sencilla.Repository.EntityFramework
         /// <summary>
         /// Context implementation
         /// </summary>
-        protected TContext? Context { get; set; }
+        protected TContext? Context => DbContext ??= R<TContext>();
+
+        protected IEnumerable<IReadConstraint>? Constraints => R<IEnumerable<IReadConstraint>>();
 
         /// <summary>
         /// 
@@ -30,7 +32,7 @@ namespace Sencilla.Repository.EntityFramework
         /// </summary>
         /// <typeparam name="T"> Type for which instance will be created </typeparam>
         /// <returns></returns>
-        public T R<T>()
+        public T? R<T>()
         {
             return Resolver.Resolve<T>();
         }
@@ -40,7 +42,12 @@ namespace Sencilla.Repository.EntityFramework
         /// </summary>
         public async Task<int> Save()
         {
-            return Context != null ? await Context.SaveChangesAsync() : 0;
+            return DbContext == null ? 0 : await DbContext.SaveChangesAsync();
+        }
+
+        public void Dispose()
+        {
+            DbContext?.Dispose();
         }
     }
 }

@@ -1,6 +1,7 @@
-﻿using Sencilla.Core.Injection;
-using Sencilla.Core.Repo;
+﻿
+using Sencilla.Core;
 using Sencilla.Infrastructure.SqlMapper.Impl;
+using System.Threading.Tasks;
 
 namespace Sencilla.Impl.Repository.SqlMapper
 {
@@ -25,9 +26,10 @@ namespace Sencilla.Impl.Repository.SqlMapper
         /// <summary>
         /// 
         /// </summary>
-        public void Save()
+        public async Task<int> Save()
         {
             ContextImpl?.Commit();
+            return 0;
         }
 
         /// <summary>

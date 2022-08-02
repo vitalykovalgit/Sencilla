@@ -1,6 +1,6 @@
 ﻿using Sencilla.Core;
 
-namespace Sencilla.Component.Security.Entity
+namespace Sencilla.Component.Security
 {
     /// <summary>
     /// 

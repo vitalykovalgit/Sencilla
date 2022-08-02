@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Sencilla.Component.Config.Contract;
+using Sencilla.Component.Config;
 
-namespace Sencilla.Component.Config.Impl
+namespace Sencilla.Component.Config
 {
     /// <summary>
     /// Provide config from appsettings.json file 
@@ -10,6 +10,7 @@ namespace Sencilla.Component.Config.Impl
     public class AppSettingsJsonConfigProvider<TConfig> : IConfigProvider<TConfig> where TConfig : class, new()
     {
         IConfiguration Config;
+
         public AppSettingsJsonConfigProvider(IConfiguration config)
         {
             Config = config;

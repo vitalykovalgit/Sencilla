@@ -7,6 +7,17 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class Bootstrap
     {
         /// <summary>
+        /// Add components to Sencilla.
+        /// This is empty method just to reference 
+        /// component's assambly so it will be loaded 
+        /// and Sencilla will register everything 
+        /// </summary>
+        public static IServiceCollection AddSencillaComponents(this IServiceCollection builder, params Type[] components)
+        {
+            return builder;
+        }
+
+        /// <summary>
         /// Register sencilla framework builder, 
         /// ISencillaBuilder must be resolved in configure method to configure sencilla
         /// </summary>

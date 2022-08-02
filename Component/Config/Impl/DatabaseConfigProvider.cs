@@ -1,7 +1,5 @@
 ﻿
-using Sencilla.Component.Config.Contract;
-
-namespace Sencilla.Component.Config.Impl
+namespace Sencilla.Component.Config
 {
     /// <summary>
     /// Retrieve configuration from DB 

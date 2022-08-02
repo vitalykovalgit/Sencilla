@@ -1,4 +1,4 @@
-﻿namespace Sencilla.Component.Files.Impl.ContentProvider
+﻿namespace Sencilla.Component.Files
 {
     public class DriveFileProviderOption
     {

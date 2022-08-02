@@ -33,7 +33,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Geograph
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Localization", "Component\Localization\Sencilla.Component.Localization.csproj", "{1A0AFB7E-1BA0-4211-ABE7-8D9BFE803C6C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Security", "Component\PermissionMatrix\Sencilla.Component.Security.csproj", "{522EF56D-387D-4C89-9A2C-F0E89B723490}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Security", "Component\Security\Sencilla.Component.Security.csproj", "{522EF56D-387D-4C89-9A2C-F0E89B723490}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Validation", "Component\Validation\Sencilla.Component.Validation.csproj", "{31D2DA7D-A4C8-4280-B92E-24351D4DAC2F}"
 EndProject

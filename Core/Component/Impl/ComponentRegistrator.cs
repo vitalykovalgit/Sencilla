@@ -13,7 +13,7 @@
         /// </summary>
         /// <param name="container"></param>
         /// <param name="type"></param>
-        public void Register(IRegistrator container, Type type)
+        public void Register(IContainer container, Type type)
         {
             var componentInterface = typeof(IComponent);
             var isComponent = componentInterface.IsAssignableFrom(type) && type.IsClass && !type.IsAbstract;
@@ -32,7 +32,7 @@
         /// Initialize all founded components 
         /// </summary>
         /// <param name="container"></param>
-        public void InitComponents(IRegistrator container)
+        public void InitComponents(IContainer container)
         {
             foreach (var c in Components)
             {

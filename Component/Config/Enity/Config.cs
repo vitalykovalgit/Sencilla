@@ -1,7 +1,7 @@
 ﻿
 using Sencilla.Core;
 
-namespace Sencilla.Component.Config.Enity
+namespace Sencilla.Component.Config
 {
     public class Config : IEntity
     {

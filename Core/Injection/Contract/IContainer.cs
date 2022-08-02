@@ -4,7 +4,7 @@ namespace Sencilla.Core
     /// <summary>
     /// Register type in container 
     /// </summary>
-    public interface IRegistrator
+    public interface IContainer
     {
         /// <summary>
         /// Register implemention for interface 

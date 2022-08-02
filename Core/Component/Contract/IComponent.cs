@@ -14,7 +14,7 @@ namespace Sencilla.Core
         /// <summary>
         /// Initialize the component 
         /// </summary>
-        void Init(IRegistrator container);
+        void Init(IContainer container);
         
     }
 }

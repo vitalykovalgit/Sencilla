@@ -2,6 +2,22 @@
 
 namespace Microsoft.AspNetCore.Mvc
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
+    public class CrudApiController<TEntity> : CrudApiController<TEntity, int> where TEntity : class, IEntity<int>, new()
+    {
+        public CrudApiController(IResolver resolver) : base(resolver)
+        {
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <typeparam name="TKey"></typeparam>
     public class CrudApiController<TEntity, TKey> : ApiController where TEntity : class, IEntity<TKey>, new()
     {
         public CrudApiController(IResolver resolver) : base(resolver)
@@ -26,47 +42,52 @@ namespace Microsoft.AspNetCore.Mvc
             return await AjaxAction((IReadRepository<TEntity, TKey> repo) => repo.GetCount(filter, token));
         }
 
-        [HttpPut, Route("")]
-        public virtual async Task<IActionResult> Create([FromBody] TEntity entity, CancellationToken token)
+        [HttpPut, Route("{id}")]
+        public virtual async Task<IActionResult> CreateOne(int id, [FromBody] TEntity entity, CancellationToken token)
         {
             return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.Create(entity, token));
         }
 
-        [HttpPut, Route("multiple")]
+        [HttpPut, Route("")]
         public virtual async Task<IActionResult> CreateMany([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
         {
             return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.Create(entities, token));
         }
 
-        [HttpPost, Route("")]
-        public virtual async Task<IActionResult> Update(TEntity entity, CancellationToken token)
+        [HttpPost, Route("{id}")]
+        public virtual async Task<IActionResult> UpdateOne(int id, TEntity entity, CancellationToken token)
         {
             return await AjaxAction((IUpdateRepository<TEntity, TKey> repo) => repo.Update(entity));
         }
 
-        [HttpPost, Route("remove")]
-        public virtual async Task<IActionResult> Remove([FromBody] TEntity entity)
+        [HttpPost, Route("")]
+        public virtual async Task<IActionResult> UpdateMany(IEnumerable<TEntity> entities, CancellationToken token)
         {
-            return await AjaxAction((IRemoveRepository<TEntity, TKey> repo) => repo.Remove(entity));
+            return await AjaxAction((IUpdateRepository<TEntity, TKey> repo) => repo.Update(entities));
+        }
+
+        [HttpPost, Route("remove")]
+        public virtual async Task<IActionResult> Remove([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
+        {
+            return await AjaxAction((IRemoveRepository<TEntity, TKey> repo) => repo.Remove(entities, token));
         }
 
         [HttpPost, Route("undo")]
-        public virtual async Task<IActionResult> Undo([FromBody] TEntity entity)
+        public virtual async Task<IActionResult> Undo([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
         {
-            return await AjaxAction((IRemoveRepository<TEntity, TKey> repo) => repo.Undo(entity));
+            return await AjaxAction((IRemoveRepository<TEntity, TKey> repo) => repo.Undo(entities, token));
         }
 
         [HttpDelete, Route("{id}")]
-        public virtual async Task<IActionResult> Delete(TKey id)
+        public virtual async Task<IActionResult> Delete(TKey id, [FromBody] TEntity entity, CancellationToken token)
         {
-            return await AjaxAction((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(id));
+            return await AjaxAction((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(id, token));
         }
 
         [HttpDelete, Route("")]
-        public virtual async Task<IActionResult> Delete(TEntity entity)
+        public virtual async Task<IActionResult> Delete(IEnumerable<TEntity> entities, CancellationToken token)
         {
-            return await AjaxAction((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(entity));
+            return await AjaxAction((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(entities, token));
         }
-
     }
 }

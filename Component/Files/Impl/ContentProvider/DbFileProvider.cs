@@ -1,9 +1,4 @@
-﻿
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Sencilla.Component.Files.Impl.ContentProvider
+﻿namespace Sencilla.Component.Files
 {
     public class DbFileProvider : IFileContentProvider
     {

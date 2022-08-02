@@ -1,11 +1,8 @@
 ﻿
-using System;
+using Sencilla.Component.Config;
 using System.Globalization;
-using System.Threading;
-using System.Threading.Tasks;
-using Sencilla.Component.Config.Contract;
 
-namespace Sencilla.Component.Files.Impl.ContentProvider
+namespace Sencilla.Component.Files
 {
     public class DriveFileProvider : IFileContentProvider
     {

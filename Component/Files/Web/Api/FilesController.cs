@@ -1,16 +1,9 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 
 using Sencilla.Core;
 
-using Sencilla.Web.Api;
-using System.Net.Http.Headers;
-using System.Net.Mime;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Sencilla.Component.Files
 {
@@ -26,14 +19,13 @@ namespace Sencilla.Component.Files
         readonly IFileContentProvider mContentProvider;
 
         public FilesController(
-            ILogger logger,
             IResolver resolver,
             IFileContentProvider contentProvider,
             IReadRepository<File, ulong> readFileRepo,
             IUpdateRepository<File, ulong> updateFileRepo,
             ICreateRepository<File, ulong> createFileRepo,
             IRemoveRepository<File, ulong> removeFileRepo,
-            IDeleteRepository<File, ulong> deleteFileRepo) : base(logger, resolver)
+            IDeleteRepository<File, ulong> deleteFileRepo) : base(resolver)
         {
             mReadFileRepo = readFileRepo;
             mUpdateFileRepo = updateFileRepo;
@@ -179,7 +171,7 @@ namespace Sencilla.Component.Files
 
             // Remove file 
             // TODO: Think about content 
-            await mRemoveFileRepo.Remove(new[] { fileId }, token);
+            await mRemoveFileRepo.Remove(new File { Id = fileId }, token);
 
             return Ok(fileId);
         }
