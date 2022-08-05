@@ -1,6 +1,9 @@
 ﻿
 namespace Sencilla.Core
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class Filter : IFilter
     {
         public int? Skip { get; set; }
@@ -20,6 +23,14 @@ namespace Sencilla.Core
             var props = Properties ??= new Dictionary<string, IEnumerable<object>>();
             props[name] = values;
         }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
+    public class Filter<TEntity> : Filter where TEntity : class, IBaseEntity
+    { 
     }
 
 }

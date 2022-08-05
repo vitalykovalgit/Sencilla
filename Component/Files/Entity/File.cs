@@ -6,7 +6,8 @@ using Sencilla.Core;
 namespace Sencilla.Component.Files
 {
 	public class File 
-        : IEntityCreateable<ulong>
+        : IEntity<ulong>
+        , IEntityCreateable
         , IEntityUpdateable<ulong>
         , IEntityRemoveable<ulong>
         , IEntityDeleteable<ulong>

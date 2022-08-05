@@ -17,10 +17,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
     <ProjectReference Include="..\..\Web\Sencilla.Web.csproj" />
+    <ProjectReference Include="..\Users\Sencilla.Component.Users.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Impl\" />
+    <Folder Include="Contract\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -13,7 +13,7 @@ namespace Sencilla.Repository.EntityFramework
        where TEntity : class, IEntity<int>, new()
        where TContext : DbContext
     {
-        public ReadRepository(IResolver resolver) : base(resolver) {}
+        public ReadRepository(IResolver resolver, TContext context) : base(resolver, context) { }
     }
 
     /// <summary>
@@ -26,49 +26,41 @@ namespace Sencilla.Repository.EntityFramework
            where TEntity : class, IEntity<TKey>, new()
            where TContext : DbContext
     {
-        public ReadRepository(IResolver resolver) : base(resolver)
+        public ReadRepository(IResolver resolver, TContext context) : base(resolver, context)
         {
         }
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
         public async Task<TEntity?> GetById(TKey id, CancellationToken token = default, params Expression<Func<TEntity, object>>[] with)
         {
-            using (var ctx = R<TContext>())
-            {
-                return await ctx.Query<TEntity>()
-                                .Constraints(Constraints)
-                                .FirstOrDefaultAsync(e => e.Id.Equals(id), token);
-            }
+            var query = await Query(null);
+            return await query.FirstOrDefaultAsync(e => e.Id.Equals(id), token);
         }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
         public async Task<IEnumerable<TEntity>> GetByIds(IEnumerable<TKey> ids, CancellationToken token = default, params Expression<Func<TEntity, object>>[] includes)
         {
-            using (var ctx = R<TContext>())
-            {
-                return await ctx.Query<TEntity>()
-                                .Constraints(Constraints)
-                                .Where(e => ids.Contains(e.Id))
-                                .ToListAsync(token);
-            }
+            var query = await Query(null);
+            return await query.Where(e => ids.Contains(e.Id)).ToListAsync(token);
         }
 
         public async Task<IEnumerable<TEntity>> GetAll(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[] with)
         {
-            using (var ctx = R<TContext>())
-            {
-                return await ctx.Query<TEntity>()
-                                .Constraints(Constraints, filter)
-                                .ToListAsync(token);
-            }
+            var query = await Query(filter);
+            return await query.ToListAsync(token);
         }
 
         public async Task<int> GetCount(IFilter? filter = null, CancellationToken token = default)
         {
-            using (var ctx = R<TContext>())
-            {
-                return await ctx.Query<TEntity>()
-                                .Constraints(Constraints, filter)
-                                .CountAsync(token);
-            }
+            var query = await Query(filter);
+            return await query.CountAsync(token);
+        }
+
+        protected Task<IQueryable<TEntity>> Query(IFilter? filter)
+        {
+            return DbContext.Query<TEntity>()
+                            .AsNoTracking()
+                            .Constraints(Constraints, filter);
         }
     }
 }

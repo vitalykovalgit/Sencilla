@@ -15,11 +15,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Contract\" />
     <Folder Include="Database\Data\" />
-    <Folder Include="Impl\" />
     <Folder Include="Web\Api\" />
     <Folder Include="Web\Entity\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>

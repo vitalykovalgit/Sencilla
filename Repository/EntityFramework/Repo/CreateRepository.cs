@@ -9,10 +9,10 @@ namespace Sencilla.Repository.EntityFramework
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TContext"></typeparam>
     public class CreateRepository<TEntity, TContext> : CreateRepository<TEntity, TContext, int>, ICreateRepository<TEntity>
-       where TEntity : class, IEntityCreateable<int>, new()
+       where TEntity : class, IEntity<int>, IEntityCreateable, new()
        where TContext : DbContext
     {
-        public CreateRepository(IResolver resolver) : base(resolver) {}
+        public CreateRepository(IResolver resolver, TContext context): base(resolver, context){ }
     }
 
     /// <summary>
@@ -22,22 +22,21 @@ namespace Sencilla.Repository.EntityFramework
     /// <typeparam name="TContext"></typeparam>
     /// <typeparam name="TKey"></typeparam>
     public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity, TContext, TKey>, ICreateRepository<TEntity, TKey>
-           where TEntity : class, IEntityCreateable<TKey>, new()
+           where TEntity : class, IEntity<TKey>, IEntityCreateable, new()
            where TContext : DbContext
     {
-        public CreateRepository(IResolver resolver) : base(resolver)
+        public CreateRepository(IResolver resolver, TContext context) : base(resolver, context)
         {
         }
 
         public async Task<TEntity> Create(TEntity entity, CancellationToken token = default)
         {
-            // Update ceration date 
-            entity.CreatedDate = DateTime.UtcNow;
+            // Update creation date if entity is trackable
+            if (entity is IEntityCreateableTrack)
+                ((IEntityCreateableTrack)entity).CreatedDate = DateTime.UtcNow;
 
-            // Add to context and save 
-            using var context = R<TContext>();
-            context.Add(entity);
-            await context.SaveChangesAsync(token);
+            DbContext.Add(entity);
+            await Save(token);
             return entity;
         }
 
@@ -45,12 +44,14 @@ namespace Sencilla.Repository.EntityFramework
         {
             // update creation date 
             foreach (var e in entities)
-                e.CreatedDate = DateTime.UtcNow;
+            {
+                if (e is IEntityCreateableTrack)
+                   ((IEntityCreateableTrack)e).CreatedDate = DateTime.UtcNow;
+            }
 
             // Add to context and save 
-            using var context = R<TContext>();
-            context.AddRange(entities, token);
-            await context.SaveChangesAsync(token);
+            DbContext.AddRange(entities);
+            await Save(token);
             return entities;
         }
     }

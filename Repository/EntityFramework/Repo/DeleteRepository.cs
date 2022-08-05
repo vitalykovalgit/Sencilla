@@ -8,7 +8,7 @@ namespace Sencilla.Repository.EntityFramework
        where TEntity : class, IEntityDeleteable<int>, new()
        where TContext : DbContext
     {
-        public DeleteRepository(IResolver resolver) : base(resolver) {}
+        public DeleteRepository(IResolver resolver, TContext context) : base(resolver, context) { }
     }
 
     /// <summary>
@@ -21,44 +21,42 @@ namespace Sencilla.Repository.EntityFramework
            where TEntity : class, IEntityDeleteable<TKey>, new()
            where TContext : DbContext
     {
-        public DeleteRepository(IResolver resolver) : base(resolver)
+        public DeleteRepository(IResolver resolver, TContext context): base(resolver, context)
         {
         }
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
         public async Task<int> Delete(TKey id, CancellationToken token = default)
         {
-            using var context = R<TContext>();
-            var entity = context.Set<TEntity>().FirstOrDefault(e => e.Id.Equals(id));
+            var entity = DbContext.Set<TEntity>().FirstOrDefault(e => e.Id.Equals(id));
             if (entity != null)
             {
-                context.Remove(entity);
-                return await context.SaveChangesAsync(token);
+                DbContext.Remove(entity);
+                return await Save(token);
             }
 
             return 0;
         }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
         public async Task<int> Delete(TEntity entity, CancellationToken token = default)
         {
-            using var context = R<TContext>();
-            context.Remove(entity);
-            var count = await context.SaveChangesAsync(token);
+            DbContext.Remove(entity);
+            var count = await Save(token);
             return count;
         }
 
         public async Task<int> Delete(IEnumerable<TKey> ids, CancellationToken token = default)
         {
-            using var context = R<TContext>();
-            var count = await context.Set<TEntity>().Where(e => ids.Contains(e.Id)).DeleteAsync(token);
-            await context.SaveChangesAsync(token);
+            var count = await DbContext.Set<TEntity>().Where(e => ids.Contains(e.Id)).DeleteAsync(token);
+            await Save(token);
             return count;
         }
 
         public async Task<int> Delete(IEnumerable<TEntity> entities, CancellationToken token = default)
         {
-            using var context = R<TContext>();
-            context.RemoveRange(entities);
-            var count = await context.SaveChangesAsync(token);
+            DbContext.RemoveRange(entities);
+            var count = await Save(token);
             return count;
         }
     }

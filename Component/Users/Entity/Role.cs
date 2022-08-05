@@ -2,7 +2,7 @@
 using Sencilla.Core;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Sencilla.Component.Security
+namespace Sencilla.Component.Users
 {
 
     [Table(nameof(Role), Schema = "sec")]

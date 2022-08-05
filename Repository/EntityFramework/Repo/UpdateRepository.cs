@@ -12,7 +12,7 @@ namespace Sencilla.Repository.EntityFramework
        where TEntity : class, IEntityUpdateable<int>, new()
        where TContext : DbContext
     {
-        public UpdateRepository(IResolver resolver) : base(resolver) {}
+        public UpdateRepository(IResolver resolver, TContext context) : base(resolver, context) { }
     }
 
     /// <summary>
@@ -25,7 +25,7 @@ namespace Sencilla.Repository.EntityFramework
            where TEntity : class, IEntityUpdateable<TKey>, new()
            where TContext : DbContext
     {
-        public UpdateRepository(IResolver resolver) : base(resolver)
+        public UpdateRepository(IResolver resolver, TContext context) : base(resolver, context)
         {
         }
 
@@ -34,9 +34,8 @@ namespace Sencilla.Repository.EntityFramework
             // Updated date 
             entity.UpdatedDate = DateTime.UtcNow;
 
-            using var context = R<TContext>();
-            context.Update(entity);
-            await context.SaveChangesAsync(token);
+            DbContext.Update(entity);
+            await Save(token);
 
             return entity;
         }
@@ -46,9 +45,8 @@ namespace Sencilla.Repository.EntityFramework
             foreach (var e in entities)
                 e.UpdatedDate = DateTime.UtcNow;
 
-            using var context = R<TContext>();
-            context.UpdateRange(entities);
-            await context.SaveChangesAsync(token);
+            DbContext.UpdateRange(entities);
+            await Save(token);
             
             return entities;
         }

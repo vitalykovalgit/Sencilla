@@ -5,23 +5,15 @@ namespace Sencilla.Core
     /// Used to check if entity is creatable 
     /// without generic parameters
     /// </summary>
-    public interface IBaseEntityCreateable : IBaseEntity
+    public interface IEntityCreateable: IBaseEntity
     {
-        DateTime CreatedDate { get; set; }
     }
 
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TKey"></typeparam>
-    public interface IEntityCreateable<TKey> : IEntity<TKey>, IBaseEntityCreateable
+    public interface IEntityCreateableTrack: IEntityCreateable
     {
-    }
-
-    /// <summary>
-    /// interafce with generic parameters as int by default 
-    /// </summary>
-    public interface IEntityCreateable : IEntityCreateable<int>
-    {
+        DateTime CreatedDate { get; set; }
     }
 }

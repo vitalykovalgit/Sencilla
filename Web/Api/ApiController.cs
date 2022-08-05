@@ -32,6 +32,17 @@ namespace Microsoft.AspNetCore.Mvc
             return StatusCode((int)HttpStatusCode.Gone, msg);
         }
 
+        protected IActionResult Forbidden(string? msg = null)
+        {
+            return StatusCode((int)HttpStatusCode.Forbidden, msg);
+        }
+
+        protected IActionResult Unauthorized(string? msg = null)
+        {
+            return StatusCode((int)HttpStatusCode.Unauthorized, msg);
+        }
+
+
         protected IActionResult InternalServerError(Exception? ex = null)
         {
             return StatusCode((int)HttpStatusCode.InternalServerError, $"{ex?.Message}\r\n{ex?.StackTrace}");
@@ -46,11 +57,11 @@ namespace Microsoft.AspNetCore.Mvc
             //if (ex is EntityNotExistException)
             //    return NotFound(ex.Message);
 
-            //if (ex is EntityDeletedException)
-            //    return ResourceGone(ex.Message);
+            if (ex is UnauthorizedException)
+                return Unauthorized(ex.Message);
 
-            //if (ex is EntityAccessForbiddenException)
-            //    return Forbidden(ex.Message);
+            if (ex is ForbiddenException)
+                return Forbidden(ex.Message);
 
             return InternalServerError(ex);
         }

@@ -55,7 +55,7 @@ namespace Sencilla.Repository.EntityFramework
         private void RegisterCreateRepo(IContainer container, Type type, Type context, Type key)
         {
             // register create repo 
-            if (typeof(IEntityCreateable<>).MakeGenericType(key).IsAssignableFrom(type))
+            if (typeof(IEntityCreateable).IsAssignableFrom(type))
             {
                 container.RegisterType(
                     typeof(ICreateRepository<,>).MakeGenericType(type, key),

@@ -11,6 +11,6 @@ namespace Sencilla.Core
         /// Save changes
         /// </summary>
         /// <returns>Count of saved entities</returns>
-        Task<int> Save();
+        Task<int> Save(CancellationToken token = default);
     }
 }

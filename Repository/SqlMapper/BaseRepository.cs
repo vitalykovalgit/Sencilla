@@ -1,6 +1,7 @@
 ﻿
 using Sencilla.Core;
 using Sencilla.Infrastructure.SqlMapper.Impl;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sencilla.Impl.Repository.SqlMapper
@@ -26,7 +27,7 @@ namespace Sencilla.Impl.Repository.SqlMapper
         /// <summary>
         /// 
         /// </summary>
-        public async Task<int> Save()
+        public async Task<int> Save(CancellationToken token = default)
         {
             ContextImpl?.Commit();
             return 0;

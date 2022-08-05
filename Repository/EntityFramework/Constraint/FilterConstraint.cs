@@ -7,7 +7,9 @@ namespace Sencilla.Repository.EntityFramework
     [Implement(typeof(IReadConstraint))]
     public class FilterConstraint : IReadConstraint
     {
-        public IQueryable<TEntity> Apply<TEntity>(IQueryable<TEntity> query, IFilter? filter)
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        public async Task<IQueryable<TEntity>> Apply<TEntity>(IQueryable<TEntity> query, IFilter? filter)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             if (filter?.Skip != null)
                 query = query.Skip(filter.Skip.Value);
@@ -17,9 +19,11 @@ namespace Sencilla.Repository.EntityFramework
 
             if (filter?.OrderBy?.Length > 0)
             {
+#pragma warning disable CS8604 // Possible null reference argument.
                 query = (filter.Descending ?? false)
                       ? query.OrderByDescending(e => EF.Property<object>(e, filter.OrderBy.First()))
                       : query.OrderBy(e => EF.Property<object>(e, filter.OrderBy.First()));
+#pragma warning restore CS8604 // Possible null reference argument.
             }
 
             // 
