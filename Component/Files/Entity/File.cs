@@ -8,9 +8,9 @@ namespace Sencilla.Component.Files
 	public class File 
         : IEntity<ulong>
         , IEntityCreateable
-        , IEntityUpdateable<ulong>
-        , IEntityRemoveable<ulong>
-        , IEntityDeleteable<ulong>
+        , IEntityUpdateable
+        , IEntityRemoveable
+        , IEntityDeleteable
     {
 		public ulong Id { get; set; }
 

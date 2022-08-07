@@ -8,11 +8,10 @@ namespace Sencilla.Component.Security
     public class SecurityConstraint : Resolveable, IReadConstraint
     {
         ICurrentUserProvider UserProvider;
-        //IReadRepository<Matrix> MatrixRepo;
+
         public SecurityConstraint(ICurrentUserProvider currentUserProvider, IResolver resolver): base(resolver)
         { 
             UserProvider = currentUserProvider;
-            //MatrixRepo = resolver.Resolve<>;
         }
 
         /// <summary>
@@ -41,47 +40,29 @@ namespace Sencilla.Component.Security
             var resource = ResourceName<TEntity>(); // resource name or all
 
             // Allow root access 
-            using var access = Access.Root();
-            
-            var matrix = await R<IReadRepository<Matrix>>().GetAll();
+            using (var rootAccess = Access.Root())
+            {
+                // Get accesses 
+                var matrix = await R<IReadRepository<Matrix>>().GetAll();
+                var accesses = matrix.Where(m =>
+                    (resource.Equals(m.Resource, StringComparison.OrdinalIgnoreCase)) &&
+                    (action & m.Action) == action &&
+                    (roles.Any(r => r.RoleId == m.Role))
+                );
 
-            var accesses = matrix.Where(m =>
-                (resource.Equals(m.Resource, StringComparison.OrdinalIgnoreCase)) &&
-                (action & m.Action) == action &&
-                (roles.Any(r => r.RoleId == m.Role))
-            );
+                // if operation is not allowed throw forbid exception 
+                if (!accesses.Any())
+                    throw new ForbiddenException();
 
-            // if operation is not allowed throw forbid exception 
-            if (!accesses.Any())
-                throw new ForbiddenException();
-
-
-            // read matrix with security constraints
-            // {"State": { "in": [1, 2, 3, 4, 5] } } & {"UserId": { "in": [1, 2, 3, 4, 5] } }
-            //foreach (var a in accesses)
-            //{
-            //    a.Constraints
-            //}
-
-            // apply constraints
-            //query = query.Where(e => EF.Property<object>(e, "Name").Equals("Milan"));
-
+                // Apply constraints 
+                foreach (var a in accesses)
+                {
+                    var expr = ConstraintExpressionParser.Parse(a.Constraint)?.ToExpression<TEntity>();
+                    if (expr != null)
+                        query = query.Where(expr);
+                }
+            }
             return query;
         }
-    }
-
-    //public class 
-
-    public class Expression
-    {
-        public object? Eq { get; set; }
-        
-        public object? Ls { get; set; }
-        
-        public object? Mr { get; set; }
-
-        public object? Lk { get; set; }
-
-        public object[]? In { get; set; }
     }
 }

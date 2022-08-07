@@ -5,7 +5,7 @@ using Sencilla.Core;
 namespace Sencilla.Repository.EntityFramework
 {
     public class DeleteRepository<TEntity, TContext> : DeleteRepository<TEntity, TContext, int>, IDeleteRepository<TEntity>
-       where TEntity : class, IEntityDeleteable<int>, new()
+       where TEntity : class, IEntity<int>, IEntityDeleteable, new()
        where TContext : DbContext
     {
         public DeleteRepository(IResolver resolver, TContext context) : base(resolver, context) { }
@@ -18,7 +18,7 @@ namespace Sencilla.Repository.EntityFramework
     /// <typeparam name="TContext"></typeparam>
     /// <typeparam name="TKey"></typeparam>
     public class DeleteRepository<TEntity, TContext, TKey> : ReadRepository<TEntity, TContext, TKey>, IDeleteRepository<TEntity, TKey>
-           where TEntity : class, IEntityDeleteable<TKey>, new()
+           where TEntity : class, IEntity<TKey>, IEntityDeleteable, new()
            where TContext : DbContext
     {
         public DeleteRepository(IResolver resolver, TContext context): base(resolver, context)

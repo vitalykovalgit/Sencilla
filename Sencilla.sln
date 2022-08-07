@@ -45,6 +45,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mobile.Core", "Mob
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Mobile.Xamarin.Droid", "Mobile\Droid\Sencilla.Mobile.Xamarin.Droid.csproj", "{F217DD02-0D08-4008-A66E-4AFC4B9D361C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{82D292C4-D134-42A4-8D9A-7E1D5B7C260F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Component", "Component", "{20C65D60-A80A-4583-8CBE-01BA9E306BA3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Security.Tests", "Tests\Component\Security\Sencilla.Component.Security.Tests.csproj", "{8D521BDE-16D9-4715-88D8-E50A78DF5713}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -119,6 +125,10 @@ Global
 		{F217DD02-0D08-4008-A66E-4AFC4B9D361C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F217DD02-0D08-4008-A66E-4AFC4B9D361C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F217DD02-0D08-4008-A66E-4AFC4B9D361C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D521BDE-16D9-4715-88D8-E50A78DF5713}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D521BDE-16D9-4715-88D8-E50A78DF5713}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D521BDE-16D9-4715-88D8-E50A78DF5713}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D521BDE-16D9-4715-88D8-E50A78DF5713}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -139,6 +149,8 @@ Global
 		{CA769FFC-19A6-4909-BE8A-99114ECD0A62} = {EAFE8751-7E1F-4BFE-82DA-B747451EF49A}
 		{0CE3D262-2AA8-4DF4-837D-B9C6071B86B3} = {986CA949-ABB6-41F4-90EA-A2C2201E9CFE}
 		{F217DD02-0D08-4008-A66E-4AFC4B9D361C} = {986CA949-ABB6-41F4-90EA-A2C2201E9CFE}
+		{20C65D60-A80A-4583-8CBE-01BA9E306BA3} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
+		{8D521BDE-16D9-4715-88D8-E50A78DF5713} = {20C65D60-A80A-4583-8CBE-01BA9E306BA3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5EE15D7B-0AF6-4664-9D0B-7140B5B5961F}

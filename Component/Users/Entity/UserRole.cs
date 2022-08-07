@@ -6,8 +6,9 @@ namespace Sencilla.Component.Users
     /// 
     /// </summary>
     public class UserRole 
-        : IEntityCreateableTrack
-        , IEntityUpdateable
+        : IEntity
+        , IEntityCreateableTrack
+        , IEntityUpdateableTrack
         , IEntityDeleteable
     {
         public int Id { get; set; }

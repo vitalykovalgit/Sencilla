@@ -4,23 +4,18 @@ namespace Sencilla.Core
     /// <summary>
     /// Allow entity to be updatable 
     /// </summary>
-    public interface IBaseEntityUpdateable : IBaseEntity
+    public interface IEntityUpdateable : IBaseEntity
     {
-        /// <summary>
-        /// Last updated date time 
-        /// </summary>
-        DateTime UpdatedDate { get; set; }
     }
 
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TKey"></typeparam>
-	public interface IEntityUpdateable<TKey> : IEntity<TKey>, IBaseEntityUpdateable
+    public interface IEntityUpdateableTrack : IEntityUpdateable
     {
-    }
-
-    public interface IEntityUpdateable : IEntityUpdateable<int>
-    {
+        /// <summary>
+        /// Last updated date time 
+        /// </summary>
+        DateTime UpdatedDate { get; set; }
     }
 }

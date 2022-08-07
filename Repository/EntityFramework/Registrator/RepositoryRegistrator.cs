@@ -73,7 +73,7 @@ namespace Sencilla.Repository.EntityFramework
         private void RegisterUpdateRepo(IContainer container, Type type, Type context, Type key)
         {
             // register update repo 
-            if (typeof(IEntityUpdateable<>).MakeGenericType(key).IsAssignableFrom(type))
+            if (typeof(IEntityUpdateable).IsAssignableFrom(type))
             {
                 container.RegisterType(
                     typeof(IUpdateRepository<,>).MakeGenericType(type, key),
@@ -91,7 +91,7 @@ namespace Sencilla.Repository.EntityFramework
         private void RegisterRemoveRepo(IContainer container, Type type, Type context, Type key)
         {
             // register remvoe repo 
-            if (typeof(IEntityRemoveable<>).MakeGenericType(key).IsAssignableFrom(type))
+            if (typeof(IEntityRemoveable).IsAssignableFrom(type))
             {
                 container.RegisterType(
                     typeof(IRemoveRepository<,>).MakeGenericType(type, key),
@@ -109,7 +109,7 @@ namespace Sencilla.Repository.EntityFramework
         private void RegisterDeleteRepo(IContainer container, Type type, Type context, Type key)
         {
             // register delete repo 
-            if (typeof(IEntityDeleteable<>).MakeGenericType(key).IsAssignableFrom(type))
+            if (typeof(IEntityDeleteable).IsAssignableFrom(type))
             {
                 container.RegisterType(
                     typeof(IDeleteRepository<,>).MakeGenericType(type, key),

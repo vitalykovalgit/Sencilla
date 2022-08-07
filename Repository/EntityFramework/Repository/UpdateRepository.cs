@@ -9,7 +9,7 @@ namespace Sencilla.Repository.EntityFramework
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TContext"></typeparam>
     public class UpdateRepository<TEntity, TContext> : UpdateRepository<TEntity, TContext, int>, IUpdateRepository<TEntity>
-       where TEntity : class, IEntityUpdateable<int>, new()
+       where TEntity : class, IEntity<int>, IEntityUpdateable, new()
        where TContext : DbContext
     {
         public UpdateRepository(IResolver resolver, TContext context) : base(resolver, context) { }
@@ -22,7 +22,7 @@ namespace Sencilla.Repository.EntityFramework
     /// <typeparam name="TContext"></typeparam>
     /// <typeparam name="TKey"></typeparam>
     public class UpdateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity, TContext, TKey>, IUpdateRepository<TEntity, TKey>
-           where TEntity : class, IEntityUpdateable<TKey>, new()
+           where TEntity : class, IEntity<TKey>, IEntityUpdateable, new()
            where TContext : DbContext
     {
         public UpdateRepository(IResolver resolver, TContext context) : base(resolver, context)
@@ -32,7 +32,8 @@ namespace Sencilla.Repository.EntityFramework
         public async Task<TEntity> Update(TEntity entity, CancellationToken token = default)
         {
             // Updated date 
-            entity.UpdatedDate = DateTime.UtcNow;
+            if (entity is IEntityUpdateableTrack)
+               (entity as IEntityUpdateableTrack).UpdatedDate = DateTime.UtcNow;
 
             DbContext.Update(entity);
             await Save(token);
@@ -43,7 +44,10 @@ namespace Sencilla.Repository.EntityFramework
         public async Task<IEnumerable<TEntity>> Update(IEnumerable<TEntity> entities, CancellationToken token = default)
         {
             foreach (var e in entities)
-                e.UpdatedDate = DateTime.UtcNow;
+            {
+                if (e is IEntityUpdateableTrack)
+                   (e as IEntityUpdateableTrack).UpdatedDate = DateTime.UtcNow;
+            }
 
             DbContext.UpdateRange(entities);
             await Save(token);

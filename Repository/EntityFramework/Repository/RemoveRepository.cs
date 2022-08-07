@@ -9,7 +9,7 @@ namespace Sencilla.Repository.EntityFramework
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TContext"></typeparam>
     public class RemoveRepository<TEntity, TContext> : RemoveRepository<TEntity, TContext, int>, IRemoveRepository<TEntity>
-       where TEntity : class, IEntityRemoveable<int>, new()
+       where TEntity : class, IEntity<int>, IEntityRemoveable, new()
        where TContext : DbContext
     {
         public RemoveRepository(IResolver resolver, TContext context) : base(resolver, context) { }
@@ -19,7 +19,7 @@ namespace Sencilla.Repository.EntityFramework
     /// 
     /// </summary>
     public class RemoveRepository<TEntity, TContext, TKey> : UpdateRepository<TEntity, TContext, TKey>, IRemoveRepository<TEntity, TKey>
-           where TEntity : class, IEntityRemoveable<TKey>, new()
+           where TEntity : class, IEntity<TKey>, IEntityRemoveable, new()
            where TContext : DbContext
     {
         public RemoveRepository(IResolver resolver, TContext context): base(resolver, context)

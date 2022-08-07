@@ -4,7 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Sencilla.Component.Users
 {
     public class User 
-      : IEntityCreateable
+      : IEntity<int>
+      , IEntityCreateable
       , IEntityUpdateable
       , IEntityRemoveable
     {

@@ -33,7 +33,7 @@ namespace Sencilla.Repository.EntityFramework
         {
             // Update creation date if entity is trackable
             if (entity is IEntityCreateableTrack)
-                ((IEntityCreateableTrack)entity).CreatedDate = DateTime.UtcNow;
+               (entity as IEntityCreateableTrack).CreatedDate = DateTime.UtcNow;
 
             DbContext.Add(entity);
             await Save(token);
@@ -46,7 +46,7 @@ namespace Sencilla.Repository.EntityFramework
             foreach (var e in entities)
             {
                 if (e is IEntityCreateableTrack)
-                   ((IEntityCreateableTrack)e).CreatedDate = DateTime.UtcNow;
+                   (e as IEntityCreateableTrack).CreatedDate = DateTime.UtcNow;
             }
 
             // Add to context and save 

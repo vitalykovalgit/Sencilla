@@ -2,7 +2,7 @@
 
 namespace Sencilla.Component.Users
 {
-    public class UserContact: IEntityCreateable, IEntityUpdateable, IEntityDeleteable
+    public class UserContact: IEntity, IEntityCreateable, IEntityUpdateable, IEntityDeleteable
     {
         public int Id { get; set; }
         public int UserId { get; set; }
