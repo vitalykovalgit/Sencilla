@@ -50,19 +50,19 @@ namespace Microsoft.Extensions.DependencyInjection
             Provider = provider;
         }
 
-        public TType? Resolve<TType>()
+        public TServcie? Resolve<TServcie>()
         {
-            return Provider.GetService<TType>();
+            return Provider.GetService<TServcie>();
         }
 
-        public TType? Resolve<TType>(string name)
+        public TServcie? Resolve<TServcie>(string name)
         {
-            return Provider.GetService<TType>();
+            return Resolve<TServcie>();
         }
 
-        public object Resolve(Type type)
+        public object? Resolve(Type type)
         {
-            return Provider.GetServices(type);
+            return Provider.GetService(type);
         }
 
         public IEnumerable<TType> ResolveAll<TType>()

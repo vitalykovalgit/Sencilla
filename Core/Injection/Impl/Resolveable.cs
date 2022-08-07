@@ -10,9 +10,8 @@ namespace Sencilla.Core
             Resolver = resolver;
         }
 
-        protected T? R<T>()
-        {
-            return Resolver.Resolve<T>();
-        }
+        protected T?     R<T>() => Resolver.Resolve<T>();
+        protected object R(Type type) => Resolver.Resolve(type);
+        protected IEnumerable<T> All<T>() => Resolver.ResolveAll<T>();
     }
 }
