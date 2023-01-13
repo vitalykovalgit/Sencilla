@@ -15,7 +15,6 @@
     <FileAlignment>512</FileAlignment>
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <TargetFrameworkVersion>v9.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -86,7 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Sencilla.Core.csproj">
-      <Project>{876AF7BE-6D83-44F9-82A5-7971E07401B4}</Project>
+      <Project>{3C5B8832-AFD4-44FA-938D-09DD43BEE6A2}</Project>
       <Name>Sencilla.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Injection\Unity\Sencilla.Impl.Injection.Unity.csproj">
