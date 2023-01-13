@@ -28,12 +28,22 @@ namespace Sencilla.Component.Users.Impl
         /// </summary>
         public IPrincipal? CurrentPrincipal => ContextAccessor.HttpContext.User ?? Thread.CurrentPrincipal;
 
+        /// <summary>
+        /// Convert current principal to sencilla user 
+        /// </summary>
+        /// <returns></returns>
         private User GetCurrentUser()
         {
             var user = (CurrentPrincipal as ClaimsPrincipal)?.ToUser() ?? new User();
 
-            // try read user from DB 
+            // TODO: try read user from DB 
+
+            // Add anonymous role be default 
             user.AddRole((int)RoleType.Anonymous);
+
+            // if user is not empty add general role 
+            if (!user.IsAnonymous())
+                user.AddRole((int)RoleType.User);
 
             return user;
         }

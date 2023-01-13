@@ -2,11 +2,11 @@
 CREATE TABLE [sec].[User] 
 (
 	[Id]                INT             IDENTITY NOT NULL,
-    [FirstName]         NVARCHAR (255)  NULL,
+    [FirstName]         NVARCHAR (255)  NOT NULL,
     [LastName]          NVARCHAR (255)  NULL,
     [FatherName]        NVARCHAR (255)  NULL,
 
-    [Email]             NVARCHAR (255)  NULL,
+    [Email]             NVARCHAR (255)  NOT NULL,
     [Phone]             BIGINT NULL,
     
 	[CreatedDate]       DATETIME2 (7)  NOT NULL,

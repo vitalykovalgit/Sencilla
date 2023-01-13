@@ -18,7 +18,7 @@ namespace Sencilla.Component.Users.Impl
         public static User ToUser(this ClaimsPrincipal principal)
         {
             // try parse phone 
-            ulong.TryParse(principal?.GetClaimValue(ClaimTypes.MobilePhone), out ulong phone);
+            long.TryParse(principal?.GetClaimValue(ClaimTypes.MobilePhone), out long phone);
 
             return new User
             {

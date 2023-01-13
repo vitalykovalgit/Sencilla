@@ -3,11 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sencilla.Component.Users
 {
-    public class User 
-      : IEntity<int>
-      , IEntityCreateable
-      , IEntityUpdateable
-      , IEntityRemoveable
+
+    [Table(nameof(User), Schema = "sec")]
+    public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityRemoveable
     {
         public int Id { get; set; }
         public string? FirstName { get; set; }
@@ -15,17 +13,18 @@ namespace Sencilla.Component.Users
         public string? FatherName { get; set; }
 
         public string? Email { get; set; }
-        public ulong Phone { get; set; }
+        public long Phone { get; set; }
 
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
         public DateTime? DeletedDate { get; set; }
 
         //[ForeignKey(nameof(UserRole.UserId))]
+        [NotMapped]
         public ICollection<UserRole>? Roles { get; set; }
 
         //[ForeignKey(nameof(UserAttribute.UserId))]
-        public ICollection<UserAttribute>? Attributes { get; set; }
+        public ICollection<UserClaim>? Claims { get; set; }
 
         public User AddRole(int role) 
         {
@@ -38,6 +37,11 @@ namespace Sencilla.Component.Users
             });
 
             return this;
+        }
+
+        public bool IsAnonymous() 
+        {
+            return string.IsNullOrEmpty(Email) && Phone == 0;
         }
     }
 }
