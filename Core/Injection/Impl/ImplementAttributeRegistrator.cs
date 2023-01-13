@@ -12,7 +12,10 @@ namespace Sencilla.Core.Injection.Impl
             var attributes = type.GetCustomAttributes(typeof(ImplementAttribute), true);
             foreach (ImplementAttribute attribute in attributes)
             {
-                container.RegisterType(attribute.Interface, type);
+                if (attribute.PerRequest)
+                    container.RegisterTypePerRequest(attribute.Interface, type);
+                else
+                    container.RegisterType(attribute.Interface, type);
             }
         }
     }

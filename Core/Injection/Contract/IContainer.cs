@@ -43,5 +43,11 @@ namespace Sencilla.Core
         /// <typeparam name="TInterface"></typeparam>
         /// <param name="instance"></param>
         void RegisterInstance<TInterface>(TInterface instance) where TInterface : class;
+
+        public void RegisterTypePerRequest(Type @interface, Type implementation);
+
+        public void RegisterTypePerRequest<TInterface, TImplementation>() 
+            where TInterface : class
+            where TImplementation : class, TInterface;
     }
 }

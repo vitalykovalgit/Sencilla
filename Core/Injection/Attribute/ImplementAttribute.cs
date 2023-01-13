@@ -15,6 +15,11 @@ namespace Sencilla.Core
         public Type Interface { get; }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public bool PerRequest { get; set; } = false;
+
+        /// <summary>
         /// Initialize Implement Attribute 
         /// </summary>
         /// <param name="interface"></param>

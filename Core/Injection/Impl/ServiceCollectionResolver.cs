@@ -12,6 +12,19 @@ namespace Microsoft.Extensions.DependencyInjection
             Container = container;
         }
 
+        public void RegisterTypePerRequest(Type @interface, Type implementation)
+        {
+            Container.AddScoped(@interface, implementation);
+        }
+
+        public void RegisterTypePerRequest<TInterface, TImplementation>()
+            where TInterface : class
+            where TImplementation : class, TInterface
+        {
+            Container.AddScoped<TInterface, TImplementation>();
+        }
+
+
         public void RegisterInstance(Type @interface, object instance)
         {
             Container.AddSingleton(@interface, instance);

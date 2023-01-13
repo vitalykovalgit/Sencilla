@@ -23,6 +23,11 @@ namespace Sencilla.Core
             var props = Properties ??= new Dictionary<string, IEnumerable<object>>();
             props[name] = values;
         }
+
+        public IEnumerable<object>? GetProperty(string name)
+        {
+            return Properties?[name];
+        }
     }
 
     /// <summary>
