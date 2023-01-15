@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Sencilla.Core;
 
-namespace Deloitte.PursuitFramework.Impl
+namespace Sencilla.Web
 {
     public class FilterTypeBodyBinder : IModelBinder
     {

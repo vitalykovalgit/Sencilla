@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.Extensions.Logging;
 using Sencilla.Core;
 
-namespace Deloitte.PursuitFramework.Impl
+namespace Sencilla.Web
 {
     public class FilterTypeBinder : IModelBinder
     {

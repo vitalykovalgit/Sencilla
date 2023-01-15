@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sencilla.Core;
 
-namespace Deloitte.PursuitFramework.Impl
+namespace Sencilla.Web
 {
     /// <summary>
     /// 
