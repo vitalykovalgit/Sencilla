@@ -19,9 +19,8 @@ namespace Sencilla.Component.Users
             {
                 try
                 {
-                    var container = context.RequestServices;
-
                     // get current user and check if it is not anonymous
+                    var container = context.RequestServices;
                     var currentUser = container.GetService<ICurrentUserProvider>()?.CurrentUser;
                     if (!(currentUser?.IsAnonymous() ?? true))
                     {
@@ -32,8 +31,12 @@ namespace Sencilla.Component.Users
                         {
                             // create if not exists 
                             var userCreateRepo = container.GetService<ICreateRepository<User>>();
-                            await userCreateRepo.Create(currentUser);
+                            user = await userCreateRepo.Create(currentUser);
                         }
+
+                        // Set current user to system variable
+                        var sysVars = container.GetService<ISystemVariable>();
+                        sysVars?.SetCurrentUser(user);
                     }
                 }
                 catch (Exception ex)

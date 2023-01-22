@@ -10,34 +10,36 @@ namespace Sencilla.Core
         Dictionary<string, object> Variables = new();
 
         /// <summary>
-        /// 
+        /// Add/rewrite variable in system variables
         /// </summary>
         /// <param name="name"></param>
         /// <param name="data"></param>
-        public void Add(string name, object data)
+        public void Set(string name, object data)
         {
-            Variables.Add(name, data);
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+
+            Variables[name.ToLower()] = data;
         }
 
         /// <summary>
-        /// 
+        /// The same as Get<T> where T is object?
         /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public object? Get(string name)
-        { 
-            return Variables.ContainsKey(name) ? null : Variables[name];
-        }
+        public object? Get(string? name) => Get<object?>(name);
 
         /// <summary>
         /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="name"></param>
+        /// <param name="name">name of variable, case insencitive</param>
         /// <returns></returns>
-        public T? Get<T>(string name)
+        public T? Get<T>(string? name)
         {
-            var obj = Variables.ContainsKey(name) ? null : Variables[name];
+            if (string.IsNullOrWhiteSpace(name))
+                return default(T);
+
+            var lname = name.ToLower();
+            var obj = Variables.ContainsKey(lname) ? Variables[lname] : default(T);
             return (T?)obj;
         }
     }

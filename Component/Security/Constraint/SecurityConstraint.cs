@@ -1,65 +1,11 @@
 ﻿using System.Reflection;
 using System.Linq.Dynamic.Core;
-using System.Text.RegularExpressions;
 
 using Sencilla.Core;
 using Sencilla.Component.Users;
-using System.Collections.Concurrent;
 
 namespace Sencilla.Component.Security
 {
-    public class ParsedConstraintCache
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        private static ConcurrentDictionary<string, ParsedConstraint> Cache = new();
-
-        public static ParsedConstraint Get(string constraint)
-        {
-            // 
-            if (Cache.ContainsKey(constraint))
-                return Cache[constraint];
-
-            // 
-            var parsed = new ParsedConstraint(constraint);
-            Cache[constraint] = parsed;
-            return parsed;
-        }
-    }
-
-    public class ParsedConstraint
-    {
-        private List<string> Params = new();
-
-        public ParsedConstraint(string constraint) 
-        {
-            Constraint = constraint;
-            Parse(constraint);
-        }
-
-        public string Constraint { get; }
-
-        public object[] Vars(ISystemVariable sysVars) => Params.Select(p => sysVars.Get(p)).ToArray();
-
-        private void Parse(string constraint)
-        {
-            // replace all placeholders 
-            var idx = 0;
-            var replaced = Regex.Replace(constraint, "{[\\w\\s\\d.]*}", match =>
-            {
-                // add vars 
-                var val = match.Value.Trim(' ', '{', '}');
-                var var = new Regex("[\\s\\w\\d]*").Replace(val, m =>
-                {
-                    Params.Add(m.Value);
-                    return $"${idx++}";
-                }, 1);
-
-                return var;
-            });
-        }
-    }
 
     [Implement(typeof(IReadConstraint))]
     public class SecurityConstraint : Resolveable, IReadConstraint
@@ -90,6 +36,7 @@ namespace Sencilla.Component.Security
             if (Access.Current?.AllowAll ?? false)
                 return query;
 
+            // TODO: split access by roles and add to where using 'or' clause 
             // current user
             var user  = UserProvider.CurrentUser; // get current user and his roles
             var roles = user.Roles;
@@ -112,14 +59,14 @@ namespace Sencilla.Component.Security
                     throw new ForbiddenException();
 
                 // Apply constraints 
+                var sysVars = R<ISystemVariable>();
+                
                 foreach (var a in accesses)
                 {
-                    if (!string.IsNullOrEmpty(a?.Constraint))
+                    if (!string.IsNullOrWhiteSpace(a?.Constraint))
                     {
-                        // 
-                        var sysVars = R<ISystemVariable>();
-                        var constr = ParsedConstraintCache.Get(a?.Constraint);
-                        query = query.Where(a.Constraint, constr.Vars(sysVars));
+                        var c = ParsedConstraintCache.Get(a?.Constraint);
+                        query = query.Where(c.Constraint, c.Vars(sysVars));
                     }
                 }
             }
