@@ -39,14 +39,14 @@ namespace Sencilla.Core
         /// <summary>
         /// Contains list of properties by which we need to make select 
         /// </summary>
-        IDictionary<string, IEnumerable<object>>? Properties { get; }
+        IDictionary<string, FilterProperty>? Properties { get; }
 
         /// <summary>
         /// Add property by which user wants to filter entity 
         /// </summary>
         /// <param name="name"></param>
         /// <param name="values"></param>
-        void AddProperty(string name, params object[] values);
+        void AddProperty(string name, Type? type, params object[] values);
 
     }
 

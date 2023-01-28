@@ -6,7 +6,7 @@ namespace Sencilla.Component.Users
     {
         public UserFilter ByEmail(params string[] emails) 
         {
-            AddProperty(nameof(User.Email), emails);
+            AddProperty(nameof(User.Email), typeof(string), emails);
             return this;
         }
     }

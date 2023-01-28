@@ -9,7 +9,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             mvcBuilder.AddMvcOptions(options =>
             {
-                //options.ModelBinderProviders.Insert(0, new FilterTypeBinderProvider(options.InputFormatters));
+                options.ModelBinderProviders.Insert(0, new FilterTypeBinderProvider(options.InputFormatters));
                 options.Conventions.Add(new CrudApiControllerRouteConvention());
             })
             .ConfigureApplicationPartManager(manager =>

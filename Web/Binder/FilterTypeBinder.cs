@@ -33,19 +33,17 @@ namespace Sencilla.Web
             // Bind values passed by user to filter
             await ComplexTypeModelBinder.BindModelAsync(bindingContext);
 
-            // Get other properties passed by user 
-            var parameters = bindingContext.ValueProvider as IEnumerableValueProvider;
-            var keys = parameters.GetKeysFromPrefix(bindingContext.ModelName);
-            foreach (var param in keys.Values)
+            var parameters = bindingContext.HttpContext.Request.Query;
+            foreach (var propName in parameters.Keys)
             {
                 // If they defined in filter skip it, so properties dictionary will contains only 
                 // properties not defined in filter 
-                if (FilterProperties.Any(p => p.Key.Name.Equals(param, StringComparison.OrdinalIgnoreCase)))
+                if (FilterProperties.Any(p => p.Key.Name.Equals(propName, StringComparison.OrdinalIgnoreCase)))
                     continue;
 
                 // Check if properties defined in entity 
                 // Use only properties that are defined in entity 
-                var property = EntityProperties.FirstOrDefault(p => p.Key.Name.Equals(param, StringComparison.OrdinalIgnoreCase));
+                var property = EntityProperties.FirstOrDefault(p => p.Key.Name.Equals(propName, StringComparison.OrdinalIgnoreCase));
                 if (!property.Equals(default(KeyValuePair<ModelMetadata, IModelBinder>)))
                 {
                     // Get values as array for the property 
@@ -53,7 +51,7 @@ namespace Sencilla.Web
                     var propertyType = property.Key.ModelType;//Nullable.GetUnderlyingType(property.Key.ModelType) ?? property.Key.ModelType;
 
                     var metaArray = EntityArrayProperties[propertyType.FullName];
-                    using (bindingContext.EnterNestedScope(metaArray, bindingContext.FieldName, param, null))
+                    using (bindingContext.EnterNestedScope(metaArray, bindingContext.FieldName, propName, null))
                     {
                         await property.Value.BindModelAsync(bindingContext);
                         result = bindingContext.Result;
@@ -64,8 +62,14 @@ namespace Sencilla.Web
                     if (filter != null)
                     {
                         foreach (var v in (System.Collections.IEnumerable)result.Model)
-                            filter.AddProperty(param, v);
+                            filter.AddProperty(propName, propertyType, v);
                     }
+                }
+                else
+                {
+                    // think how secure it is
+                    var filter = bindingContext.Model as IFilter;
+                    filter?.AddProperty(propName, null);
                 }
             }
         }

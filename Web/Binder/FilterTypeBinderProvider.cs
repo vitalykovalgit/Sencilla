@@ -30,7 +30,7 @@ namespace Sencilla.Web
 
                 // Get properties from entity type                 
                 var type = GetFilterEntityType(context.Metadata.ModelType);
-                var entityProperties = context.MetadataProvider.GetMetadataForProperties(type);
+                var entityProperties = type == null ? new ModelMetadata[] { } : context.MetadataProvider.GetMetadataForProperties(type);
 
                 // make array from them
                 var arrayEntityProperties = new Dictionary<string, ModelMetadata>();

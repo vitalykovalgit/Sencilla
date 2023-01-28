@@ -36,7 +36,6 @@ namespace Sencilla.Component.Security
             if (Access.Current?.AllowAll ?? false)
                 return query;
 
-            // TODO: split access by roles and add to where using 'or' clause 
             // current user
             var user  = UserProvider.CurrentUser; // get current user and his roles
             var roles = user.Roles;
@@ -63,9 +62,11 @@ namespace Sencilla.Component.Security
                 
                 foreach (var a in accesses)
                 {
+                    // TODO: group by roles and add to predicate with 'or' clause 
+                    
                     if (!string.IsNullOrWhiteSpace(a?.Constraint))
                     {
-                        var c = ParsedConstraintCache.Get(a?.Constraint);
+                        var c = ParsedConstraintCache.Get(a.Constraint);
                         query = query.Where(c.Constraint, c.Vars(sysVars));
                     }
                 }

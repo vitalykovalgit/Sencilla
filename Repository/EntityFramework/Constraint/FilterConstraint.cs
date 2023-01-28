@@ -1,8 +1,5 @@
 ﻿#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-using Microsoft.EntityFrameworkCore;
-using Sencilla.Core;
-
 namespace Sencilla.Repository.EntityFramework
 {
     [Implement(typeof(IReadConstraint))]
@@ -31,10 +28,8 @@ namespace Sencilla.Repository.EntityFramework
             {
                 foreach (var kvp in filter.Properties)
                 {
-                    var prop = kvp.Key; // property name 
-                    var values = kvp.Value; // property values 
-
-                    query = query.Where(e => values.Contains(EF.Property<object>(e, prop)));
+                    var expr = kvp.Value.ToExpression(); // property values 
+                    query = query.Where(expr);
                 }
             }
 

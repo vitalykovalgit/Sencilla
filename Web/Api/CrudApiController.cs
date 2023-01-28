@@ -25,19 +25,19 @@ namespace Microsoft.AspNetCore.Mvc
         }
 
         [HttpGet, Route("")]
-        public virtual async Task<IActionResult> GetAll(Filter filter, CancellationToken token)
+        public virtual async Task<IActionResult> GetAll(Filter<TEntity> filter, CancellationToken token)
         {
             return await AjaxAction((IReadRepository<TEntity, TKey> repo) => repo.GetAll(filter, token));
         }
 
         [HttpGet, Route("{id}")]
-        public virtual async Task<IActionResult> GetById(TKey id, Filter filter)
+        public virtual async Task<IActionResult> GetById(TKey id, Filter<TEntity> filter)
         {
             return await AjaxAction((IReadRepository<TEntity, TKey> repo) => repo.GetById(id));
         }
 
         [HttpGet, Route("count")]
-        public virtual async Task<IActionResult> GetCount(Filter filter, CancellationToken token)
+        public virtual async Task<IActionResult> GetCount(Filter<TEntity> filter, CancellationToken token)
         {
             return await AjaxAction((IReadRepository<TEntity, TKey> repo) => repo.GetCount(filter, token));
         }

@@ -93,8 +93,7 @@ namespace Sencilla.Web
                         continue;
                     }
 
-                    var property = EntityProperties.FirstOrDefault(p =>
-                        p.Key.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase));
+                    var property = EntityProperties.FirstOrDefault(p => p.Key.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase));
                     if (!property.Equals(default(KeyValuePair<ModelMetadata, IModelBinder>)))
                     {
                         var filter = bindingContext.Result.Model as IFilter;
@@ -104,7 +103,7 @@ namespace Sencilla.Web
                             {
                                 if (CheckType(param.Value as JValue, property.Key.ModelType))
                                 {
-                                    filter.AddProperty(param.Name, ((JValue)param.Value).Value);
+                                    filter.AddProperty(param.Name, property.Key.ModelType, ((JValue)param.Value).Value);
                                 }
                             }
                             else if (param.Value is JArray)
@@ -116,7 +115,7 @@ namespace Sencilla.Web
                                     .ToArray();
 
                                 if (values.Count() > 0)
-                                    filter.AddProperty(param.Name, values);
+                                    filter.AddProperty(param.Name, property.Key.ModelType, values);
                             }
                         }
                     }

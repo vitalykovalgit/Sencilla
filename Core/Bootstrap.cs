@@ -1,6 +1,9 @@
-﻿using Sencilla.Core;
-using Sencilla.Core.Impl;
-using Microsoft.Extensions.Configuration;
+﻿global using System.Text;
+
+global using Sencilla.Core;
+global using Sencilla.Core.Impl;
+
+global using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
