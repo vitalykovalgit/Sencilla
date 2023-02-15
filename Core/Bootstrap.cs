@@ -1,9 +1,13 @@
-﻿global using System.Text;
-
+﻿global using System;
+global using System.Text;
+global using System.Reflection;
 global using Sencilla.Core;
 global using Sencilla.Core.Impl;
 
+global using Microsoft.AspNetCore.Http;
 global using Microsoft.Extensions.Configuration;
+
+[assembly: AutoDiscovery]
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -28,16 +32,18 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection AddSencilla(this IServiceCollection builder, IConfiguration configuration)
         {
             // Add builder 
-            builder.AddTransient<ILogger, NoLogger>();
-            builder.AddTransient<IResolver, ServiceCollectionResolver>();
+            //builder.AddTransient<ILogger, NoLogger>();
+            //builder.AddTransient<IResolver, ServiceCollectionResolver>();
 
             // create service collection container 
             var container = new ServiceCollectionRegistrator(builder);
 
             // 0. load all types from app
-            var types = AppDomain.CurrentDomain
+            var assemblies = AppDomain.CurrentDomain
                                  .GetAssemblies()
-                                 .SelectMany(x => x.GetTypes());
+                                 .Where(a => a.GetCustomAttributes(typeof(AutoDiscoveryAttribute), false).Any());
+
+            var types = assemblies.SelectMany(x => x.GetTypes());
 
             // 1. first find all type registrators in app 
             var registrators = new List<ITypeRegistrator>();

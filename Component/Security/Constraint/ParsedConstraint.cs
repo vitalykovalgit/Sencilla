@@ -1,13 +1,12 @@
 ﻿using System.Linq.Dynamic.Core;
 using System.Text.RegularExpressions;
 
-using Sencilla.Core;
-
 namespace Sencilla.Component.Security
 {
     /// <summary>
     /// 
     /// </summary>
+    //[DisableInjection]
     public class ParsedConstraint
     {
         private List<string> Params = new();

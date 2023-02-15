@@ -9,7 +9,7 @@
         /// <param name="type"></param>
         public void Register(IContainer container, Type type)
         {
-            if (type.IsClass && !type.IsAbstract)
+            if (type.IsClass && !type.IsAbstract && !type.IsGenericType)
             {
                 var cmdHandlerInterfaces = type.GetInterfaces().Where(i => IsInterfaceCommand(i));
                 foreach (var cmdInterface in cmdHandlerInterfaces)

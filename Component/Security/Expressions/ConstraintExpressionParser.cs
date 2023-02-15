@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.Security
 {
-    public class ConstraintExpressionParser
+    public static class ConstraintExpressionParser
     {
         public delegate ParseAction ParseAction(char c, ConstraintExpressionBuilder ctx);
 

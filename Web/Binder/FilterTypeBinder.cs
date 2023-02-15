@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.Extensions.Logging;
-using Sencilla.Core;
 
 namespace Sencilla.Web
 {
+    [DisableInjection]
     public class FilterTypeBinder : IModelBinder
     {
         ComplexTypeModelBinder ComplexTypeModelBinder;

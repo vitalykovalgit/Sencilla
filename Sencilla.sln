@@ -33,7 +33,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Geograph
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Localization", "Component\Localization\Sencilla.Component.Localization.csproj", "{1A0AFB7E-1BA0-4211-ABE7-8D9BFE803C6C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Component.Security", "Component\Security\Sencilla.Component.Security.csproj", "{522EF56D-387D-4C89-9A2C-F0E89B723490}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Security", "Component\Security\Sencilla.Component.Security.csproj", "{522EF56D-387D-4C89-9A2C-F0E89B723490}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Validation", "Component\Validation\Sencilla.Component.Validation.csproj", "{31D2DA7D-A4C8-4280-B92E-24351D4DAC2F}"
 EndProject
@@ -48,6 +48,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Component", "Component", "{20C65D60-A80A-4583-8CBE-01BA9E306BA3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Security.Tests", "Tests\Component\Security\Sencilla.Component.Security.Tests.csproj", "{8D521BDE-16D9-4715-88D8-E50A78DF5713}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityFramework.Tests", "Tests\Repository\EntityFramework\Sencilla.Repository.EntityFramework.Tests.csproj", "{7E57A4E6-DA08-44F7-96C8-AF06E7180E41}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository", "Repository", "{98A5679D-EA35-49A0-A7D8-738DA4868592}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Core.Tests", "Tests\Core\Sencilla.Core.Tests.csproj", "{B4479087-3435-42DA-88B1-7D32C7358EB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,6 +129,14 @@ Global
 		{8D521BDE-16D9-4715-88D8-E50A78DF5713}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D521BDE-16D9-4715-88D8-E50A78DF5713}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D521BDE-16D9-4715-88D8-E50A78DF5713}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E57A4E6-DA08-44F7-96C8-AF06E7180E41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E57A4E6-DA08-44F7-96C8-AF06E7180E41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E57A4E6-DA08-44F7-96C8-AF06E7180E41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E57A4E6-DA08-44F7-96C8-AF06E7180E41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4479087-3435-42DA-88B1-7D32C7358EB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4479087-3435-42DA-88B1-7D32C7358EB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4479087-3435-42DA-88B1-7D32C7358EB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4479087-3435-42DA-88B1-7D32C7358EB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -144,6 +158,9 @@ Global
 		{0CE3D262-2AA8-4DF4-837D-B9C6071B86B3} = {986CA949-ABB6-41F4-90EA-A2C2201E9CFE}
 		{20C65D60-A80A-4583-8CBE-01BA9E306BA3} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
 		{8D521BDE-16D9-4715-88D8-E50A78DF5713} = {20C65D60-A80A-4583-8CBE-01BA9E306BA3}
+		{7E57A4E6-DA08-44F7-96C8-AF06E7180E41} = {98A5679D-EA35-49A0-A7D8-738DA4868592}
+		{98A5679D-EA35-49A0-A7D8-738DA4868592} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
+		{B4479087-3435-42DA-88B1-7D32C7358EB9} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5EE15D7B-0AF6-4664-9D0B-7140B5B5961F}

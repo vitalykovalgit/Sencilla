@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <Folder Include="Impl\" />
-    <Folder Include="Contract\" />
   </ItemGroup>
 
   <ItemGroup>

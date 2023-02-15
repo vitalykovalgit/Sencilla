@@ -1,7 +1,9 @@
 ﻿
-using Sencilla.Core;
-using Sencilla.Component.Config;
-using Sencilla.Component.Files;
+global using Sencilla.Core;
+global using Sencilla.Component.Config;
+global using Sencilla.Component.Files;
+
+[assembly: AutoDiscovery]
 
 namespace Microsoft.Extensions.DependencyInjection
 {

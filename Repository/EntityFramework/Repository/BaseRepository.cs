@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Sencilla.Core;
-
+﻿
 namespace Sencilla.Repository.EntityFramework
 {
     public class BaseRepository<TContext> : Resolveable, IBaseRepository where TContext : DbContext
@@ -8,18 +6,24 @@ namespace Sencilla.Repository.EntityFramework
         /// <summary>
         /// 
         /// </summary>
-        protected TContext DbContext { get; }
-        
+        public TContext DbContext { get; }
+
         /// <summary>
         /// Resolve here allows us to avoid circular dependency 
         /// </summary>
-        protected IEnumerable<IReadConstraint>? Constraints => R<IEnumerable<IReadConstraint>>();
+        public IEnumerable<IReadConstraint>? Constraints => R<IEnumerable<IReadConstraint>>();
+
+        /// <summary>
+        /// Reposiroty dependency
+        /// </summary>
+        public RepositoryDependency D { get; }
 
         /// <summary>
         /// 
         /// </summary>
-        public BaseRepository(IResolver resolver, TContext context): base(resolver)
+        public BaseRepository(RepositoryDependency dependency, TContext context): base(dependency.Resolver)
         {
+            D = dependency;
             DbContext = context;
         }
 

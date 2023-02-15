@@ -1,14 +1,13 @@
 ﻿
-namespace Sencilla.Component.Config
+namespace Sencilla.Component.Config;
+
+/// <summary>
+/// Retrieve configuration from DB 
+/// </summary>
+public class DatabaseConfigProvider<TConfig> : IConfigProvider<TConfig> where TConfig : class
 {
-    /// <summary>
-    /// Retrieve configuration from DB 
-    /// </summary>
-    public class DatabaseConfigProvider<TConfig> : IConfigProvider<TConfig> where TConfig : class
+    public TConfig GetConfig()
     {
-        public TConfig GetConfig()
-        {
-            throw new System.NotImplementedException();
-        }
+        throw new System.NotImplementedException();
     }
 }

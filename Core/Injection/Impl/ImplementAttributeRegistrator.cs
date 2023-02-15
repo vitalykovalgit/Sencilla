@@ -1,5 +1,5 @@
 ﻿
-namespace Sencilla.Core.Injection.Impl
+namespace Sencilla.Core
 {
     /// <summary>
     /// Register all interfaces for type from attribute 

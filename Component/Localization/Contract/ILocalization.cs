@@ -1,6 +1,4 @@
 ﻿
-using System.Collections.Generic;
-
 namespace Sencilla.Component.Localization
 {
     public interface ILocalization

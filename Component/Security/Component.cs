@@ -1,14 +1,12 @@
 ﻿
-using Sencilla.Core;
+namespace Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.Extensions.DependencyInjection
+public class SecurityComponent : IComponent
 {
-    public class SecurityComponent : IComponent
-    {
-        public string Type => nameof(SecurityComponent);
+    public string Type => nameof(SecurityComponent);
 
-        public void Init(IContainer container)
-        {
-        }
+    public void Init(IContainer container)
+    {
     }
 }
+

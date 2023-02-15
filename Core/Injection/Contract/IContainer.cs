@@ -6,48 +6,24 @@ namespace Sencilla.Core
     /// </summary>
     public interface IContainer
     {
-        /// <summary>
-        /// Register implemention for interface 
-        /// </summary>
-        /// <param name="iterface"></param>
-        /// <param name="implementation"></param>
-        void RegisterType<TInterface, TImplementation>(string? name = null)
-            where TInterface : class
-            where TImplementation : class, TInterface;
+        IContainer RegisterInstance(Type service, object instance);
+        IContainer RegisterInstance<TService>(TService instance) where TService: class;
 
-        /// <summary>
-        /// Register implemention for interface 
-        /// </summary>
-        /// <param name="iterface"></param>
-        /// <param name="implementation"></param>
-        void RegisterType(Type @interface, Type implementation);
+        IContainer RegisterType(Type service, string? name = null);
+        IContainer RegisterTypeSingleton(Type service, string? name = null);
+        IContainer RegisterTypePerRequest(Type service, string? name = null);
 
-        /// <summary>
-        /// Register implemention for interface with specific name 
-        /// </summary>
-        /// <param name="iterface"></param>
-        /// <param name="implementation"></param>
-        /// <param name="name"></param>
-        void RegisterType(Type @interface, Type implementation, string? name);
+        IContainer RegisterType(Type service, Type implementation, string? name = null);
+        IContainer RegisterTypeSingleton(Type service, Type implementation, string? name = null);
+        IContainer RegisterTypePerRequest(Type service, Type implementation, string? name = null);
 
-        /// <summary>
-        /// Register instance for specific interface 
-        /// </summary>
-        /// <param name="iterface"></param>
-        /// <param name="instance"></param>
-        void RegisterInstance(Type @interface, object instance);
+        IContainer RegisterType<TService>(string? name = null) where TService: class;
+        IContainer RegisterTypeSingleton<TService>(string? name = null) where TService: class;
+        IContainer RegisterTypePerRequest<TService>(string? name = null) where TService: class;
 
-        /// <summary>
-        /// Register instance for specific interface 
-        /// </summary>
-        /// <typeparam name="TInterface"></typeparam>
-        /// <param name="instance"></param>
-        void RegisterInstance<TInterface>(TInterface instance) where TInterface : class;
 
-        public void RegisterTypePerRequest(Type @interface, Type implementation);
-
-        public void RegisterTypePerRequest<TInterface, TImplementation>() 
-            where TInterface : class
-            where TImplementation : class, TInterface;
+        IContainer RegisterType<TService, TImplementation>(string? name = null) where TService : class where TImplementation : class, TService;
+        IContainer RegisterTypeSingleton<TService, TImplementation>(string? name = null) where TService : class where TImplementation : class, TService;
+        IContainer RegisterTypePerRequest<TService, TImplementation>(string? name = null) where TService : class where TImplementation : class, TService;
     }
 }

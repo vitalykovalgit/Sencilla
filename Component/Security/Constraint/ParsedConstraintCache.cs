@@ -5,7 +5,7 @@ namespace Sencilla.Component.Security
     /// <summary>
     /// Cache for parsed constraints 
     /// </summary>
-    public class ParsedConstraintCache
+    public static class ParsedConstraintCache
     {
         /// <summary>
         /// 

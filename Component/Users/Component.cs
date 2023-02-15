@@ -1,13 +1,11 @@
-﻿using Sencilla.Core;
+﻿
+namespace Microsoft.Extensions.DependencyInjection;
 
-namespace Microsoft.Extensions.DependencyInjection
+public class UsersComponent : IComponent
 {
-    public class UsersComponent : IComponent
-    {
-        public string Type => "Users";
+    public string Type => "Sencilla.Users";
 
-        public void Init(IContainer container)
-        {
-        }
+    public void Init(IContainer container)
+    {
     }
 }

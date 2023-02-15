@@ -1,5 +1,7 @@
 ﻿using Sencilla.Core;
 
+[assembly: AutoDiscovery]
+
 namespace Microsoft.Extensions.DependencyInjection
 {
     public class LocalizationComponent : IComponent

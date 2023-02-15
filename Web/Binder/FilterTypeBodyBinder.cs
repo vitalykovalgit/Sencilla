@@ -4,135 +4,134 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using Sencilla.Core;
 
-namespace Sencilla.Web
+namespace Sencilla.Web;
+
+[DisableInjection]
+public class FilterTypeBodyBinder : IModelBinder
 {
-    public class FilterTypeBodyBinder : IModelBinder
+    BodyModelBinder BodyModelBinder;
+
+    IDictionary<ModelMetadata, IModelBinder> FilterProperties;
+    IDictionary<ModelMetadata, IModelBinder> EntityProperties;
+
+    private readonly IList<IInputFormatter> _formatters;
+    private readonly ModelMetadata _dictMetadata;
+    private readonly IHttpRequestStreamReaderFactory _readerFactory;
+
+    public FilterTypeBodyBinder(
+        ILoggerFactory logger,
+        IDictionary<ModelMetadata, IModelBinder> filterProperties,
+        IDictionary<ModelMetadata, IModelBinder> entityProperties,
+        IList<IInputFormatter> formatters,
+        IHttpRequestStreamReaderFactory readerFactory,
+        ModelMetadata dictMetadata)
     {
-        BodyModelBinder BodyModelBinder;
+        FilterProperties = filterProperties;
+        EntityProperties = entityProperties;
+        BodyModelBinder = new BodyModelBinder(formatters, readerFactory);
 
-        IDictionary<ModelMetadata, IModelBinder> FilterProperties;
-        IDictionary<ModelMetadata, IModelBinder> EntityProperties;
+        _formatters = formatters;
+        _readerFactory = readerFactory;
+        _dictMetadata = dictMetadata;
+    }
 
-        private readonly IList<IInputFormatter> _formatters;
-        private readonly ModelMetadata _dictMetadata;
-        private readonly IHttpRequestStreamReaderFactory _readerFactory;
+    public async Task BindModelAsync(ModelBindingContext bindingContext)
+    {
+        if (bindingContext == null)
+            throw new ArgumentNullException(nameof(bindingContext));
 
-        public FilterTypeBodyBinder(
-            ILoggerFactory logger,
-            IDictionary<ModelMetadata, IModelBinder> filterProperties,
-            IDictionary<ModelMetadata, IModelBinder> entityProperties,
-            IList<IInputFormatter> formatters,
-            IHttpRequestStreamReaderFactory readerFactory,
-            ModelMetadata dictMetadata)
+        await BodyModelBinder.BindModelAsync(bindingContext);
+        await BindDynamicPropertiesAsync(bindingContext);
+    }
+
+    public async Task BindDynamicPropertiesAsync(ModelBindingContext bindingContext)
+    {
+        var modelBindingKey = bindingContext.IsTopLevelObject
+            ? bindingContext.BinderModelName ?? string.Empty
+            : bindingContext.ModelName;
+
+        var httpContext = bindingContext.HttpContext;
+
+        var stream = httpContext.Request.Body;
+        if (stream.CanSeek)
+            stream.Seek(0, SeekOrigin.Begin);
+
+        var formatterContext = new InputFormatterContext(
+            httpContext,
+            modelBindingKey,
+            bindingContext.ModelState,
+            _dictMetadata,
+            _readerFactory.CreateReader);
+
+        var formatter = (IInputFormatter)null;
+        for (var i = 0; i < _formatters.Count; i++)
         {
-            FilterProperties = filterProperties;
-            EntityProperties = entityProperties;
-            BodyModelBinder = new BodyModelBinder(formatters, readerFactory);
-
-            _formatters = formatters;
-            _readerFactory = readerFactory;
-            _dictMetadata = dictMetadata;
-        }
-
-        public async Task BindModelAsync(ModelBindingContext bindingContext)
-        {
-            if (bindingContext == null)
-                throw new ArgumentNullException(nameof(bindingContext));
-
-            await BodyModelBinder.BindModelAsync(bindingContext);
-            await BindDynamicPropertiesAsync(bindingContext);
-        }
-
-        public async Task BindDynamicPropertiesAsync(ModelBindingContext bindingContext)
-        {
-            var modelBindingKey = bindingContext.IsTopLevelObject
-                ? bindingContext.BinderModelName ?? string.Empty
-                : bindingContext.ModelName;
-
-            var httpContext = bindingContext.HttpContext;
-
-            var stream = httpContext.Request.Body;
-            if (stream.CanSeek)
-                stream.Seek(0, SeekOrigin.Begin);
-
-            var formatterContext = new InputFormatterContext(
-                httpContext,
-                modelBindingKey,
-                bindingContext.ModelState,
-                _dictMetadata,
-                _readerFactory.CreateReader);
-
-            var formatter = (IInputFormatter)null;
-            for (var i = 0; i < _formatters.Count; i++)
+            if (_formatters[i].CanRead(formatterContext))
             {
-                if (_formatters[i].CanRead(formatterContext))
-                {
-                    formatter = _formatters[i];
-                    break;
-                }
+                formatter = _formatters[i];
+                break;
             }
+        }
 
-            if (formatter == null)
-                return;
+        if (formatter == null)
+            return;
 
-            var result = await formatter.ReadAsync(formatterContext);
-            if (result.HasError)
-                return;
+        var result = await formatter.ReadAsync(formatterContext);
+        if (result.HasError)
+            return;
 
-            if (result?.Model != null)
+        if (result?.Model != null)
+        {
+
+            foreach (var kvp in ((JObject)result.Model).Children())
             {
+                var param = (JProperty)kvp;
 
-                foreach (var kvp in ((JObject)result.Model).Children())
+                if (FilterProperties.Any(p => p.Key.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase)))
                 {
-                    var param = (JProperty)kvp;
+                    continue;
+                }
 
-                    if (FilterProperties.Any(p => p.Key.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase)))
+                var property = EntityProperties.FirstOrDefault(p => p.Key.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase));
+                if (!property.Equals(default(KeyValuePair<ModelMetadata, IModelBinder>)))
+                {
+                    var filter = bindingContext.Result.Model as IFilter;
+                    if (filter != null)
                     {
-                        continue;
-                    }
-
-                    var property = EntityProperties.FirstOrDefault(p => p.Key.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase));
-                    if (!property.Equals(default(KeyValuePair<ModelMetadata, IModelBinder>)))
-                    {
-                        var filter = bindingContext.Result.Model as IFilter;
-                        if (filter != null)
+                        if (param.Value is JValue)
                         {
-                            if (param.Value is JValue)
+                            if (CheckType(param.Value as JValue, property.Key.ModelType))
                             {
-                                if (CheckType(param.Value as JValue, property.Key.ModelType))
-                                {
-                                    filter.AddProperty(param.Name, property.Key.ModelType, ((JValue)param.Value).Value);
-                                }
+                                filter.AddProperty(param.Name, property.Key.ModelType, ((JValue)param.Value).Value);
                             }
-                            else if (param.Value is JArray)
-                            {
-                                var values = ((JArray)param.Value).Values()
-                                    .Where(p => p is JValue)
-                                    .Where(p => CheckType(p as JValue, property.Key.ModelType))
-                                    .Select(p => ((JValue)p).Value)
-                                    .ToArray();
+                        }
+                        else if (param.Value is JArray)
+                        {
+                            var values = ((JArray)param.Value).Values()
+                                .Where(p => p is JValue)
+                                .Where(p => CheckType(p as JValue, property.Key.ModelType))
+                                .Select(p => ((JValue)p).Value)
+                                .ToArray();
 
-                                if (values.Count() > 0)
-                                    filter.AddProperty(param.Name, property.Key.ModelType, values);
-                            }
+                            if (values.Count() > 0)
+                                filter.AddProperty(param.Name, property.Key.ModelType, values);
                         }
                     }
                 }
             }
         }
+    }
 
-        private bool CheckType(JValue jValue, Type type)
-        {
-            if (jValue == null)
-                throw new ArgumentNullException(nameof(jValue));
+    private bool CheckType(JValue jValue, Type type)
+    {
+        if (jValue == null)
+            throw new ArgumentNullException(nameof(jValue));
 
-            var underType = Nullable.GetUnderlyingType(type);
-            if (underType != null)
-                type = underType;
+        var underType = Nullable.GetUnderlyingType(type);
+        if (underType != null)
+            type = underType;
 
-            return jValue.Type.ToString() == type.Name;
-        }
+        return jValue.Type.ToString() == type.Name;
     }
 }

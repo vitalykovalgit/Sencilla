@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Sencilla.Core;
-
+﻿
 namespace Sencilla.Repository.EntityFramework
 {
     /// <summary>
@@ -12,7 +10,7 @@ namespace Sencilla.Repository.EntityFramework
        where TEntity : class, IEntity<int>, IEntityCreateable, new()
        where TContext : DbContext
     {
-        public CreateRepository(IResolver resolver, TContext context): base(resolver, context){ }
+        public CreateRepository(RepositoryDependency dependency, TContext context): base(dependency, context) { }
     }
 
     /// <summary>
@@ -25,28 +23,37 @@ namespace Sencilla.Repository.EntityFramework
            where TEntity : class, IEntity<TKey>, IEntityCreateable, new()
            where TContext : DbContext
     {
-        public CreateRepository(IResolver resolver, TContext context) : base(resolver, context)
+        public CreateRepository(RepositoryDependency dependency, TContext context): base(dependency, context)
         {
         }
 
-        public async Task<TEntity> Create(TEntity entity, CancellationToken token = default)
+        public async Task<TEntity?> Create(TEntity entity, CancellationToken token = default)
         {
-            // Update creation date if entity is trackable
-            if (entity is IEntityCreateableTrack)
-               (entity as IEntityCreateableTrack).CreatedDate = DateTime.UtcNow;
+            return (await Create(new[] { entity })).FirstOrDefault();
+        }
 
-            DbContext.Add(entity);
-            await Save(token);
-            return entity;
+        public Task<IEnumerable<TEntity>> Create(params TEntity[] entities)
+        {
+            return Create(entities, CancellationToken.None);
         }
 
         public async Task<IEnumerable<TEntity>> Create(IEnumerable<TEntity> entities, CancellationToken token = default)
         {
+            // Check constarints 
+            var query = entities.AsQueryable();
+
+            var @event = new EntityCreatingEvent<TEntity> { Entities = query };
+            await D.Events.PublishAsync(@event);
+            //foreach (var constraint in Constraints)
+            //    query = await constraint.Apply(query, /*create action*/);
+
+            // Validate 
+
             // update creation date 
             foreach (var e in entities)
             {
                 if (e is IEntityCreateableTrack)
-                   (e as IEntityCreateableTrack).CreatedDate = DateTime.UtcNow;
+                   ((IEntityCreateableTrack)e).CreatedDate = DateTime.UtcNow;
             }
 
             // Add to context and save 

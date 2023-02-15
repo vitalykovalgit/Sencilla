@@ -1,41 +1,103 @@
 ﻿#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-namespace Sencilla.Repository.EntityFramework
+namespace Sencilla.Repository.EntityFramework;
+
+public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent<TEntity>>
 {
-    [Implement(typeof(IReadConstraint))]
-    public class FilterConstraint : IReadConstraint
+    public async Task HandleAsync(EntityReadingEvent<TEntity> @event)
     {
-        public async Task<IQueryable<TEntity>> Apply<TEntity>(IQueryable<TEntity> query, IFilter? filter)
+        if (@event == null)
+            return;
+
+        // check if filter is not null
+        var filter = @event.Filter;
+        if (filter == null)
+            return;
+
+        var query = @event.Entities;
+        if (query == null)
+            return;
+
+        if (filter.Skip != null)
+            query = query.Skip(filter.Skip.Value);
+
+        if (filter.Take != null)
+            query = query.Take(filter.Take.Value);
+
+        if (filter.OrderBy?.Length > 0)
+            query = (filter.Descending ?? false)
+                  ? query.OrderByDescending(e => EF.Property<object>(e, filter.OrderBy.First()))
+                  : query.OrderBy(e => EF.Property<object>(e, filter.OrderBy.First()));
+
+        if (filter.Properties?.Count > 0)
+            foreach (var kvp in filter.Properties)
+                query = query.Where(ToExpression(kvp.Value));
+
+        @event.Entities = query;
+    }
+
+    /// <summary>
+    /// If no values and type we will treat it as a query 
+    /// otherwise it will treat query as name of property in entity
+    /// and convert it to expr: name in (val1, val2) 
+    /// </summary>
+    /// <param name="prop"></param>
+    /// <returns></returns>
+    public static string? ToExpression(FilterProperty prop)
+    {
+        if (prop.Type == null)
+            return prop.Query;
+
+        if (prop.Values == null || prop.Values.Count == 0)
+            return prop.Query;
+
+        var vals = new StringBuilder();
+        foreach (var v in prop.Values)
         {
-            if (filter?.Skip != null)
+            if (prop.Type == typeof(string))
             {
-                query = query.Skip(filter.Skip.Value);
+                vals.Append($"\"{v}\",");
             }
-
-            if (filter?.Take != null)
+            else
             {
-                query = query.Take(filter.Take.Value);
+                vals.Append($"{v},");
             }
-
-            if (filter?.OrderBy?.Length > 0)
-            {
-                query = (filter.Descending ?? false)
-                      ? query.OrderByDescending(e => EF.Property<object>(e, filter.OrderBy.First()))
-                      : query.OrderBy(e => EF.Property<object>(e, filter.OrderBy.First()));
-            }
-
-            if (filter?.Properties?.Count > 0)
-            {
-                foreach (var kvp in filter.Properties)
-                {
-                    var expr = kvp.Value.ToExpression(); // property values 
-                    query = query.Where(expr);
-                }
-            }
-
-            return query;
         }
+
+        if (vals.Length > 0)
+            vals.Remove(vals.Length - 1, 1);
+
+        return $"{prop.Query} in ({vals})";
     }
 }
+
+/*
+public class FilterConstraint : IReadConstraint
+{
+    public async Task<IQueryable<TEntity>> Apply<TEntity>(IQueryable<TEntity> query, int action, IFilter? filter)
+    {
+        // check if filter is not null
+        if (filter == null)
+            return query;
+
+        if (filter.Skip != null)
+            query = query.Skip(filter.Skip.Value);
+
+        if (filter.Take != null)
+            query = query.Take(filter.Take.Value);
+
+        if (filter.OrderBy?.Length > 0)
+            query = (filter.Descending ?? false)
+                  ? query.OrderByDescending(e => EF.Property<object>(e, filter.OrderBy.First()))
+                  : query.OrderBy(e => EF.Property<object>(e, filter.OrderBy.First()));
+
+        if (filter.Properties?.Count > 0)
+            foreach (var kvp in filter.Properties)
+                query = query.Where(kvp.Value.ToExpression());
+
+        return query;
+    }
+}
+*/
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

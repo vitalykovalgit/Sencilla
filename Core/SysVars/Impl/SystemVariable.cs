@@ -4,7 +4,7 @@ namespace Sencilla.Core
     /// <summary>
     /// 
     /// </summary>
-    [Implement(typeof(ISystemVariable), PerRequest = true)]
+    [PerRequestLifetime]
     public class SystemVariable : ISystemVariable
     {
         Dictionary<string, object> Variables = new();

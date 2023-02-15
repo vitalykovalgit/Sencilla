@@ -1,13 +1,11 @@
-﻿using Sencilla.Core;
+﻿
+namespace Sencilla.Component.Users;
 
-namespace Sencilla.Component.Users
+public class UserFilter: Filter
 {
-    public class UserFilter: Filter
+    public UserFilter ByEmail(params string[] emails) 
     {
-        public UserFilter ByEmail(params string[] emails) 
-        {
-            AddProperty(nameof(User.Email), typeof(string), emails);
-            return this;
-        }
+        AddProperty(nameof(User.Email), typeof(string), emails);
+        return this;
     }
 }

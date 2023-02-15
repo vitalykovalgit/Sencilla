@@ -1,126 +1,124 @@
-﻿using Sencilla.Core;
+﻿
+namespace Sencilla.Repository.EntityFramework;
 
-namespace Sencilla.Repository.EntityFramework
+/// <summary>
+/// 
+/// </summary>
+public class RepositoryRegistrator : ITypeRegistrator
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public class RepositoryRegistrator : ITypeRegistrator
+    public List<Type> Entities { get; } = new List<Type>();
+
+    public void Register(IContainer container, Type type)
     {
-        public List<Type> Entities { get; } = new List<Type>();
-
-        public void Register(IContainer container, Type type)
+        // 
+        var typeEntity = typeof(IBaseEntity);
+        if (typeEntity.IsAssignableFrom(type) && type.IsClass && !type.IsAbstract && !type.IsGenericType)
         {
-            // 
-            var typeEntity = typeof(IBaseEntity);
-            if (typeEntity.IsAssignableFrom(type) && type.IsClass && !type.IsAbstract)
-            {
-                // Add entity to collection 
-                Entities.Add(type);
+            // Add entity to collection 
+            Entities.Add(type);
 
-                // get 
-                var entity = type.GetInterfaces()
-                                 .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEntity<>));
+            // get 
+            var entity = type.GetInterfaces()
+                             .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEntity<>));
 
-                var key = entity.GetGenericArguments()[0];
-                var context = typeof(DynamicDbContext);
+            var key = entity.GetGenericArguments()[0];
+            var context = typeof(DynamicDbContext);
 
-                
-                RegisterReadRepo(container, type, context, key);
-                RegisterCreateRepo(container, type, context, key);
-                RegisterUpdateRepo(container, type, context, key);
-                RegisterRemoveRepo(container, type, context, key);
-                RegisterDeleteRepo(container, type, context, key);
-            }
+            
+            RegisterReadRepo(container, type, context, key);
+            RegisterCreateRepo(container, type, context, key);
+            RegisterUpdateRepo(container, type, context, key);
+            RegisterRemoveRepo(container, type, context, key);
+            RegisterDeleteRepo(container, type, context, key);
         }
+    }
 
-        private void RegisterReadRepo(IContainer container, Type type, Type context, Type key)
+    private void RegisterReadRepo(IContainer container, Type type, Type context, Type key)
+    {
+        // register read repo 
+        if (typeof(IEntity<>).MakeGenericType(key).IsAssignableFrom(type))
         {
-            // register read repo 
-            if (typeof(IEntity<>).MakeGenericType(key).IsAssignableFrom(type))
+            container.RegisterType(
+                typeof(IReadRepository<,>).MakeGenericType(type, key),
+                typeof(ReadRepository<,,>).MakeGenericType(type, context, key));
+
+            if (key == typeof(int))
             {
                 container.RegisterType(
-                    typeof(IReadRepository<,>).MakeGenericType(type, key),
-                    typeof(ReadRepository<,,>).MakeGenericType(type, context, key));
-
-                if (key == typeof(int))
-                {
-                    container.RegisterType(
-                        typeof(IReadRepository<>).MakeGenericType(type),
-                        typeof(ReadRepository<,>).MakeGenericType(type, context));
-                }
+                    typeof(IReadRepository<>).MakeGenericType(type),
+                    typeof(ReadRepository<,>).MakeGenericType(type, context));
             }
         }
+    }
 
-        private void RegisterCreateRepo(IContainer container, Type type, Type context, Type key)
+    private void RegisterCreateRepo(IContainer container, Type type, Type context, Type key)
+    {
+        // register create repo 
+        if (typeof(IEntityCreateable).IsAssignableFrom(type))
         {
-            // register create repo 
-            if (typeof(IEntityCreateable).IsAssignableFrom(type))
+            container.RegisterType(
+                typeof(ICreateRepository<,>).MakeGenericType(type, key),
+                typeof(CreateRepository<,,>).MakeGenericType(type, context, key));
+
+            if (key == typeof(int))
             {
                 container.RegisterType(
-                    typeof(ICreateRepository<,>).MakeGenericType(type, key),
-                    typeof(CreateRepository<,,>).MakeGenericType(type, context, key));
-
-                if (key == typeof(int))
-                {
-                    container.RegisterType(
-                        typeof(ICreateRepository<>).MakeGenericType(type),
-                        typeof(CreateRepository<,>).MakeGenericType(type, context));
-                }
+                    typeof(ICreateRepository<>).MakeGenericType(type),
+                    typeof(CreateRepository<,>).MakeGenericType(type, context));
             }
         }
+    }
 
-        private void RegisterUpdateRepo(IContainer container, Type type, Type context, Type key)
+    private void RegisterUpdateRepo(IContainer container, Type type, Type context, Type key)
+    {
+        // register update repo 
+        if (typeof(IEntityUpdateable).IsAssignableFrom(type))
         {
-            // register update repo 
-            if (typeof(IEntityUpdateable).IsAssignableFrom(type))
+            container.RegisterType(
+                typeof(IUpdateRepository<,>).MakeGenericType(type, key),
+                typeof(UpdateRepository<,,>).MakeGenericType(type, context, key));
+
+            if (key == typeof(int))
             {
                 container.RegisterType(
-                    typeof(IUpdateRepository<,>).MakeGenericType(type, key),
-                    typeof(UpdateRepository<,,>).MakeGenericType(type, context, key));
-
-                if (key == typeof(int))
-                {
-                    container.RegisterType(
-                        typeof(IUpdateRepository<>).MakeGenericType(type),
-                        typeof(UpdateRepository<,>).MakeGenericType(type, context));
-                }
+                    typeof(IUpdateRepository<>).MakeGenericType(type),
+                    typeof(UpdateRepository<,>).MakeGenericType(type, context));
             }
         }
+    }
 
-        private void RegisterRemoveRepo(IContainer container, Type type, Type context, Type key)
+    private void RegisterRemoveRepo(IContainer container, Type type, Type context, Type key)
+    {
+        // register remvoe repo 
+        if (typeof(IEntityRemoveable).IsAssignableFrom(type))
         {
-            // register remvoe repo 
-            if (typeof(IEntityRemoveable).IsAssignableFrom(type))
+            container.RegisterType(
+                typeof(IRemoveRepository<,>).MakeGenericType(type, key),
+                typeof(RemoveRepository<,,>).MakeGenericType(type, context, key));
+
+            if (key == typeof(int))
             {
                 container.RegisterType(
-                    typeof(IRemoveRepository<,>).MakeGenericType(type, key),
-                    typeof(RemoveRepository<,,>).MakeGenericType(type, context, key));
-
-                if (key == typeof(int))
-                {
-                    container.RegisterType(
-                        typeof(IRemoveRepository<>).MakeGenericType(type),
-                        typeof(RemoveRepository<,>).MakeGenericType(type, context));
-                }
+                    typeof(IRemoveRepository<>).MakeGenericType(type),
+                    typeof(RemoveRepository<,>).MakeGenericType(type, context));
             }
         }
+    }
 
-        private void RegisterDeleteRepo(IContainer container, Type type, Type context, Type key)
+    private void RegisterDeleteRepo(IContainer container, Type type, Type context, Type key)
+    {
+        // register delete repo 
+        if (typeof(IEntityDeleteable).IsAssignableFrom(type))
         {
-            // register delete repo 
-            if (typeof(IEntityDeleteable).IsAssignableFrom(type))
+            container.RegisterType(
+                typeof(IDeleteRepository<,>).MakeGenericType(type, key),
+                typeof(DeleteRepository<,,>).MakeGenericType(type, context, key));
+
+            if (key == typeof(int))
             {
                 container.RegisterType(
-                    typeof(IDeleteRepository<,>).MakeGenericType(type, key),
-                    typeof(DeleteRepository<,,>).MakeGenericType(type, context, key));
-
-                if (key == typeof(int))
-                {
-                    container.RegisterType(
-                        typeof(IDeleteRepository<>).MakeGenericType(type),
-                        typeof(DeleteRepository<,>).MakeGenericType(type, context));
-                }
+                    typeof(IDeleteRepository<>).MakeGenericType(type),
+                    typeof(DeleteRepository<,>).MakeGenericType(type, context));
             }
         }
     }

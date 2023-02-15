@@ -13,7 +13,7 @@ namespace Sencilla.Core
         /// <typeparam name="TCommand"></typeparam>
         /// <param name="cmd"></param>
         /// <returns></returns>
-        Task SendAsync(ICommand cmd);
+        Task SendAsync(ICommand cmd, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 

@@ -1,6 +1,4 @@
 ﻿
-using Sencilla.Core;
-
 namespace Microsoft.EntityFrameworkCore
 {
     public static class DbContextEx
@@ -10,12 +8,13 @@ namespace Microsoft.EntityFrameworkCore
             return context.Set<TEntity>();
         }
 
-        public static async Task<IQueryable<TEntity>> Constraints<TEntity>(this IQueryable<TEntity> query, IEnumerable<IReadConstraint>? constraints, IFilter? filter = null) where TEntity : class
+        [Obsolete]
+        public static async Task<IQueryable<TEntity>> Constraints<TEntity>(this IQueryable<TEntity> query, IEnumerable<IReadConstraint>? constraints, int action, IFilter? filter = null) where TEntity : class
         {
             if (constraints != null)
             {
                 foreach (var c in constraints)
-                    query = await c.Apply(query, filter);
+                    query = await c.Apply(query, action, filter);
             }
             return query;
         }

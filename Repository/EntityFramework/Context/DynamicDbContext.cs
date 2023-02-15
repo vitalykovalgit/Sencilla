@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace Sencilla.Repository.EntityFramework
 {
+    [DisableInjection]
     public class DynamicDbContext : DbContext
     {
         RepositoryRegistrator Registrator;

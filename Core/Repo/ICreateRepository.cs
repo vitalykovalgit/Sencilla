@@ -18,12 +18,14 @@ namespace Sencilla.Core
     public interface ICreateRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
                where TEntity : IEntity<TKey>
     {
+        Task<TEntity?> Create(TEntity entity, CancellationToken token = default);
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        Task<TEntity> Create(TEntity entity, CancellationToken token = default);
+        Task<IEnumerable<TEntity>> Create(params TEntity[] entities);
 
         /// <summary>
         /// 

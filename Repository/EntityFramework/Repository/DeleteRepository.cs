@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Z.EntityFramework.Plus;
-using Sencilla.Core;
+﻿using Z.EntityFramework.Plus;
 
 namespace Sencilla.Repository.EntityFramework
 {
@@ -8,7 +6,7 @@ namespace Sencilla.Repository.EntityFramework
        where TEntity : class, IEntity<int>, IEntityDeleteable, new()
        where TContext : DbContext
     {
-        public DeleteRepository(IResolver resolver, TContext context) : base(resolver, context) { }
+        public DeleteRepository(RepositoryDependency dependency, TContext context) : base(dependency, context) { }
     }
 
     /// <summary>
@@ -21,7 +19,7 @@ namespace Sencilla.Repository.EntityFramework
            where TEntity : class, IEntity<TKey>, IEntityDeleteable, new()
            where TContext : DbContext
     {
-        public DeleteRepository(IResolver resolver, TContext context): base(resolver, context)
+        public DeleteRepository(RepositoryDependency dependency, TContext context): base(dependency, context)
         {
         }
 

@@ -1,5 +1,8 @@
 ﻿
-using Sencilla.Web;
+global using Sencilla.Core;
+global using Sencilla.Web;
+
+[assembly: AutoDiscovery]
 
 namespace Microsoft.Extensions.DependencyInjection
 {

@@ -1,22 +1,20 @@
 
-namespace Sencilla.Core
+namespace Sencilla.Core;
+
+public class EventDispatcher : IEventDispatcher
 {
-    [Implement(typeof(IEventDispatcher))]
-    public class EventDispatcher : IEventDispatcher
+    private readonly IEnumerable<IEventMiddleware> Middlewares;
+
+    public EventDispatcher(IEnumerable<IEventMiddleware> middlewares)
     {
-        private readonly IEnumerable<IEventMiddleware> Middlewares;
+        Middlewares = middlewares;
+    }
 
-        public EventDispatcher(IEnumerable<IEventMiddleware> middlewares)
+    public async Task PublishAsync<T>(T @event) where T : class, IEvent
+    {
+        foreach (var m in Middlewares)
         {
-            Middlewares = middlewares;
-        }
-
-        public async Task PublishAsync<T>(T @event) where T : class, IEvent
-        {
-            foreach (var m in Middlewares)
-            {
-                await m.ProcessAsync(@event);
-            }
+            await m.ProcessAsync(@event);
         }
     }
 }

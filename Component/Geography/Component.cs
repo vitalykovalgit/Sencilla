@@ -1,4 +1,6 @@
-﻿using Sencilla.Core;
+﻿global using Sencilla.Core;
+
+[assembly: AutoDiscovery]
 
 namespace Microsoft.Extensions.DependencyInjection
 {
