@@ -61,6 +61,5 @@ public class ReadRepository<TEntity, TContext, TKey> : BaseRepository<TContext>,
         };
         await D.Events.PublishAsync(e);
         return e.Entities;
-        //return q.Constraints(Constraints, /*Read action*/, filter);
     }
 }

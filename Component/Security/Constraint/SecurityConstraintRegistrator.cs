@@ -11,10 +11,15 @@ public class SecurityConstraintRegistrator : ITypeRegistrator
     {
         if (type.IsAssignableTo(typeof(IBaseEntity)) && type.IsClass && !type.IsAbstract && !type.IsGenericType)
         {
-            var @event = typeof(EntityReadingEvent<>).MakeGenericType(type);
-            var @interface = typeof(IEventHandlerBase<>).MakeGenericType(@event);
             var constraint = typeof(SecurityConstraintHandler<>).MakeGenericType(type);
-            container.RegisterType(@interface, constraint);
+
+            // read interafce 
+            var readInterface = typeof(IEventHandlerBase<>).MakeGenericType(typeof(EntityReadingEvent<>).MakeGenericType(type));
+            container.RegisterType(readInterface, constraint);
+
+            // create interafce 
+            var createInterface = typeof(IEventHandlerBase<>).MakeGenericType(typeof(EntityCreatingEvent<>).MakeGenericType(type));
+            container.RegisterType(createInterface, constraint);
         }
     }
 }

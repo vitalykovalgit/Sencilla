@@ -13,8 +13,6 @@ public class EventDispatcher : IEventDispatcher
     public async Task PublishAsync<T>(T @event) where T : class, IEvent
     {
         foreach (var m in Middlewares)
-        {
             await m.ProcessAsync(@event);
-        }
     }
 }

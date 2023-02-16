@@ -71,33 +71,4 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
     }
 }
 
-/*
-public class FilterConstraint : IReadConstraint
-{
-    public async Task<IQueryable<TEntity>> Apply<TEntity>(IQueryable<TEntity> query, int action, IFilter? filter)
-    {
-        // check if filter is not null
-        if (filter == null)
-            return query;
-
-        if (filter.Skip != null)
-            query = query.Skip(filter.Skip.Value);
-
-        if (filter.Take != null)
-            query = query.Take(filter.Take.Value);
-
-        if (filter.OrderBy?.Length > 0)
-            query = (filter.Descending ?? false)
-                  ? query.OrderByDescending(e => EF.Property<object>(e, filter.OrderBy.First()))
-                  : query.OrderBy(e => EF.Property<object>(e, filter.OrderBy.First()));
-
-        if (filter.Properties?.Count > 0)
-            foreach (var kvp in filter.Properties)
-                query = query.Where(kvp.Value.ToExpression());
-
-        return query;
-    }
-}
-*/
-
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
