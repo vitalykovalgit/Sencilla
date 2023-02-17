@@ -1,10 +1,9 @@
 ﻿
-namespace Sencilla.Core
+namespace Sencilla.Core;
+
+public class UnauthorizedException : SencillaException
 {
-    public class UnauthorizedException : SencillaException
+    public UnauthorizedException(string? message = null): base(message)
     {
-        public UnauthorizedException(string? message = null): base(message)
-        {
-        }
     }
 }

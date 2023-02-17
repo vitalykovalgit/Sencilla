@@ -1,10 +1,9 @@
 ﻿
-namespace Sencilla.Core
+namespace Sencilla.Core;
+
+public class BadRequestException : SencillaException
 {
-    public class BadRequestException : SencillaException
+    public BadRequestException(string? message = null) : base(message)
     {
-        public BadRequestException(string? message = null) : base(message)
-        {
-        }
     }
 }

@@ -19,17 +19,3 @@ public interface IEntityUpdateableTrack : IEntityUpdateable
     DateTime UpdatedDate { get; set; }
 }
 
-
-/// <summary>
-/// Fired when entity is going to be updated 
-/// </summary>
-public class EntityUpdatingEvent<TEntity> : EntityBaseEvent<TEntity>
-{
-}
-
-/// <summary>
-/// Fired when entity is updated 
-/// </summary>
-public class EntityUpdatedEvent<TEntity> : EntityBaseEvent<TEntity>
-{
-}

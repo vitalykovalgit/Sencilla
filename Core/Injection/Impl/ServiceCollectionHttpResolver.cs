@@ -5,9 +5,9 @@ public class ServiceCollectionHttpResolver : IResolver
 {
     protected readonly IHttpContextAccessor ContextAccessor;
 
-    public ServiceCollectionHttpResolver(IHttpContextAccessor contextAccessor)
+    public ServiceCollectionHttpResolver(IHttpContextAccessor? contextAccessor)
     {
-        ContextAccessor = contextAccessor;
+        ContextAccessor = contextAccessor ?? throw new NullReferenceException($"{nameof(contextAccessor)} could not be null");
     }
 
     public TServcie? Resolve<TServcie>(string name) => Resolve<TServcie>();

@@ -4,6 +4,8 @@ namespace Sencilla.Component.Security;
 public class SecurityConstraintHandler<TEntity>
     : IEventHandlerBase<EntityReadingEvent<TEntity>>
     , IEventHandlerBase<EntityCreatingEvent<TEntity>>
+    , IEventHandlerBase<EntityUpdatingEvent<TEntity>>
+    , IEventHandlerBase<EntityDeletingEvent<TEntity>>
 {
     public async Task HandleAsync(EntityReadingEvent<TEntity> @event, ISystemVariable sysVars, IReadRepository<Matrix> matrixRepo)
     {
@@ -13,8 +15,42 @@ public class SecurityConstraintHandler<TEntity>
 
     public async Task HandleAsync(EntityCreatingEvent<TEntity> @event, ISystemVariable sysVars, IReadRepository<Matrix> matrixRepo)
     {
+        if (@event?.Entities != null)
+        {
+            var safeEntities = await ApplyConstraint(@event.Entities, (int)Action.Create, sysVars, matrixRepo);
+            var countBefore = @event.Entities.Count();
+            var countAfter = safeEntities.Count();
+            if (countBefore != countAfter)
+            {
+                // throw exeception 
+                // TODO: add detailed info 
+                //var badEntities = @event.Entities.Except(safeEntities);
+                throw new ForbiddenException("Does not met criteria to create object");
+            }
+        }
+    }
+
+    public async Task HandleAsync(EntityUpdatingEvent<TEntity> @event, ISystemVariable sysVars, IReadRepository<Matrix> matrixRepo)
+    {
+        if (@event?.Entities != null)
+        {
+            var safeEntities = await ApplyConstraint(@event.Entities, (int)Action.Update, sysVars, matrixRepo);
+            var countBefore = @event.Entities.Count();
+            var countAfter = safeEntities.Count();
+            if (countBefore != countAfter)
+            {
+                // throw exeception 
+                // TODO: add detailed info 
+                //var badEntities = @event.Entities.Except(safeEntities);
+                throw new ForbiddenException("Does not met criteria to create object");
+            }
+        }
+    }
+
+    public async Task HandleAsync(EntityDeletingEvent<TEntity> @event, ISystemVariable sysVars, IReadRepository<Matrix> matrixRepo)
+    {
         if (@event != null)
-            @event.Entities = await ApplyConstraint(@event.Entities, (int)Action.Create, sysVars, matrixRepo);
+            @event.Entities = await ApplyConstraint(@event.Entities, (int)Action.Delete, sysVars, matrixRepo);
     }
 
     protected async Task<IQueryable<TEntity>> ApplyConstraint(IQueryable<TEntity> query, int action, ISystemVariable sysVars, IReadRepository<Matrix> matrixRepo)
@@ -23,11 +59,12 @@ public class SecurityConstraintHandler<TEntity>
             return query;
 
         // Check if access allowed then do nothing 
+        // to avoid recursion 
         if (Access.Current?.AllowAll ?? false)
             return query;
 
         // current user
-        var user = sysVars.GetCurrentUser();// UserProvider.CurrentUser; // get current user and his roles
+        var user = sysVars.GetCurrentUser();
         var resource = ResourceName<TEntity>(); // resource name or all
 
         // Allow root access 

@@ -1,10 +1,9 @@
 ﻿
-namespace Sencilla.Core
+namespace Sencilla.Core;
+
+public class InternalServerErrorException : SencillaException
 {
-    public class InternalServerErrorException : SencillaException
+    public InternalServerErrorException(string? message = null) : base(message)
     {
-        public InternalServerErrorException(string? message = null) : base(message)
-        {
-        }
     }
 }

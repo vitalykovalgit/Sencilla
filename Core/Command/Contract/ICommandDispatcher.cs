@@ -22,7 +22,7 @@ namespace Sencilla.Core
         /// <param name="command"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<TResponse> SendAsync<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default);
+        Task<TResponse?> SendAsync<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default);
 
     }
 }

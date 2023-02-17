@@ -13,7 +13,7 @@ public static class ServiceLocator
     private static IResolver Resolver => mResolver ?? throw new Exception("You should Initialize the ServiceProvider before using it.");
 
     public static T? R<T>() => Resolver.Resolve<T>();
-    public static object R(Type type) => Resolver.Resolve(type);
+    public static object? R(Type type) => Resolver.Resolve(type);
     public static IEnumerable<T> RAll<T>() => Resolver.ResolveAll<T>();
 
     public static void UseSencillaServiceLocator(this IApplicationBuilder app)

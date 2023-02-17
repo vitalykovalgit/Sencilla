@@ -38,6 +38,14 @@ public static class IEnumerableEx
             if (!fEnum.MoveNext())
                 return false;
 
+            if (sEnum.Current == null)
+            {
+                if (fEnum.Current == null)
+                    continue;
+
+                return false;
+            }
+
             if (!sEnum.Current.Equals(fEnum.Current))
                 return false;
         }
@@ -54,14 +62,22 @@ public static class IEnumerableEx
     /// <returns> True if first array begins with second, or second array is empty </returns>
     public static bool StartWith<TSource, TKey>(this IEnumerable<TSource> first, IEnumerable<TKey> second, Func<TSource, TKey> keySelector)
     {
-        var secEnum = second.GetEnumerator();
-        var fstEnum = first.GetEnumerator();
-        while (secEnum.MoveNext())
+        var sEnum = second.GetEnumerator();
+        var fEnum = first.GetEnumerator();
+        while (sEnum.MoveNext())
         {
-            if (!fstEnum.MoveNext())
+            if (!fEnum.MoveNext())
                 return false;
 
-            if (!secEnum.Current.Equals(keySelector(fstEnum.Current)))
+            if (sEnum.Current == null)
+            {
+                if (fEnum.Current == null)
+                    continue;
+
+                return false;
+            }
+
+            if (!sEnum.Current.Equals(keySelector(fEnum.Current)))
                 return false;
         }
 

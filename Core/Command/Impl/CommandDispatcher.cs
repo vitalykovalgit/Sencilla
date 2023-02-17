@@ -20,7 +20,7 @@ public class CommandDispatcher: Resolveable, ICommandDispatcher
     {
         // get method and inject parameters but skip first parameter 
         var handler = R(typeof(ICommandHandlerBase<>).MakeGenericType(command.GetType()));
-        await handler.CallWithInjectAsync(nameof(ICommandHandler<ICommand>.HandleAsync), command);
+        await (handler?.CallWithInjectAsync(nameof(ICommandHandler<ICommand>.HandleAsync), command) ?? Task.CompletedTask);
     }
 
     /// <summary>
@@ -32,9 +32,12 @@ public class CommandDispatcher: Resolveable, ICommandDispatcher
     /// <param name="command"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public async Task<TResponse> SendAsync<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default)
+    public async Task<TResponse?> SendAsync<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default)
     {
         var handler = R(typeof(ICommandHandlerBase<,>).MakeGenericType(command.GetType(), typeof(TResponse)));
+        if (handler == null)
+            return default(TResponse);
+
         var response = await handler.CallWithInjectAsync<TResponse>(nameof(ICommandHandler<ICommand>.HandleAsync), command);
         return response;
     }

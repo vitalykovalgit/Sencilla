@@ -16,8 +16,6 @@ public class InMemoryMiddleware: Resolveable, IEventMiddleware
     {
         var handlers = All<IEventHandlerBase<TEvent>>();
         foreach (var handler in handlers)
-        {
             await handler.CallWithInjectAsync(nameof(ICommandHandler<ICommand>.HandleAsync), @event);
-        }
     }
 }

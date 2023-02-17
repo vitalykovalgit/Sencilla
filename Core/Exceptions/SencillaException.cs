@@ -1,13 +1,12 @@
 ﻿
-namespace Sencilla.Core
+namespace Sencilla.Core;
+
+/// <summary>
+/// Base exception for all sencilla exceptions 
+/// </summary>
+public class SencillaException : Exception
 {
-    /// <summary>
-    /// Base exception for all sencilla exceptions 
-    /// </summary>
-    public class SencillaException : Exception
+    public SencillaException(string? message = null) : base(message)
     {
-        public SencillaException(string? message = null) : base(message)
-        {
-        }
     }
 }

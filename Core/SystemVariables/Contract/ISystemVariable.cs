@@ -11,14 +11,14 @@ namespace Sencilla.Core
         /// </summary>
         /// <param name="name"></param>
         /// <param name="data"></param>
-        void Set(string name, object data);
+        void Set(string name, object? data);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        object Get(string? name);
+        object? Get(string? name);
         
         /// <summary>
         /// 

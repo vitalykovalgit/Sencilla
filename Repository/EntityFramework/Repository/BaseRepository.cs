@@ -11,7 +11,7 @@ namespace Sencilla.Repository.EntityFramework
         /// <summary>
         /// Resolve here allows us to avoid circular dependency 
         /// </summary>
-        public IEnumerable<IReadConstraint>? Constraints => R<IEnumerable<IReadConstraint>>();
+        //public IEnumerable<IReadConstraint>? Constraints => R<IEnumerable<IReadConstraint>>();
 
         /// <summary>
         /// Reposiroty dependency
