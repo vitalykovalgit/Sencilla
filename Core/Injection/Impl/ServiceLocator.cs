@@ -16,7 +16,11 @@ public static class ServiceLocator
     public static object? R(Type type) => Resolver.Resolve(type);
     public static IEnumerable<T> RAll<T>() => Resolver.ResolveAll<T>();
 
-    public static void UseSencillaServiceLocator(this IApplicationBuilder app)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="app"></param>
+    public static void UseServiceLocator(this IApplicationBuilder app)
     {
         var httpAccessor = app.ApplicationServices.GetService<IHttpContextAccessor>();
         mResolver = new ServiceCollectionHttpResolver(httpAccessor);
