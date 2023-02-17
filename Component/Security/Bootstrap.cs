@@ -1,5 +1,8 @@
 ﻿global using System.Reflection;
 global using System.Linq.Dynamic.Core;
+global using System.Linq.Expressions;
+
+global using Microsoft.AspNetCore.Mvc;
 
 global using Sencilla.Core;
 global using Sencilla.Component.Users;
