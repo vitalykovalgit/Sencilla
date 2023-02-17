@@ -16,8 +16,6 @@
 
   <ItemGroup>
     <Folder Include="Database\Data\" />
-    <Folder Include="Web\Api\" />
-    <Folder Include="Web\Entity\" />
   </ItemGroup>
 
   <ItemGroup>
