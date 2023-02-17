@@ -9,9 +9,8 @@ global using Microsoft.Extensions.Configuration;
 
 [assembly: AutoDiscovery]
 
-namespace Sencilla.Component.Config
+namespace Sencilla.Component.Config;
+
+public static class Bootstrap
 {
-    public static class Bootstrap
-    {
-    }
 }

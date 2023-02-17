@@ -18,7 +18,7 @@ public static class Bootstrap
     /// this assambly with all it's component 
     /// Sencilla will register everything automatically
     /// </summary>
-    public static IServiceCollection AddSecurity(this IServiceCollection builder)
+    public static IServiceCollection AddSencillaSecurity(this IServiceCollection builder)
     {
         // Do nothing here
         return builder;

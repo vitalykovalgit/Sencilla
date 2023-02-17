@@ -19,7 +19,7 @@ public static class Bootstrap
     /// this assambly with all it's component 
     /// Sencilla will register everything automatically
     /// </summary>
-    public static IServiceCollection AddUsers(this IServiceCollection builder)
+    public static IServiceCollection AddSencillaUsers(this IServiceCollection builder)
     {
         // Do nothing here
         return builder;
