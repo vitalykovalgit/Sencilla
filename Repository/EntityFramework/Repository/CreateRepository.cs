@@ -39,17 +39,12 @@ namespace Sencilla.Repository.EntityFramework
 
         public async Task<IEnumerable<TEntity>> Create(IEnumerable<TEntity> entities, CancellationToken token = default)
         {
-            // Check constarints 
-            var query = entities.AsQueryable();
-
-            var @event = new EntityCreatingEvent<TEntity> { Entities = query };
-            await D.Events.PublishAsync(@event);
-            //foreach (var constraint in Constraints)
-            //    query = await constraint.Apply(query, /*create action*/);
-
-            // Validate 
+            // Check constraints 
+            var eventCreating = new EntityCreatingEvent<TEntity> { Entities = entities.AsQueryable() };
+            await D.Events.PublishAsync(eventCreating);
 
             // update creation date 
+            // TODO: Move to event handler 
             foreach (var e in entities)
             {
                 if (e is IEntityCreateableTrack)
@@ -59,6 +54,11 @@ namespace Sencilla.Repository.EntityFramework
             // Add to context and save 
             DbContext.AddRange(entities);
             await Save(token);
+
+            // Notify about 
+            var eventCreated = new EntityCreatedEvent<TEntity> { Entities = entities.AsQueryable() };
+            await D.Events.PublishAsync(eventCreated);
+
             return entities;
         }
     }

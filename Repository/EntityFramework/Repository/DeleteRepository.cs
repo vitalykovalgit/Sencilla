@@ -23,25 +23,9 @@ namespace Sencilla.Repository.EntityFramework
         {
         }
 
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-        public async Task<int> Delete(TKey id, CancellationToken token = default)
+        public Task<int> Delete(TKey id, CancellationToken token = default)
         {
-            var entity = DbContext.Set<TEntity>().FirstOrDefault(e => e.Id.Equals(id));
-            if (entity != null)
-            {
-                DbContext.Remove(entity);
-                return await Save(token);
-            }
-
-            return 0;
-        }
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-
-        public async Task<int> Delete(TEntity entity, CancellationToken token = default)
-        {
-            DbContext.Remove(entity);
-            var count = await Save(token);
-            return count;
+            return Delete(new[] { id }, token);
         }
 
         public async Task<int> Delete(IEnumerable<TKey> ids, CancellationToken token = default)
@@ -51,10 +35,18 @@ namespace Sencilla.Repository.EntityFramework
             return count;
         }
 
+        public Task<int> Delete(TEntity entity, CancellationToken token = default)
+        {
+            return Delete(new[] { entity }, token);
+        }
+
         public async Task<int> Delete(IEnumerable<TEntity> entities, CancellationToken token = default)
         {
+            // Add events
+
             DbContext.RemoveRange(entities);
             var count = await Save(token);
+
             return count;
         }
     }

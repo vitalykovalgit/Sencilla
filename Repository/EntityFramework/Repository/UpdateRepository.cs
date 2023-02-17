@@ -27,29 +27,36 @@ public class UpdateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
     {
     }
 
-    public async Task<TEntity> Update(TEntity entity, CancellationToken token = default)
+    public async Task<TEntity?> Update(TEntity entity, CancellationToken token = default)
     {
-        // Updated date 
-        if (entity is IEntityUpdateableTrack)
-            (entity as IEntityUpdateableTrack).UpdatedDate = DateTime.UtcNow;
+        return (await Update(new[] { entity })).FirstOrDefault();
+    }
 
-        DbContext.Update(entity);
-        await Save(token);
-
-        return entity;
+    public Task<IEnumerable<TEntity>> Update(params TEntity[] entities)
+    {
+        return Update(entities, CancellationToken.None);
     }
 
     public async Task<IEnumerable<TEntity>> Update(IEnumerable<TEntity> entities, CancellationToken token = default)
     {
+        // Notify before updating 
+        var eventUpdating = new EntityUpdatingEvent<TEntity> { Entities = entities.AsQueryable() };
+        await D.Events.PublishAsync(eventUpdating);
+
+        // TODO: Move to trackable 
         foreach (var e in entities)
         {
             if (e is IEntityUpdateableTrack)
-                (e as IEntityUpdateableTrack).UpdatedDate = DateTime.UtcNow;
+                ((IEntityUpdateableTrack)e).UpdatedDate = DateTime.UtcNow;
         }
 
         DbContext.UpdateRange(entities);
         await Save(token);
-            
+
+        // Notify that entity updated
+        var eventUpdated = new EntityUpdatedEvent<TEntity> { Entities = entities.AsQueryable() };
+        await D.Events.PublishAsync(eventUpdated);
+
         return entities;
     }
 }

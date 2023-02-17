@@ -42,7 +42,7 @@ public class SecurityConstraintHandler<TEntity>
                 // throw exeception 
                 // TODO: add detailed info 
                 //var badEntities = @event.Entities.Except(safeEntities);
-                throw new ForbiddenException("Does not met criteria to create object");
+                throw new ForbiddenException("Does not met criteria to update object");
             }
         }
     }
