@@ -46,7 +46,7 @@ namespace Sencilla.Repository.EntityFramework.Tests
             // setup matrix 
             var matrix = new Mock<IReadRepository<Matrix>>();
             matrix.Setup(m => m.GetAll(null, CancellationToken.None).Result).Returns(new List<Matrix> {
-                new Matrix { Role = 1 /**/, Action = (int)Component.Security.Action.Create, Resource = nameof(Entity), Constraint = "" }
+                new Matrix { Role = "owner" /**/, Action = (int)Component.Security.Action.Create, Resource = nameof(Entity), Constraint = "" }
             });
             Resolver.Setup(r => r.Resolve<IReadRepository<Matrix>>()).Returns(matrix.Object);
 

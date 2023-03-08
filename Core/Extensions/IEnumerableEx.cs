@@ -106,4 +106,16 @@ public static class IEnumerableEx
 
         return true;
     }
+
+    /// <summary>
+    /// Joing list of string with delimeter 
+    /// </summary>
+    /// <param name="list"></param>
+    /// <param name="delimeter"></param>
+    /// <returns></returns>
+    public static string Join(this IEnumerable<string> list, string delimeter)
+    {
+        return string.Join(delimeter, list);
+    }
+
 }

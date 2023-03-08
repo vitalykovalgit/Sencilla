@@ -32,7 +32,7 @@ namespace Sencilla.Repository.EntityFramework
         /// </summary>
         public async Task<int> Save(CancellationToken token = default)
         {
-            return await DbContext.SaveChangesAsync(token);
+            return await DbContext.SaveChangesAsync(token).ConfigureAwait(false);
         }
     }
 }

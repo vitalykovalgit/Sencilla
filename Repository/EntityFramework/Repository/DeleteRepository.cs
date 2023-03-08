@@ -30,7 +30,7 @@ namespace Sencilla.Repository.EntityFramework
 
         public async Task<int> Delete(IEnumerable<TKey> ids, CancellationToken token = default)
         {
-            var count = await DbContext.Set<TEntity>().Where(e => ids.Contains(e.Id)).DeleteAsync(token);
+            var count = await DbContext.Set<TEntity>().Where(e => ids.Contains(e.Id)).DeleteAsync(token).ConfigureAwait(false);
             await Save(token);
             return count;
         }

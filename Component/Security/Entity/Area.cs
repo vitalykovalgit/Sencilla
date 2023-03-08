@@ -1,14 +1,9 @@
 ﻿
-using Sencilla.Core;
-using System.ComponentModel.DataAnnotations.Schema;
+namespace Sencilla.Component.Security;
 
-namespace Sencilla.Component.Security
+[Table(nameof(Area), Schema = "sec")]
+public class Area : IEntity
 {
-
-    [Table(nameof(Area), Schema = "sec")]
-    public class Area : IEntity
-    {
-        public int Id { get; set; }
-        public string? Name { get; set; }
-    }
+    public int Id { get; set; }
+    public string? Name { get; set; }
 }
