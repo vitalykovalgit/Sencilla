@@ -25,6 +25,7 @@ static class ClaimsPrincipalEx
             Email = principal?.GetClaimValue(ClaimTypes.Email),
             FirstName = principal?.GetClaimValue(ClaimTypes.GivenName),
             LastName = principal?.GetClaimValue(ClaimTypes.Surname),
+            Pic = principal?.GetClaimValue(ClaimType.Picture)
         };
     }
 }

@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
+    <ProjectReference Include="..\..\Web\Sencilla.Web.csproj" />
   </ItemGroup>
 
 </Project>

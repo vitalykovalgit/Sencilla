@@ -24,7 +24,7 @@ public class UserRegistrationMiddleware
             {
                 // check if user already exists
                 var userReadRepo = container.GetService<IReadRepository<User>>();
-                var dbUser = (await userReadRepo.GetAll(new UserFilter().ByEmail(user.Email))).FirstOrDefault();
+                var dbUser = (await userReadRepo.GetAll(ByEmail(user.Email))).FirstOrDefault();
                 if (dbUser == null)
                 {
                     // create if not exists 

@@ -12,6 +12,8 @@ public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEnt
     public string? Email { get; set; }
     public long Phone { get; set; }
 
+    public string? Pic { get; set; }
+
     public DateTime CreatedDate { get; set; }
     public DateTime UpdatedDate { get; set; }
     public DateTime? DeletedDate { get; set; }
