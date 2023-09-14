@@ -29,7 +29,7 @@ public class UserRegistrationMiddleware
                 {
                     // create if not exists 
                     var userCreateRepo = container.GetService<ICreateRepository<User>>();
-                    dbUser = await userCreateRepo.Create(user);
+                    dbUser = await userCreateRepo.Upsert(user, u => u.Email);
                 }
                 
                 user = dbUser;
@@ -40,10 +40,10 @@ public class UserRegistrationMiddleware
             sysVars?.SetCurrentUser(user);
 
         }
-        catch //(Exception ex)
+        catch (Exception ex)
         {
             // For debug purpose
-            throw;
+            throw ex;
         }
         //}
 
