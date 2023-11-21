@@ -2,7 +2,6 @@
 using System.Data.Common;
 using System.Data.SqlClient;
 using Sencilla.Infrastructure.SqlMapper.Impl;
-using Microsoft.Azure.Services.AppAuthentication;
 using Sencilla.Infrastructure.SqlMapper.Provider;
 
 namespace Sencilla.Infrastructure.SqlMapper.Context
