@@ -104,6 +104,9 @@ public class SecurityConstraintHandler<TEntity>
                 Expression<Func<TEntity, bool>>? roleExps = null;
                 foreach (var p in group)
                 {
+                    if (string.IsNullOrWhiteSpace(p.Constraint))
+                        continue;
+
                     var c = ParsedConstraintCache.Get(p.Constraint());
                     var e = (Expression<Func<TEntity, bool>>)DynamicExpressionParser.ParseLambda(
                                     typeof(TEntity), typeof(bool), c.Constraint, c.Vars(sysVars));

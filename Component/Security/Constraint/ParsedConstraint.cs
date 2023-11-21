@@ -1,5 +1,4 @@
-﻿using System.Linq.Dynamic.Core;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Sencilla.Component.Security
 {
