@@ -86,7 +86,9 @@ namespace Sencilla.Repository.EntityFramework
             foreach (var e in entities)
             {
                 if (e is IEntityCreateableTrack)
+                {
                     ((IEntityCreateableTrack)e).CreatedDate = DateTime.UtcNow;
+                }
             }
 
             DbContext.BulkMerge(entities, options => options.ColumnPrimaryKeyExpression = columnPrimaryKeyExpression);
