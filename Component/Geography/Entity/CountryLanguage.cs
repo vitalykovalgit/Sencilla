@@ -1,12 +1,10 @@
-﻿
-using Sencilla.Core;
+﻿namespace Sencilla.Component.Geography;
 
-namespace Sencilla.Component.Geography
+[CrudApi("api/v1/countries/languages")]
+public class CountryLanguage : IEntity
 {
-    public class CountryLanguage : IEntity
-    {
-        public int Id { get; set; }
-        public int CountryId { get; set; }
-        public int LanguageId { get; set; }
-    }
+    public int Id { get; set; }
+    public int CountryId { get; set; }
+    public int LanguageId { get; set; }
 }
+
