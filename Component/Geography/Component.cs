@@ -1,4 +1,5 @@
 ﻿global using Sencilla.Core;
+global using Sencilla.Web;
 
 [assembly: AutoDiscovery]
 

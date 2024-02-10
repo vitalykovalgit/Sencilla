@@ -15,12 +15,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Database\MySQL\" />
-    <Folder Include="Impl\" />
+    <Compile Remove="Database\**" />
+    <Compile Remove="Impl\**" />
+    <EmbeddedResource Remove="Database\**" />
+    <EmbeddedResource Remove="Impl\**" />
+    <None Remove="Database\**" />
+    <None Remove="Impl\**" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
+    <ProjectReference Include="..\..\Web\Sencilla.Web.csproj" />
   </ItemGroup>
 
 </Project>
