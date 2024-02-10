@@ -8,29 +8,46 @@ public class RepositoryRegistrator : ITypeRegistrator
 {
     public List<Type> Entities { get; } = new List<Type>();
 
+    public Dictionary<string, List<Type>> ContextEntitiesPairs = new Dictionary<string, List<Type>>()
+    {
+        { nameof(DynamicDbContext), new List<Type>() },
+        { nameof(UserInfoDynamicDbContext), new List<Type>() },
+    };
+
     public void Register(IContainer container, Type type)
     {
-        // 
+        //
         var typeEntity = typeof(IBaseEntity);
+
         if (typeEntity.IsAssignableFrom(type) && type.IsClass && !type.IsAbstract && !type.IsGenericType)
         {
-            // Add entity to collection 
-            Entities.Add(type);
-
-            // get 
-            var entity = type.GetInterfaces()
-                             .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEntity<>));
-
-            var key = entity.GetGenericArguments()[0];
+            var entity = GetEntityType(type);
             var context = typeof(DynamicDbContext);
+            var key = entity.GetGenericArguments()[0];
 
-            
-            RegisterReadRepo(container, type, context, key);
-            RegisterCreateRepo(container, type, context, key);
-            RegisterUpdateRepo(container, type, context, key);
-            RegisterRemoveRepo(container, type, context, key);
-            RegisterDeleteRepo(container, type, context, key);
+            var dynamicContextAttr = type.GetCustomAttributes(typeof(DynamicContextAttribute), true)
+                .FirstOrDefault() as DynamicContextAttribute;
+
+            var contextName = dynamicContextAttr == null ? nameof(DynamicDbContext) : nameof(UserInfoDynamicDbContext);
+
+            ContextEntitiesPairs[contextName].Add(type);
+
+            RegisterRepositories(container, type, context, key);
         }
+    }
+
+    private Type GetEntityType(Type type)
+    {
+        return type.GetInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEntity<>));
+    }
+
+    private void RegisterRepositories(IContainer container, Type type, Type context, Type key)
+    {
+        RegisterReadRepo(container, type, context, key);
+        RegisterCreateRepo(container, type, context, key);
+        RegisterUpdateRepo(container, type, context, key);
+        RegisterRemoveRepo(container, type, context, key);
+        RegisterDeleteRepo(container, type, context, key);
     }
 
     private void RegisterReadRepo(IContainer container, Type type, Type context, Type key)

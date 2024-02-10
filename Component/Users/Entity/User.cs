@@ -43,3 +43,12 @@ public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEnt
         return string.IsNullOrEmpty(Email) && Phone == 0;
     }
 }
+
+[Table(nameof(User), Schema = "sec")]
+[DynamicContext(typeof(UserInfoDynamicDbContext))]
+public class UserInfo : IEntity
+{
+    public int Id { get; set; }
+
+    public string? Email { get; set; }
+}

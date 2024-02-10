@@ -6,6 +6,7 @@ global using System.Linq.Dynamic.Core;
 
 global using Sencilla.Core;
 global using Sencilla.Repository.EntityFramework;
+global using Sencilla.Repository.EntityFramework.Attributes;
 
 global using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             //builder.AddTransient<RepositoryDependency>();
             builder.AddDbContext<DynamicDbContext>(action);
+            builder.AddDbContext<UserInfoDynamicDbContext>(action);
             return builder;
         }
     }

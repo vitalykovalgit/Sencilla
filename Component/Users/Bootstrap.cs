@@ -12,6 +12,9 @@ global using Sencilla.Core;
 global using Sencilla.Web;
 global using Sencilla.Component.Users;
 
+global using Sencilla.Repository.EntityFramework;
+global using Sencilla.Repository.EntityFramework.Attributes;
+
 global using static Sencilla.Component.Users.UserFilter;
 
 [assembly: AutoDiscovery]
