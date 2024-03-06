@@ -47,14 +47,14 @@ namespace Sencilla.Core
         /// <param name="token"></param>
         /// <returns></returns>
         Task<TEntity?> Upsert(TEntity entity,
-            System.Linq.Expressions.Expression<Func<TEntity, object>> columnPrimaryKeyExpression, CancellationToken token = default);
+            Expression<Func<TEntity, object>> columnPrimaryKeyExpression, CancellationToken token = default);
 
         /// <summary>
         /// Upsert many entities async
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        Task<IEnumerable<TEntity>> Upsert(System.Linq.Expressions.Expression<Func<TEntity, object>> columnPrimaryKeyExpression, params TEntity[] entities);
+        Task<IEnumerable<TEntity>> Upsert(Expression<Func<TEntity, object>> columnPrimaryKeyExpression, params TEntity[] entities);
 
         /// <summary>
         /// Upsert many entities async
@@ -62,6 +62,6 @@ namespace Sencilla.Core
         /// <param name="entities"></param>
         /// <returns></returns>
         Task<IEnumerable<TEntity>> Upsert(IEnumerable<TEntity> entities,
-            System.Linq.Expressions.Expression<Func<TEntity, object>> columnPrimaryKeyExpression, CancellationToken token = default);
+            Expression<Func<TEntity, object>> columnPrimaryKeyExpression, CancellationToken token = default);
     }
 }
