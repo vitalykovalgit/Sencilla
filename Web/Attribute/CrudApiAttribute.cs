@@ -1,21 +1,20 @@
 ﻿
-namespace Sencilla.Web
+namespace Sencilla.Web;
+
+/// <summary>
+/// Generate Crud Api controller for entity 
+/// </summary>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+public class CrudApiAttribute : Attribute
 {
     /// <summary>
-    /// Generate Crud Api controller for entity 
+    /// 
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class CrudApiAttribute : Attribute
+    /// <param name="route"></param>
+    public CrudApiAttribute(string? route = null)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="route"></param>
-        public CrudApiAttribute(string? route = null)
-        {
-            Route = route;
-        }
-
-        public string? Route { get; }
+        Route = route;
     }
+
+    public string? Route { get; }
 }

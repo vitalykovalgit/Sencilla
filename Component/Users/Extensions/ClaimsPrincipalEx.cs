@@ -19,13 +19,20 @@ static class ClaimsPrincipalEx
         // try parse phone 
         long.TryParse(principal?.GetClaimValue(ClaimTypes.MobilePhone), out long phone);
 
-        return new User
+        var user = new User
         {
             Phone = phone,
             Email = principal?.GetClaimValue(ClaimTypes.Email),
+            EmailConf = principal?.GetClaimValue(ClaimType.EmailConfirmed) != null,
             FirstName = principal?.GetClaimValue(ClaimTypes.GivenName),
             LastName = principal?.GetClaimValue(ClaimTypes.Surname),
-            Pic = principal?.GetClaimValue(ClaimType.Picture)
+            Pic = principal?.GetClaimValue(ClaimType.Picture),
+            Status = (byte?)UserStatuses.NotRegistered,
         };
+
+        if (Enum.TryParse(principal?.GetClaimValue(ClaimType.RegStatus), true, out UserStatuses regStatus))
+            user.Status = (byte?)regStatus;
+
+        return user;
     }
 }

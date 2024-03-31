@@ -1,8 +1,7 @@
-﻿
-
-namespace Sencilla.Component.Geography;
+﻿namespace Sencilla.Component.Geography;
 
 [CrudApi("api/v1/countries")]
+[Table(nameof(Country), Schema = "geo")]
 public class Country : IEntity
 {
     public int Id { get; set; }

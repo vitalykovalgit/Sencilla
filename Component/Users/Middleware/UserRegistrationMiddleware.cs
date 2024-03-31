@@ -1,4 +1,3 @@
-
 namespace Sencilla.Component.Users;
 
 [DisableInjection]
@@ -13,14 +12,16 @@ public class UserRegistrationMiddleware
 
     public async Task Invoke(HttpContext context)
     {
-        //if (context.User?.Identity?.IsAuthenticated ?? false)
-        //{
         try
         {
             // get current user and check if it is not anonymous
             var container = context.RequestServices;
-            var user = container.GetService<ICurrentUserProvider>()?.CurrentUser;
-            if (!(user?.IsAnonymous() ?? true))
+            var userProvider = container.GetService<ICurrentUserProvider>();
+            if (userProvider == null)
+                return;
+
+            var user = userProvider.CurrentUser;
+            if (!user.IsAnonymous())
             {
                 // check if user already exists
                 var userReadRepo = container.GetService<IReadRepository<User>>();
@@ -28,8 +29,18 @@ public class UserRegistrationMiddleware
                 if (dbUser == null)
                 {
                     // create if not exists 
-                    var userCreateRepo = container.GetService<ICreateRepository<User>>();
-                    dbUser = await userCreateRepo.Upsert(user, u => u.Email);
+                    var userRepo = container.GetService<ICreateRepository<User>>();
+                    dbUser = await userRepo.Upsert(user, u => u.Email);
+
+                    var userAuthRepo = container.GetService<ICreateRepository<UserAuth, byte>>();
+                    var userAuth = new UserAuth
+                    {
+                        UserId = dbUser.Id,
+                        Auth = userProvider.CurrentPrincipal?.Identity?.AuthenticationType ?? "",
+                        Email = dbUser.Email,
+                        CreatedDate = DateTime.UtcNow,
+                    };
+                    await userAuthRepo.Upsert(userAuth, u => u.Email);
                 }
                 
                 user = dbUser;

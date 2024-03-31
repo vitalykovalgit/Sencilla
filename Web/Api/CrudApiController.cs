@@ -1,6 +1,4 @@
-﻿using Sencilla.Core;
-
-namespace Microsoft.AspNetCore.Mvc
+﻿namespace Microsoft.AspNetCore.Mvc
 {
     /// <summary>
     /// 
@@ -55,13 +53,13 @@ namespace Microsoft.AspNetCore.Mvc
         }
 
         [HttpPost, Route("{id}")]
-        public virtual async Task<IActionResult> UpdateOne(int id, TEntity entity, CancellationToken token)
+        public virtual async Task<IActionResult> UpdateOne(int id, [FromBody] TEntity entity, CancellationToken token)
         {
             return await AjaxAction((IUpdateRepository<TEntity, TKey> repo) => repo.Update(entity));
         }
 
         [HttpPost, Route("")]
-        public virtual async Task<IActionResult> UpdateMany(IEnumerable<TEntity> entities, CancellationToken token)
+        public virtual async Task<IActionResult> UpdateMany([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
         {
             return await AjaxAction((IUpdateRepository<TEntity, TKey> repo) => repo.Update(entities));
         }
@@ -85,7 +83,7 @@ namespace Microsoft.AspNetCore.Mvc
         }
 
         [HttpDelete, Route("")]
-        public virtual async Task<IActionResult> Delete(IEnumerable<TEntity> entities, CancellationToken token)
+        public virtual async Task<IActionResult> Delete([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
         {
             return await AjaxAction((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(entities, token));
         }

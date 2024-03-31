@@ -5,14 +5,26 @@ namespace Sencilla.Component.Users;
 public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityRemoveable
 {
     public int Id { get; set; }
+
+    public long Phone { get; set; }
+    public bool PhoneConf { get; set; }
+
+    public string? Email { get; set; }
+    public bool EmailConf { get; set; }
+
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? FatherName { get; set; }
-
-    public string? Email { get; set; }
-    public long Phone { get; set; }
-
     public string? Pic { get; set; }
+
+    public byte? Gender { get; set; }
+    public byte? Status { get; set; }
+    public byte? Type { get; set; }
+
+    public string? Comments { get; set; }
+    public string? Attrs { get; set; }
+
+    public DateTime? BirthDate { get; set; }
 
     public DateTime CreatedDate { get; set; }
     public DateTime UpdatedDate { get; set; }
@@ -23,6 +35,7 @@ public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEnt
     public ICollection<UserRole>? Roles { get; set; }
 
     //[ForeignKey(nameof(UserAttribute.UserId))]
+    [NotMapped]
     public ICollection<UserClaim>? Claims { get; set; }
 
     public User AddRole(int role) 

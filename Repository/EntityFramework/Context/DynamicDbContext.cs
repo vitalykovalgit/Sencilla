@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace Sencilla.Repository.EntityFramework
 {
@@ -18,11 +20,31 @@ namespace Sencilla.Repository.EntityFramework
         {
             foreach (var e in Registrator.Entities)
             {
-                modelBuilder.Entity(e);
+                modelBuilder.Entity(e, (c) =>
+                {
+                    var ta = e.GetCustomAttribute<TableAttribute>();
+                    c.ToTable(ta?.Name ?? e.Name, ta?.Schema ?? "dbo");
+
+                    // map properties
+                    var properties = e.GetProperties();
+                    foreach (var p in properties) 
+                    {
+                        // map all properties which are not marked with [NotMapped]
+                        var nma = p.GetCustomAttribute<NotMappedAttribute>();
+                        if (nma == null)
+                        {
+                            var na = p.GetCustomAttribute<ColumnAttribute>();
+                            c.Property(p.Name).HasColumnName(na?.Name ?? p.Name);
+                        }
+                    }
+
+                    // check if entity map to the same table 
+                    var pe = e.GetCustomAttribute<MainEntityAttribute>();
+                    if (pe != null)
+                        c.HasOne(pe.Type).WithOne().HasForeignKey(e);
+                });
             }
 
-            //modelBuilder.Entity("someclass");
-            //modelBuilder.Entity<Test>().ToTable(typeof(Test).Name);
             base.OnModelCreating(modelBuilder);
         }
     }

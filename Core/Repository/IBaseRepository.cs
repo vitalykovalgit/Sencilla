@@ -1,16 +1,15 @@
-﻿
-namespace Sencilla.Core
+﻿namespace Sencilla.Core;
+
+/// <summary>
+/// TODO: To be rewieved
+/// Base repository for all the repos
+/// </summary>
+public interface IBaseRepository
 {
     /// <summary>
-    /// TODO: To be rewieved
-    /// Base repository for all the repos
+    /// Save changes
     /// </summary>
-    public interface IBaseRepository
-    {
-        /// <summary>
-        /// Save changes
-        /// </summary>
-        /// <returns>Count of saved entities</returns>
-        Task<int> Save(CancellationToken token = default);
-    }
+    /// <returns>Count of saved entities</returns>
+    Task<int> Save(CancellationToken token = default);
 }
+
