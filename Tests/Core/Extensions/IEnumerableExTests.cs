@@ -10,7 +10,7 @@ public class IEnumerableExTests
         var c2 = new List<int>();
 
         var r = c1.StartWith(c2);
-        Assert.IsTrue(r);
+        Assert.That(r, Is.True);
     }
 
     [Test]
@@ -20,7 +20,7 @@ public class IEnumerableExTests
         var c2 = new List<int>();
 
         var r = c1.StartWith(c2);
-        Assert.IsTrue(r);
+        Assert.That(r, Is.True);
     }
 
     [Test]
@@ -30,7 +30,7 @@ public class IEnumerableExTests
         var c2 = new List<int>() { 1, 2 };
 
         var r = c1.StartWith(c2);
-        Assert.IsTrue(r);
+        Assert.That(r, Is.True);
     }
 
     [Test]
@@ -40,7 +40,7 @@ public class IEnumerableExTests
         var c2 = new List<int>() { 1, 2, 4 };
 
         var r = c1.StartWith(c2);
-        Assert.IsFalse(r);
+        Assert.That(r, Is.False);
     }
 
     [Test]
@@ -50,7 +50,7 @@ public class IEnumerableExTests
         var c2 = new List<int>() { 1, 2, 4 };
 
         var r = c1.StartWith(c2);
-        Assert.IsFalse(r);
+        Assert.That(r, Is.False);
     }
 
     [Test]
@@ -60,7 +60,7 @@ public class IEnumerableExTests
         var c2 = new List<Type>() { typeof(int), typeof(string) };
 
         var r = c1.StartWith(c2);
-        Assert.IsTrue(r);
+        Assert.That(r, Is.True);
     }
 
     [Test]
@@ -70,7 +70,7 @@ public class IEnumerableExTests
         var c2 = new List<Type>() { typeof(string), typeof(int) };
 
         var r = c1.StartWith(c2);
-        Assert.IsFalse(r);
+        Assert.That(r, Is.False);
     }
 
     [Test]
@@ -80,7 +80,7 @@ public class IEnumerableExTests
         var c2 = new List<int>() { 1, 2 };
 
         var r = c2.StartWith(c1, v => v.ToString());
-        Assert.IsTrue(r);
+        Assert.That(r, Is.True);
     }
 
     [Test]
@@ -90,6 +90,6 @@ public class IEnumerableExTests
         var c2 = new List<int>() { 2 };
 
         var r = c2.StartWith(c1, v => v.ToString());
-        Assert.IsFalse(r);
+        Assert.That(r, Is.False);
     }
 }
