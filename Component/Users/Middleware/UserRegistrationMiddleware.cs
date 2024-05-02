@@ -26,21 +26,12 @@ public class UserRegistrationMiddleware
                 // check if user already exists
                 var userReadRepo = container.GetService<IReadRepository<User>>();
                 var dbUser = (await userReadRepo.GetAll(ByEmail(user.Email))).FirstOrDefault();
+                
                 if (dbUser == null)
                 {
                     // create if not exists 
-                    var userRepo = container.GetService<ICreateRepository<User>>();
-                    dbUser = await userRepo.Upsert(user, u => u.Email);
-
-                    var userAuthRepo = container.GetService<ICreateRepository<UserAuth, byte>>();
-                    var userAuth = new UserAuth
-                    {
-                        UserId = dbUser.Id,
-                        Auth = userProvider.CurrentPrincipal?.Identity?.AuthenticationType ?? "",
-                        Email = dbUser.Email,
-                        CreatedDate = DateTime.UtcNow,
-                    };
-                    await userAuthRepo.Upsert(userAuth, u => u.Email);
+                    dbUser = await UpsertUserAsync(container, userReadRepo, user,
+                        authType: userProvider.CurrentPrincipal?.Identity?.AuthenticationType);
                 }
                 
                 user = dbUser;
@@ -59,5 +50,28 @@ public class UserRegistrationMiddleware
         //}
 
         await Next(context);
+    }
+
+
+    private async Task<User> UpsertUserAsync(IServiceProvider sp,
+        IReadRepository<User> rr, User user, string? authType)
+    {
+        var userRepo = sp.GetService<ICreateRepository<User>>();
+        await userRepo.UpsertAsync(user, u => u.Email);
+
+        var dbUser = (await rr.GetAll(ByEmail(user.Email))).FirstOrDefault();
+
+        var userAuth = new UserAuth()
+        {
+            UserId = dbUser.Id,
+            Auth = authType ?? "",
+            Email = dbUser.Email,
+            CreatedDate = DateTime.UtcNow,
+        };
+
+        var userAuthRepo = sp.GetService<ICreateRepository<UserAuth, byte>>();
+        await userAuthRepo.UpsertAsync(userAuth, u => new { u.Email, u.Auth, u.UserId, });
+
+        return dbUser;
     }
 }

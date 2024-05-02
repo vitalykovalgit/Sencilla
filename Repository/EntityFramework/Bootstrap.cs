@@ -6,6 +6,7 @@ global using System.Linq.Dynamic.Core;
 
 global using Sencilla.Core;
 global using Sencilla.Repository.EntityFramework;
+global using Sencilla.Repository.EntityFramework.Extension;
 
 global using Microsoft.EntityFrameworkCore;
 
