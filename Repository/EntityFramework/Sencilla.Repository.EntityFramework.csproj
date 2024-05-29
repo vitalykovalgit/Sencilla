@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
-    <ProjectReference Include="..\..\Extension\Sencilla.Repository.EntityFramework.Extension\Sencilla.Repository.EntityFramework.Extension.csproj" />
+    <ProjectReference Include="..\..\Extension\EntityFramework.Extension\Sencilla.Repository.EntityFramework.Extension.csproj" />
   </ItemGroup>
 
 </Project>

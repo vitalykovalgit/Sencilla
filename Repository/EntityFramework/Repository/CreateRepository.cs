@@ -1,6 +1,4 @@
-﻿using Sencilla.Repository.EntityFramework.Extension;
-
-namespace Sencilla.Repository.EntityFramework;
+﻿namespace Sencilla.Repository.EntityFramework;
 
 /// <summary>
 /// 
@@ -72,8 +70,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         var eventCreating = new EntityCreatingEvent<TEntity> { Entities = new List<TEntity>() { entity }.AsQueryable() };
         await D.Events.PublishAsync(eventCreating);
 
-        // update creation date 
-        // TODO: Move to event handler 
+        // update creation date
         if (entity is IEntityCreateableTrack)
             ((IEntityCreateableTrack)entity).CreatedDate = DateTime.UtcNow;
 
@@ -81,6 +78,34 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
 
         // Notify about 
         var eventCreated = new EntityCreatedEvent<TEntity> { Entities = new List<TEntity>() { entity }.AsQueryable() };
+        await D.Events.PublishAsync(eventCreated);
+    }
+
+    public Task UpsertAsync(Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        params TEntity[] entities) => UpsertAsync(entities, condition, insertAction, updateAction);
+
+    public async Task UpsertAsync(IEnumerable<TEntity> entities,
+        Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default)
+    {
+        // Check constraints 
+        var eventCreating = new EntityCreatingEvent<TEntity> { Entities = entities.AsQueryable() };
+        await D.Events.PublishAsync(eventCreating);
+
+        // update creation date
+        foreach (var e in entities)
+        {
+            if (e is IEntityCreateableTrack)
+                ((IEntityCreateableTrack)e).CreatedDate = DateTime.UtcNow;
+        }
+
+        await DbContext.UpsertBulkAsync(entities, condition, insertAction, updateAction);
+
+        var eventCreated = new EntityCreatedEvent<TEntity> { Entities = entities.AsQueryable() };
         await D.Events.PublishAsync(eventCreated);
     }
 }
