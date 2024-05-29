@@ -15,7 +15,7 @@ public class QueryProvider
             return $"NULL";
 
         if (p.PropertyType == typeof(string))
-            return $"N'{SqlSanitizer.Sanitize(ov.ToString())}'";
+            return $"N'{Sanitize(ov.ToString())}'";
 
         if (p.PropertyType == typeof(Guid)
             || p.PropertyType == typeof(DateTime)
@@ -56,6 +56,8 @@ public class QueryProvider
 
         return "SET " + res.TrimEnd(',');
     }
+
+    private string Sanitize(string input) => string.IsNullOrEmpty(input) ? input : input.Replace("'", @"\'").Trim();
 
     private string ExcludeIdColumn(string cols) => cols.Split(",").Where(x => x is not "[Id]" and not "Id").Join(",");
 }

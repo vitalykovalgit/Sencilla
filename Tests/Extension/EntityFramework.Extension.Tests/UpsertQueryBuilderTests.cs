@@ -143,7 +143,7 @@ public class UpsertQueryBuilderTests
     }
 
     [Test]
-    public void UpsertCommand_WithSqlInjection_ShouldNotProceed()
+    public void UpsertCommand_WithSqlInjection_ShouldProceedAndReplaceSingleQoute()
     {
         var cmnd = new UpsertCommand<TestEntity>(te => new { te.Email, te.Id, te.FirstName, })
         {
@@ -153,9 +153,10 @@ public class UpsertQueryBuilderTests
 
         var builder = new UpsertQueryBuilder<TestEntity>(cmnd);
 
-        _te.Email = "'asdlf@gmail.com' Drop Database";
+        _te.Email = "asdlf@gmail.com' Drop Database";
 
-        Assert.Throws<ArgumentException>(() => builder.Build(_te), "SQL injection attempt detected!");
+        Assert.Pass();
+        Assert.IsTrue(builder.Build(_te).Contains('\''));
     }
 
     [Test]

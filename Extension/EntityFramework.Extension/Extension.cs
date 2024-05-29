@@ -23,6 +23,7 @@ public static class EfExtension
         await context.Database.ExecuteSqlRawAsync(query);
     }
 
+    // todo: implement bulk to execute by one query
     public static async Task UpsertBulkAsync<TEntity>(this DbContext context,
         IEnumerable<TEntity> entities,
         Expression<Func<TEntity, object>> condition,
