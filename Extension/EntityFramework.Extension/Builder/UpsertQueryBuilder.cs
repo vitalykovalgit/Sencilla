@@ -13,10 +13,10 @@ public class UpsertQueryBuilder<TEntity>
         _qp = new QueryProvider();
     }
 
-    public string Build(TEntity e)
+    public string Build(IEnumerable<TEntity> entities)
     {
         string query = string.Empty;
-        var targetTable = GetTargetTableName(e);
+        var targetTable = GetTargetTableName(entities.First());
 
         /*
         if (_cmnd.InsertAction != null)
@@ -24,10 +24,11 @@ public class UpsertQueryBuilder<TEntity>
             query += $"SET IDENTITY_INSERT {targetTable} ON";
         }*/
 
-        var colVals = GetColumnValues(e);
+        var colVals = GetColumnValues(entities);
         query += Environment.NewLine + $"MERGE {targetTable} AS t";
         query += Environment.NewLine + "USING (VALUES";
-        query += Environment.NewLine + $"({colVals[VALS]}))";
+        query += Environment.NewLine + $"{colVals[VALS]}";
+        query += Environment.NewLine + ")";
         query += Environment.NewLine + $"AS s ({colVals[COLS]})";
 
         query += Environment.NewLine + "ON " + $"{_qp.ToMergeQuery(_cmnd.MatchedCondition, QueryClauseType.MergeMatchCondition)}";
@@ -75,7 +76,7 @@ public class UpsertQueryBuilder<TEntity>
         return string.Join(".", schema, table);
     }
 
-    private Dictionary<string, string> GetColumnValues(TEntity e)
+    private Dictionary<string, string> GetColumnValues(IEnumerable<TEntity> entities)
     {
         var dict = new Dictionary<string, string>()
         {
@@ -83,18 +84,44 @@ public class UpsertQueryBuilder<TEntity>
             { VALS, string.Empty },
         };
 
-        var props = e.GetType().GetProperties();
+        var props = entities.First().GetType().GetProperties().ToList();
 
-        foreach (var p in props)
+        using (var eIterator = entities.GetEnumerator())
         {
-            var nma = p.GetCustomAttribute<NotMappedAttribute>();
-            if (nma == null)
+            if (eIterator.MoveNext())
             {
-                var ca = p.GetCustomAttribute<ColumnAttribute>();
-                dict[COLS] += $"[{ca?.Name ?? p.Name}],";
+                dict[VALS] += "(";
+                foreach (var p in props)
+                {
+                    var nma = p.GetCustomAttribute<NotMappedAttribute>();
+                    if (nma == null)
+                    {
+                        var ca = p.GetCustomAttribute<ColumnAttribute>();
+                        dict[COLS] += $"[{ca?.Name ?? p.Name}],";
 
-                var ov = _qp.ToSqlParameterValue(p, p.GetValue(e));
-                dict[VALS] += $"{ov},";
+                        var ov = _qp.ToSqlParameterValue(p, p.GetValue(eIterator.Current));
+                        dict[VALS] += $"{ov},";
+                    }
+                }
+
+                dict[VALS] = dict[VALS].TrimEnd(',') + "),";
+
+                while (eIterator.MoveNext())
+                {
+                    dict[VALS] += Environment.NewLine + "(";
+
+                    foreach (var p in props)
+                    {
+                        var nma = p.GetCustomAttribute<NotMappedAttribute>();
+                        if (nma == null)
+                        {
+                            var ov = _qp.ToSqlParameterValue(p, p.GetValue(eIterator.Current));
+                            dict[VALS] += $"{ov},";
+                        }
+                    }
+
+                    dict[VALS] = dict[VALS].TrimEnd(',') + "),";
+                }
             }
         }
 

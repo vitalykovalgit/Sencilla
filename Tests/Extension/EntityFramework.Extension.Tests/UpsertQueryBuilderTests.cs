@@ -59,7 +59,7 @@ public class UpsertQueryBuilderTests
 
         var builder = new UpsertQueryBuilder<TestEntity>(cmnd);
 
-        var query = builder.Build(_te);
+        var query = builder.Build(new List<TestEntity> { _te });
 
         Assert.Pass();
         Assert.That(query, Is.Not.Empty);
@@ -136,7 +136,7 @@ public class UpsertQueryBuilderTests
 
         var builder = new UpsertQueryBuilder<TestEntity>(cmnd);
 
-        var query = builder.Build(_te);
+        var query = builder.Build(new List<TestEntity> { _te });
 
         Assert.Pass();
         Assert.That(query, Is.Not.Empty);
@@ -156,7 +156,7 @@ public class UpsertQueryBuilderTests
         _te.Email = "asdlf@gmail.com' Drop Database";
 
         Assert.Pass();
-        Assert.IsTrue(builder.Build(_te).Contains('\''));
+        Assert.IsTrue(builder.Build(new List<TestEntity> { _te }).Contains('\''));
     }
 
     [Test]
@@ -170,9 +170,51 @@ public class UpsertQueryBuilderTests
 
         var builder = new UpsertQueryBuilder<TestEntity>(cmnd);
 
-        var query = builder.Build(_te);
+        var query = builder.Build(new List<TestEntity> { _te });
 
         Assert.Pass();
         Assert.That(query, Is.Not.Empty);
+    }
+
+    [Test]
+    public void UpsertCommand_WithMoreThanOneEntities_ShouldProceed()
+    {
+        var cmnd = new UpsertCommand<TestEntity>(te => te.Email)
+        {
+            InsertAction = null,
+            UpdateAction = null,
+        };
+
+        var builder = new UpsertQueryBuilder<TestEntity>(cmnd);
+
+        var te2 = new TestEntity()
+        {
+            Email = "test2@gmail.com",
+            CreatedDate = _te.CreatedDate,
+            FirstName = _te.FirstName,
+            Id = _te.Id,
+            IsActive = _te.IsActive,
+            LastName = _te.LastName,
+            Phone = _te.Phone,
+            UpdatedDate = _te.UpdatedDate,
+        };
+
+        var te3 = new TestEntity()
+        {
+            Email = "test3@gmail.com",
+            CreatedDate = _te.CreatedDate,
+            FirstName = _te.FirstName,
+            Id = _te.Id,
+            IsActive = _te.IsActive,
+            LastName = _te.LastName,
+            Phone = _te.Phone,
+            UpdatedDate = _te.UpdatedDate,
+        };
+
+        var query = builder.Build(new List<TestEntity> { _te, te2, te3 });
+
+        Assert.Pass();
+        Assert.That(query, Is.Not.Empty);
+        Assert.That(query.ContainsAll(_te.Email, te2.Email, te3.Email), Is.True);
     }
 }
