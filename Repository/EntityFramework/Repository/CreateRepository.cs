@@ -1,4 +1,3 @@
-﻿
 namespace Sencilla.Repository.EntityFramework;
 
 /// <summary>
@@ -62,26 +61,42 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         return entities;
     }
 
-    public async Task<TEntity?> Upsert(TEntity entity,
-        Expression<Func<TEntity, object>> columnPrimaryKeyExpression, CancellationToken token = default)
+    public async Task UpsertAsync(TEntity entity, Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default)
     {
-        return (await Upsert(new[] { entity }, columnPrimaryKeyExpression, token)).FirstOrDefault();
+        // Check constraints 
+        var eventCreating = new EntityCreatingEvent<TEntity> { Entities = new List<TEntity>() { entity }.AsQueryable() };
+        await D.Events.PublishAsync(eventCreating);
+
+        // update creation date
+        if (entity is IEntityCreateableTrack)
+            ((IEntityCreateableTrack)entity).CreatedDate = DateTime.UtcNow;
+
+        await DbContext.UpsertAsync(entity, condition, insertAction, updateAction);
+
+        // Notify about 
+        var eventCreated = new EntityCreatedEvent<TEntity> { Entities = new List<TEntity>() { entity }.AsQueryable() };
+        await D.Events.PublishAsync(eventCreated);
     }
 
-    public Task<IEnumerable<TEntity>> Upsert(Expression<Func<TEntity, object>> columnPrimaryKeyExpression, params TEntity[] entities)
-    {
-        return Upsert(entities, columnPrimaryKeyExpression, CancellationToken.None);
-    }
+    public Task UpsertAsync(Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        params TEntity[] entities) => UpsertAsync(entities, condition, insertAction, updateAction);
 
-    public async Task<IEnumerable<TEntity>> Upsert(IEnumerable<TEntity> entities,
-        Expression<Func<TEntity, object>> columnPrimaryKeyExpression, CancellationToken token = default)
+    public async Task UpsertAsync(IEnumerable<TEntity> entities,
+        Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default)
     {
-
         // Check constraints 
         var eventCreating = new EntityCreatingEvent<TEntity> { Entities = entities.AsQueryable() };
         await D.Events.PublishAsync(eventCreating);
 
-        // update creation date 
+        // update creation date
         // TODO: Move to event handler 
         foreach (var e in entities)
         {
@@ -89,7 +104,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
                 ((IEntityCreateableTrack)e).CreatedDate = DateTime.UtcNow;
         }
 
-        DbContext.BulkMerge(entities, options => options.ColumnPrimaryKeyExpression = columnPrimaryKeyExpression);
+        await DbContext.UpsertBulkAsync(entities, condition, insertAction, updateAction);
 
         // Notify about 
         var eventCreated = new EntityCreatedEvent<TEntity> { Entities = entities.AsQueryable() };

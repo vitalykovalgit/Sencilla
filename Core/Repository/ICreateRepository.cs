@@ -1,5 +1,4 @@
-﻿
-namespace Sencilla.Core;
+﻿namespace Sencilla.Core;
 
 /// <summary>
 /// 
@@ -43,24 +42,32 @@ public interface ICreateRepository<TEntity, TKey> : IReadRepository<TEntity, TKe
     /// <summary>
     /// Upsert single entity async
     /// </summary>
-    /// <param name="entity"></param>
-    /// <param name="token"></param>
+    /// <param name="entities"></param>
     /// <returns></returns>
-    Task<TEntity?> Upsert(TEntity entity,
-        System.Linq.Expressions.Expression<Func<TEntity, object>> columnPrimaryKeyExpression, CancellationToken token = default);
+    Task UpsertAsync(TEntity entity,
+        Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default);
 
     /// <summary>
     /// Upsert many entities async
     /// </summary>
     /// <param name="entity"></param>
     /// <returns></returns>
-    Task<IEnumerable<TEntity>> Upsert(System.Linq.Expressions.Expression<Func<TEntity, object>> columnPrimaryKeyExpression, params TEntity[] entities);
+    Task UpsertAsync(Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        params TEntity[] entities);
 
     /// <summary>
     /// Upsert many entities async
     /// </summary>
     /// <param name="entities"></param>
     /// <returns></returns>
-    Task<IEnumerable<TEntity>> Upsert(IEnumerable<TEntity> entities,
-        System.Linq.Expressions.Expression<Func<TEntity, object>> columnPrimaryKeyExpression, CancellationToken token = default);
+    Task UpsertAsync(IEnumerable<TEntity> entities,
+        Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default);
 }
