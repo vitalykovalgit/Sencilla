@@ -1,4 +1,4 @@
-﻿namespace Sencilla.Repository.EntityFramework;
+namespace Sencilla.Repository.EntityFramework;
 
 /// <summary>
 /// 
@@ -97,6 +97,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         await D.Events.PublishAsync(eventCreating);
 
         // update creation date
+        // TODO: Move to event handler 
         foreach (var e in entities)
         {
             if (e is IEntityCreateableTrack)
@@ -105,7 +106,10 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
 
         await DbContext.UpsertBulkAsync(entities, condition, insertAction, updateAction);
 
+        // Notify about 
         var eventCreated = new EntityCreatedEvent<TEntity> { Entities = entities.AsQueryable() };
         await D.Events.PublishAsync(eventCreated);
+
+        return entities;
     }
 }
