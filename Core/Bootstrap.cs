@@ -1,5 +1,7 @@
 ﻿global using System;
 global using System.Text;
+global using System.Text.Json;
+global using System.Text.Json.Serialization;
 global using System.Reflection;
 global using Sencilla.Core;
 global using Sencilla.Core.Impl;
