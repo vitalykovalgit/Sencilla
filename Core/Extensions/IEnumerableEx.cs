@@ -118,4 +118,14 @@ public static class IEnumerableEx
         return string.Join(delimeter, list);
     }
 
+    /// <summary>
+    /// check if string contains all of provided parameters
+    /// </summary>
+    /// <param name="stringToCheck"></param>
+    /// <param name="parameters"></param>
+    /// <returns></returns>
+    public static bool ContainsAll(this string stringToCheck, params string[] parameters)
+    {
+        return parameters.All(stringToCheck.Contains);
+    }
 }

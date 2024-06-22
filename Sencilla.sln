@@ -53,7 +53,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityF
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository", "Repository", "{98A5679D-EA35-49A0-A7D8-738DA4868592}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Core.Tests", "Tests\Core\Sencilla.Core.Tests.csproj", "{B4479087-3435-42DA-88B1-7D32C7358EB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Core.Tests", "Tests\Core\Sencilla.Core.Tests.csproj", "{B4479087-3435-42DA-88B1-7D32C7358EB9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extension", "Extension", "{4EF87FA7-8BCE-4B8D-854A-51E7FB0D2B42}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityFramework.Extension", "Extension\EntityFramework.Extension\Sencilla.Repository.EntityFramework.Extension.csproj", "{5E3074EC-8F16-4000-B2E9-1EF2C428D8A2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extension", "Extension", "{062F3A53-9CAD-4118-9258-9F9F252EAAD3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityFramework.Extension.Tests", "Tests\Extension\EntityFramework.Extension.Tests\Sencilla.Repository.EntityFramework.Extension.Tests.csproj", "{B98F9496-15C3-4F82-9DA7-02500E09BFAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -137,6 +145,14 @@ Global
 		{B4479087-3435-42DA-88B1-7D32C7358EB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4479087-3435-42DA-88B1-7D32C7358EB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4479087-3435-42DA-88B1-7D32C7358EB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E3074EC-8F16-4000-B2E9-1EF2C428D8A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E3074EC-8F16-4000-B2E9-1EF2C428D8A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E3074EC-8F16-4000-B2E9-1EF2C428D8A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E3074EC-8F16-4000-B2E9-1EF2C428D8A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B98F9496-15C3-4F82-9DA7-02500E09BFAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B98F9496-15C3-4F82-9DA7-02500E09BFAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B98F9496-15C3-4F82-9DA7-02500E09BFAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B98F9496-15C3-4F82-9DA7-02500E09BFAE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -161,6 +177,9 @@ Global
 		{7E57A4E6-DA08-44F7-96C8-AF06E7180E41} = {98A5679D-EA35-49A0-A7D8-738DA4868592}
 		{98A5679D-EA35-49A0-A7D8-738DA4868592} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
 		{B4479087-3435-42DA-88B1-7D32C7358EB9} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
+		{5E3074EC-8F16-4000-B2E9-1EF2C428D8A2} = {4EF87FA7-8BCE-4B8D-854A-51E7FB0D2B42}
+		{062F3A53-9CAD-4118-9258-9F9F252EAAD3} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
+		{B98F9496-15C3-4F82-9DA7-02500E09BFAE} = {062F3A53-9CAD-4118-9258-9F9F252EAAD3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5EE15D7B-0AF6-4664-9D0B-7140B5B5961F}
