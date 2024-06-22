@@ -18,7 +18,7 @@ namespace System.Data.Common
             return connection.ExecuteProcedure(spName, transaction, null, parameters);
         }
 
-        public static int ExecuteProcedure(this DbConnection connection, string spName, DbTransaction transaction, int? timeout, params DbParameter[] parameters)
+        public static int ExecuteProcedure(this DbConnection connection, string spName, DbTransaction? transaction, int? timeout, params DbParameter[] parameters)
         {
             using (var cmd = connection.CreateCommand(CommandType.StoredProcedure, spName, transaction, timeout, parameters))
             {
@@ -49,12 +49,12 @@ namespace System.Data.Common
             return connection.ExecuteProcedureAsync(spName, null, null, token, parameters);
         }
 
-        public static Task<int> ExecuteProcedureAsync(this DbConnection connection, string spName, DbTransaction transaction, CancellationToken? token, params DbParameter[] parameters)
+        public static Task<int> ExecuteProcedureAsync(this DbConnection connection, string spName, DbTransaction? transaction, CancellationToken? token, params DbParameter[] parameters)
         {
             return connection.ExecuteProcedureAsync(spName, transaction, null, token, parameters);
         }
 
-        public static Task<int> ExecuteProcedureAsync(this DbConnection connection, string spName, DbTransaction transaction, int? timeout, CancellationToken? token, params DbParameter[] parameters)
+        public static Task<int> ExecuteProcedureAsync(this DbConnection connection, string spName, DbTransaction? transaction, int? timeout, CancellationToken? token, params DbParameter[] parameters)
         {
             using (var cmd = connection.CreateCommand(CommandType.StoredProcedure, spName, transaction, timeout, parameters))
             {

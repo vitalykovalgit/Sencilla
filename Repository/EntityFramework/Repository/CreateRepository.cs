@@ -61,24 +61,13 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         return entities;
     }
 
-    public async Task UpsertAsync(TEntity entity, Expression<Func<TEntity, object>> condition,
+    public async Task UpsertAsync(TEntity entity, 
+        Expression<Func<TEntity, object>> condition,
         Expression<Func<TEntity, TEntity>>? insertAction = null,
         Expression<Func<TEntity, TEntity>>? updateAction = null,
         CancellationToken token = default)
     {
-        // Check constraints 
-        var eventCreating = new EntityCreatingEvent<TEntity> { Entities = new List<TEntity>() { entity }.AsQueryable() };
-        await D.Events.PublishAsync(eventCreating);
-
-        // update creation date
-        if (entity is IEntityCreateableTrack)
-            ((IEntityCreateableTrack)entity).CreatedDate = DateTime.UtcNow;
-
-        await DbContext.UpsertAsync(entity, condition, insertAction, updateAction);
-
-        // Notify about 
-        var eventCreated = new EntityCreatedEvent<TEntity> { Entities = new List<TEntity>() { entity }.AsQueryable() };
-        await D.Events.PublishAsync(eventCreated);
+        await UpsertAsync([entity], condition, insertAction, updateAction, token);
     }
 
     public Task UpsertAsync(Expression<Func<TEntity, object>> condition,
@@ -110,6 +99,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         var eventCreated = new EntityCreatedEvent<TEntity> { Entities = entities.AsQueryable() };
         await D.Events.PublishAsync(eventCreated);
 
-        return entities;
+        // TODO: Think about returning values
+        //return entities;
     }
 }

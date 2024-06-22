@@ -56,6 +56,7 @@ public class UserRegistrationMiddleware
     private async Task<User> UpsertUserAsync(IServiceProvider sp,
         IReadRepository<User> rr, User user, string? authType)
     {
+        // TODO: Think about saving this in transaction
         var userRepo = sp.GetService<ICreateRepository<User>>();
         await userRepo.UpsertAsync(user, u => u.Email);
 

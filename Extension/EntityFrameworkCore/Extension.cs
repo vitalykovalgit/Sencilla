@@ -1,6 +1,6 @@
-﻿namespace Sencilla.Repository.EntityFramework.Extension;
+﻿namespace Microsoft.EntityFrameworkCore;
 
-public static class EfExtension
+public static class EntityFrameworkCoreExtensions
 {
     public static Task UpsertAsync<TEntity, TContext>(this TContext context,
         TEntity e,
@@ -9,7 +9,10 @@ public static class EfExtension
         Expression<Func<TEntity, TEntity>>? updateAction = null)
         where TEntity : class
         where TContext : DbContext 
-        => UpsertBulkAsync(context, new List<TEntity> { e }, condition, insertAction, updateAction);
+    {
+        return UpsertBulkAsync(context, new List<TEntity> { e }, condition, insertAction, updateAction);
+    }
+        
 
     public static async Task UpsertBulkAsync<TEntity, TContext>(this TContext context,
         IEnumerable<TEntity> entities,

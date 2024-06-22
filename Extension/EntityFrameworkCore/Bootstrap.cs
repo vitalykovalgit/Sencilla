@@ -15,7 +15,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class Bootstrap
     {
-        public static IServiceCollection AddSencillaExtensionForEF(this IServiceCollection builder, Action<DbContextOptionsBuilder> action)
+        public static IServiceCollection AddEntityFrameworkCoreExtensions(this IServiceCollection builder, Action<DbContextOptionsBuilder>? action = null)
         {
             
             return builder;

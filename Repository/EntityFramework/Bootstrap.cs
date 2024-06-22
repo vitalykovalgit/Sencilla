@@ -9,7 +9,6 @@ global using System.ComponentModel.DataAnnotations.Schema;
 
 global using Sencilla.Core;
 global using Sencilla.Repository.EntityFramework;
-global using Sencilla.Repository.EntityFramework.Extension;
 global using Microsoft.EntityFrameworkCore;
 
 [assembly: AutoDiscovery]
@@ -22,6 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             //builder.AddTransient<RepositoryDependency>();
             builder.AddDbContext<DynamicDbContext>(action);
+            builder.AddEntityFrameworkCoreExtensions();
             return builder;
         }
     }
