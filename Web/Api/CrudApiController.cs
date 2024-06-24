@@ -64,6 +64,18 @@
             return await AjaxAction((IUpdateRepository<TEntity, TKey> repo) => repo.Update(entities));
         }
 
+        [HttpPost, Route("upsert/{id}")]
+        public virtual async Task<IActionResult> UpsertOne(int id, [FromBody] TEntity entity, CancellationToken token)
+        {
+            return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(entity, x => x.Id));
+        }
+
+        [HttpPost, Route("upsert")]
+        public virtual async Task<IActionResult> UpsertMany([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
+        {
+            return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(entities, x => x.Id));
+        }
+
         [HttpPost, Route("remove")]
         public virtual async Task<IActionResult> Remove([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
         {
