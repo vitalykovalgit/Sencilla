@@ -61,21 +61,23 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         return entities;
     }
 
-    public async Task UpsertAsync(TEntity entity, 
+    public async Task<TEntity> UpsertAsync(TEntity entity,
         Expression<Func<TEntity, object>> condition,
         Expression<Func<TEntity, TEntity>>? insertAction = null,
         Expression<Func<TEntity, TEntity>>? updateAction = null,
         CancellationToken token = default)
     {
         await UpsertAsync([entity], condition, insertAction, updateAction, token);
+
+        return entity;
     }
 
-    public Task UpsertAsync(Expression<Func<TEntity, object>> condition,
+    public Task<IEnumerable<TEntity>> UpsertAsync(Expression<Func<TEntity, object>> condition,
         Expression<Func<TEntity, TEntity>>? insertAction = null,
         Expression<Func<TEntity, TEntity>>? updateAction = null,
         params TEntity[] entities) => UpsertAsync(entities, condition, insertAction, updateAction);
 
-    public async Task UpsertAsync(IEnumerable<TEntity> entities,
+    public async Task<IEnumerable<TEntity>> UpsertAsync(IEnumerable<TEntity> entities,
         Expression<Func<TEntity, object>> condition,
         Expression<Func<TEntity, TEntity>>? insertAction = null,
         Expression<Func<TEntity, TEntity>>? updateAction = null,
@@ -100,6 +102,6 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         await D.Events.PublishAsync(eventCreated);
 
         // TODO: Think about returning values
-        //return entities;
+        return entities;
     }
 }
