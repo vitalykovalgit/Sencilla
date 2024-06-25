@@ -17,14 +17,18 @@ public class QueryProvider
         if (p.PropertyType == typeof(string))
             return $"N'{Sanitize(ov.ToString())}'";
 
+
+        if (p.PropertyType == typeof(DateTime))
+            return $"'{((DateTime)ov).ToString("yyyy-MM-dd HH:mm:ss")}'";
+
         if (p.PropertyType == typeof(Guid)
-            || p.PropertyType == typeof(DateTime)
             || p.PropertyType == typeof(TimeSpan)
             || p.PropertyType == typeof(DateTimeOffset))
             return $"'{ov}'";
 
         if (p.PropertyType == typeof(bool))
             return bool.Parse(ov.ToString()) ? "1" : "0";
+
 
         return ov.ToString();
     }
