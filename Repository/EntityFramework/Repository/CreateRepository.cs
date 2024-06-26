@@ -104,4 +104,47 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         // TODO: Think about returning values
         return entities;
     }
+
+    public async Task<TEntity> MergeAsync(TEntity entity,
+        Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default)
+    {
+        await MergeAsync([entity], condition, insertAction, updateAction, token);
+
+        return entity;
+    }
+
+    public Task<IEnumerable<TEntity>> MergeAsync(Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        params TEntity[] entities) => MergeAsync(entities, condition, insertAction, updateAction);
+
+    public async Task<IEnumerable<TEntity>> MergeAsync(IEnumerable<TEntity> entities,
+        Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default)
+    {
+        // TODO: replace creating by merging
+        var eventCreating = new EntityCreatingEvent<TEntity> { Entities = entities.AsQueryable() };
+        await D.Events.PublishAsync(eventCreating);
+
+        // update creation date
+        // TODO: Move to event handler
+        if (entities.Any())
+            foreach (var e in entities)
+                if (e is IEntityCreateableTrack)
+                    ((IEntityCreateableTrack)e).CreatedDate = DateTime.UtcNow;
+
+        await DbContext.MergeBulkAsync(entities, condition, insertAction, updateAction);
+
+        // TODO: replace created by merged
+        var eventCreated = new EntityCreatedEvent<TEntity> { Entities = entities.AsQueryable() };
+        await D.Events.PublishAsync(eventCreated);
+
+        // TODO: Think about returning values
+        return entities;
+    }
 }
