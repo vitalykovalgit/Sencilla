@@ -70,4 +70,36 @@ public interface ICreateRepository<TEntity, TKey> : IReadRepository<TEntity, TKe
         Expression<Func<TEntity, TEntity>>? insertAction = null,
         Expression<Func<TEntity, TEntity>>? updateAction = null,
         CancellationToken token = default);
+
+    /// <summary>
+    /// Merge single entity async (upsert and delete)
+    /// </summary>
+    /// <param name="entities"></param>
+    /// <returns></returns>
+    Task<TEntity> MergeAsync(TEntity entity,
+        Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default);
+
+    /// <summary>
+    /// Merge many entities async (upsert and delete)
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <returns></returns>
+    Task<IEnumerable<TEntity>> MergeAsync(Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        params TEntity[] entities);
+
+    /// <summary>
+    /// Merge many entities async (upsert and delete)
+    /// </summary>
+    /// <param name="entities"></param>
+    /// <returns></returns>
+    Task<IEnumerable<TEntity>> MergeAsync(IEnumerable<TEntity> entities,
+        Expression<Func<TEntity, object>> condition,
+        Expression<Func<TEntity, TEntity>>? insertAction = null,
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default);
 }

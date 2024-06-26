@@ -67,13 +67,25 @@
         [HttpPost, Route("upsert/{id}")]
         public virtual async Task<IActionResult> UpsertOne(int id, [FromBody] TEntity entity, CancellationToken token)
         {
-            return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(entity, x => x.Id));
+            return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(entity, x => x.Id, token: token));
         }
 
         [HttpPost, Route("upsert")]
         public virtual async Task<IActionResult> UpsertMany([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
         {
-            return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(entities, x => x.Id));
+            return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(entities, x => x.Id, token: token));
+        }
+
+        [HttpPost, Route("merge/{id}")]
+        public virtual async Task<IActionResult> MergeOne(int id, [FromBody] TEntity entity, CancellationToken token)
+        {
+            return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.MergeAsync(entity, x => x.Id, token: token));
+        }
+
+        [HttpPost, Route("merge")]
+        public virtual async Task<IActionResult> MergeMany([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
+        {
+            return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.MergeAsync(entities, x => x.Id, token: token));
         }
 
         [HttpPost, Route("remove")]
