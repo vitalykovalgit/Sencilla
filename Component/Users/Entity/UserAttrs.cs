@@ -8,6 +8,6 @@ public class UserAttrs: IEntity, IEntityUpdateable
 {
     public int Id { get; set; }
 
-    [JsonObject]
+    [JsonObjectString]
     public string? Attrs { get; set; }
 }

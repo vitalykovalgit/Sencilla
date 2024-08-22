@@ -23,7 +23,7 @@ public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEnt
 
     public string? Comments { get; set; }
 
-    [JsonObject]
+    [JsonObjectString]
     public string? Attrs { get; set; }
 
     public DateTime? BirthDate { get; set; }

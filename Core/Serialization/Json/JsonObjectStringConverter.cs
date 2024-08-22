@@ -2,9 +2,9 @@
 namespace Sencilla.Core;
 
 /// <summary>
-/// Convert json to object and object to json 
+/// Convert json to object and object to json
 /// </summary>
-public class JsonObjectConverter : JsonConverter<string>
+public class JsonObjectStringConverter : JsonConverter<string>
 {
     public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
