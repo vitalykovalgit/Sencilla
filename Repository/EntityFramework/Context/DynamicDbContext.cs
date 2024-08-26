@@ -34,6 +34,10 @@ public class DynamicDbContext : DbContext
                         var na = p.GetCustomAttribute<ColumnAttribute>();
                         c.Property(p.Name).HasColumnName(na?.Name ?? p.Name);
                     }
+
+                    var joa = p.GetCustomAttribute<JsonObjectAttribute>();
+                    if (joa is not null)
+                        c.Property(p.Name).HasConversion(JsonObjectConverter<object>.CreateConverter(p.PropertyType));
                 }
 
                 // check if entity map to the same table 
