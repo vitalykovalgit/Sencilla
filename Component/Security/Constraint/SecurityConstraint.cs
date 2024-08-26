@@ -90,7 +90,7 @@ public class SecurityConstraintHandler<TEntity>
 
             // retrieve permissions and current user
             var user = sysVars.GetCurrentUser();
-            var permissions = provider.Permissions<TEntity>(action);
+            var permissions = provider.Permissions<TEntity>(action); // DB, Attrs, FluenApi
 
             // if operation is not allowed throw forbid exception 
             if (!permissions.Any())
@@ -106,10 +106,9 @@ public class SecurityConstraintHandler<TEntity>
                 {
                     if (string.IsNullOrWhiteSpace(p.Constraint))
                         continue;
-
+                    
                     var c = ParsedConstraintCache.Get(p.Constraint());
-                    var e = (Expression<Func<TEntity, bool>>)DynamicExpressionParser.ParseLambda(
-                                    typeof(TEntity), typeof(bool), c.Constraint, c.Vars(sysVars));
+                    var e = (Expression<Func<TEntity, bool>>)DynamicExpressionParser.ParseLambda(typeof(TEntity), typeof(bool), c.Constraint, c.Vars(sysVars));
                     roleExps = roleExps == null ? e : roleExps.AndAlso(e);
                 }
 

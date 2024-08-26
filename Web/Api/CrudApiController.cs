@@ -101,7 +101,7 @@
         }
 
         [HttpDelete, Route("{id}")]
-        public virtual async Task<IActionResult> Delete(TKey id, [FromBody] TEntity entity, CancellationToken token)
+        public virtual async Task<IActionResult> Delete(TKey id, CancellationToken token)
         {
             return await AjaxAction((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(id, token));
         }
@@ -110,6 +110,12 @@
         public virtual async Task<IActionResult> Delete([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
         {
             return await AjaxAction((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(entities, token));
+        }
+
+        [HttpDelete, Route("ids")]
+        public virtual async Task<IActionResult> DeleteByIds([FromBody] IEnumerable<TKey> ids, CancellationToken token)
+        {
+            return await AjaxAction((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(ids, token));
         }
     }
 }

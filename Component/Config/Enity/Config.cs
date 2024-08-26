@@ -5,4 +5,3 @@ public class Config : IEntity
 {
     public int Id { get; set; }
 }
-
