@@ -29,7 +29,8 @@ public class DynamicDbContext : DbContext
                 {
                     // map all properties which are not marked with [NotMapped]
                     var nma = p.GetCustomAttribute<NotMappedAttribute>();
-                    if (nma == null)
+
+                    if (nma is null)
                     {
                         var na = p.GetCustomAttribute<ColumnAttribute>();
                         c.Property(p.Name).HasColumnName(na?.Name ?? p.Name);
@@ -38,6 +39,16 @@ public class DynamicDbContext : DbContext
                     var joa = p.GetCustomAttribute<JsonObjectAttribute>();
                     if (joa is not null)
                         c.Property(p.Name).HasConversion(JsonObjectConverter<object>.CreateConverter(p.PropertyType));
+
+                    var fka = p.GetCustomAttribute<ForeignKeyAttribute>();
+                    var ipa = p.GetCustomAttribute<InversePropertyAttribute>();
+                    if (fka is not null && ipa is not null)
+                    {
+                        string hasOne = p.Name;
+                        string withMany = ipa.Property;
+                        string hasForeignKey = fka.Name;
+                        c.HasOne(hasOne).WithMany(withMany).HasForeignKey(hasForeignKey);
+                    }
                 }
 
                 // check if entity map to the same table 
