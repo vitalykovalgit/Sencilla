@@ -35,13 +35,15 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
             query = query.Take(filter.Take.Value);
 
         if (filter.With?.Length > 0)
+        {
+            var entityType = typeof(TEntity);
             foreach (var with in filter.With)
             {
-                var property = typeof(TEntity)
-                    ?.GetProperty(with, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)?.Name;
+                var property = entityType.GetProperty(with, BindingFlags.IgnoreCase|BindingFlags.Public|BindingFlags.Instance)?.Name;
                 if (property != null)
                     query = query.Include(property);
             }
+        }
 
         @event.Entities = query;
     }
