@@ -3,6 +3,7 @@
 namespace Sencilla.Repository.EntityFramework;
 
 public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent<TEntity>>
+    where TEntity : class
 {
     public async Task HandleAsync(EntityReadingEvent<TEntity> @event)
     {
@@ -32,6 +33,15 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
 
         if (filter.Take != null)
             query = query.Take(filter.Take.Value);
+
+        if (filter.With?.Length > 0)
+            foreach (var with in filter.With)
+            {
+                var property = typeof(TEntity)
+                    ?.GetProperty(with, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)?.Name;
+                if (property != null)
+                    query = query.Include(property);
+            }
 
         @event.Entities = query;
     }
