@@ -18,7 +18,9 @@ namespace Microsoft.Extensions.DependencyInjection
             .ConfigureApplicationPartManager(manager =>
             {
                 manager.FeatureProviders.Add(new CrudApiControllerFeatureProvider());
-            });
+            })
+            .AddJsonOptions(options =>
+                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
 
             return builder;
         }
