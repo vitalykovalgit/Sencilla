@@ -37,15 +37,35 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
         if (filter.With?.Length > 0)
         {
             var entityType = typeof(TEntity);
+
             foreach (var with in filter.With)
             {
-                var property = entityType.GetProperty(with, BindingFlags.IgnoreCase|BindingFlags.Public|BindingFlags.Instance)?.Name;
-                if (property != null)
-                    query = query.Include(property);
+                var include = ToIncludePath(entityType, with);
+
+                if (include?.Length > 0)
+                    query = query.Include(include);
             }
         }
 
         @event.Entities = query;
+    }
+
+    private static string? ToIncludePath(Type entityType, string with)
+    {
+        var properties = new List<string>();
+
+        foreach (var w in with.Split('.'))
+        {
+            var property = entityType?.GetProperty(w, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+
+            if (property != null)
+            {
+                properties.Add(property.Name);
+                entityType = property?.PropertyType;
+            }
+        }
+
+        return string.Join(".", properties);
     }
 
     /// <summary>
