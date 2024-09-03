@@ -1,6 +1,7 @@
 ﻿
 global using Sencilla.Core;
 global using Sencilla.Web;
+global using System.Text.Json.Serialization;
 
 [assembly: AutoDiscovery]
 
@@ -19,8 +20,7 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 manager.FeatureProviders.Add(new CrudApiControllerFeatureProvider());
             })
-            .AddJsonOptions(options =>
-                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
+            .AddJsonOptions(o => o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
             return builder;
         }
