@@ -3,13 +3,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Sencilla.Component.Files;
 
 public class File
-    : IEntity<ulong>
+    : IEntity<Guid>
     , IEntityCreateable
     , IEntityUpdateable
     , IEntityRemoveable
     , IEntityDeleteable
 {
-    public ulong Id { get; set; }
+    public Guid Id { get; set; }
 
     /// <summary>
     /// 
@@ -47,18 +47,18 @@ public class File
     public DateTime? DeletedDate { get; set; }
 
 
-    [ForeignKey(nameof(Id))]
-    public FileContent FileContent { get; set; }
+    //[ForeignKey(nameof(Id))]
+    //public FileContent FileContent { get; set; }
 
-    public File SetContent(byte[] content)
-    {
-        Size = content.Length;
-        FileContent.Content = content;
-        return this;
-    }
+    //public File SetContent(byte[] content)
+    //{
+    //    Size = content.Length;
+    //    FileContent.Content = content;
+    //    return this;
+    //}
 
-    public byte[] Content()
-    {
-        return FileContent?.Content ?? new byte[] { };
-    }
+    //public byte[] Content()
+    //{
+    //    return FileContent?.Content ?? new byte[] { };
+    //}
 }

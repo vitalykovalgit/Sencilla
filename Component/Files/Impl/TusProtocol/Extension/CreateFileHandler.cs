@@ -3,10 +3,10 @@
 [DisableInjection]
 internal class CreateFileHandler : ITusRequestHandler
 {
-    private readonly IFileStateProvider _fileState;
+    private readonly IFileProvider _fileState;
     private readonly IFileContentProvider _fileContent;
 
-    public CreateFileHandler(IFileStateProvider state, IFileContentProvider fileContent)
+    public CreateFileHandler(IFileProvider state, IFileContentProvider fileContent)
     {
         _fileState = state;
         _fileContent = fileContent;
@@ -14,7 +14,7 @@ internal class CreateFileHandler : ITusRequestHandler
 
     public async Task Handle(HttpContext context)
     {
-        var fileId = Guid.NewGuid().ToString();
+        var fileId = Guid.NewGuid();
 
         var uploadMetadataExists = context.Request.Headers.ContainsKey(TusHeaders.UploadMetadata);
         var uploadLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadLength);
@@ -51,9 +51,9 @@ internal class CreateFileHandler : ITusRequestHandler
         var fileMimeType = FromBase64(metadata["filetype"]);
         var fileExt = MimeTypeExt(fileMimeType);
 
-        var file = await _fileState.SetFileState(new()
+        var file = await _fileState.CreateFile(new()
         {
-            //Id = fileId,
+            Id = fileId,
             Name = fileName,
             Size = uploadLength,
             MimeType = fileMimeType,
@@ -63,7 +63,6 @@ internal class CreateFileHandler : ITusRequestHandler
         // TODO: test cancellation token on middleware
         //       and test writing empty array to file
         await _fileContent.WriteFileAsync(file, []);
-        //await _fileStorage.Create(fileId);
 
         // think about location for uploading, probably can be S3/CloudFare directly
         var location = $"{context.Request.Path.Value}/{fileId}";

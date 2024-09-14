@@ -6,7 +6,7 @@ public class TusResumableUploadOptions
 }
 
 [DisableInjection]
-class TusResumableUploadMiddleware
+public class TusResumableUploadMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly TusResumableUploadOptions _options;
@@ -17,17 +17,15 @@ class TusResumableUploadMiddleware
         _options = options;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IServiceProvider container)
     {
-        // add route parameter to this!
         if (!context.Request.Path.StartsWithSegments(_options.Route))
         {
             await _next(context);
             return;
         }
 
-        var handler = HandlerRouter.ResolveHandler(context.Request.Method);
-        await handler.Handle(context);
+        await TusRequestRouter.Handle(container, context);
     }
 }
 

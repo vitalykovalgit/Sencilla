@@ -3,10 +3,10 @@
 [DisableInjection]
 internal class UploadFileHandler : ITusRequestHandler
 {
-    private readonly IFileStateProvider _fileState;
+    private readonly IFileProvider _fileState;
     private readonly IFileContentProvider _fileContent;
 
-    public UploadFileHandler(IFileStateProvider fileState, IFileContentProvider fileContent)
+    public UploadFileHandler(IFileProvider fileState, IFileContentProvider fileContent)
     {
         _fileState = fileState;
         _fileContent = fileContent;
@@ -29,21 +29,22 @@ internal class UploadFileHandler : ITusRequestHandler
         }
 
         var segments = context.Request.Path.Value!.Split('/');
-        var fileId = segments[segments.Length - 1];
+        var fileId = Guid.Parse(segments[segments.Length - 1]);
         Stream chunk = context.Request.Body;
 
-        var file = await _fileState.GetFileState(fileId);
         // fileState could be null, since CREATE is extension
         // so it's needed to handle both cases
+        var file = await _fileState.GetFile(fileId) ?? await _fileState.CreateFile(new()
+        {
+            Id = fileId
+        });
 
-        //var newOffset = await _fileContent.Write(fileId, chunk, offset);
         var newOffset = await _fileContent.WriteFileAsync(file, chunk, offset, CancellationToken.None);
 
         if (file?.Size == newOffset)
         {
             file.UploadCompleted = true;
-            await _fileState.SetFileState(file);
-            //await _fileContent.RestoreFile(fileId, file);
+            await _fileState.UpdateFile(file);
         }
 
         await context.WriteNoContentWithOffset(newOffset);

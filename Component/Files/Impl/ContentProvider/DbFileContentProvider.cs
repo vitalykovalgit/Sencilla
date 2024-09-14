@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.Files
 {
-    public class DbFileProvider : IFileContentProvider
+    public class DbFileContentProvider : IFileContentProvider
     {
         public Task<Stream> ReadFileAsync(File file, CancellationToken? token = null)
         {

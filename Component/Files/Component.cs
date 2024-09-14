@@ -8,6 +8,7 @@ global using System.Net.Mime;
 
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Builder;
+global using Microsoft.Extensions.DependencyInjection;
 
 [assembly: AutoDiscovery]
 
@@ -25,7 +26,13 @@ public class FilesComponent : IComponent
         //container.AddRepositoriesFor<File, ulong, FileDbContext>();
         //container.AddRepositoriesFor<FileContent, ulong, FileDbContext>();
 
-        container.RegisterType<IFileContentProvider, DriveFileProvider>();
-        container.RegisterType<IConfigProvider<DriveFileProviderOption>, AppSettingsJsonConfigProvider<DriveFileProviderOption>>();
+        container.RegisterType<IFileContentProvider, DriveFileContentProvider>();
+        container.RegisterType<IConfigProvider<DriveFileContentProviderOption>, AppSettingsJsonConfigProvider<DriveFileContentProviderOption>>();
+
+        container.RegisterType<IFileProvider, DbFileProvider>();
+
+        // Tus Resumable Upload
+        container.RegisterType<ITusRequestHandler, CreateFileHandler>(nameof(CreateFileHandler));
+        container.RegisterType<ITusRequestHandler, UploadFileHandler>(nameof(UploadFileHandler));
     }
 }
