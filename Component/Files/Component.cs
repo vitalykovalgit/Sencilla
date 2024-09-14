@@ -3,6 +3,12 @@ global using Sencilla.Core;
 global using Sencilla.Component.Config;
 global using Sencilla.Component.Files;
 
+global using System.Text;
+global using System.Net.Mime;
+
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Builder;
+
 [assembly: AutoDiscovery]
 
 namespace Microsoft.Extensions.DependencyInjection;

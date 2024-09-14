@@ -12,12 +12,12 @@
             throw new System.NotImplementedException();
         }
 
-        public Task<File> WriteFileAsync(File file, byte[] content, CancellationToken? token = null)
+        public Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken? token = null)
         {
             throw new System.NotImplementedException();
         }
 
-        public Task<File> WriteFileAsync(File file, Stream stream, CancellationToken? token = null)
+        public Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, CancellationToken? token = null)
         {
             throw new System.NotImplementedException();
         }

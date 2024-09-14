@@ -35,28 +35,31 @@ namespace Sencilla.Component.Files
             return Task.FromResult(stream);
         }
 
-        public Task<File> WriteFileAsync(File file, byte[] content, CancellationToken? token = null)
+        public Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken? token = null)
         {
             var path = GetFilePath(file);
 
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
             System.IO.File.WriteAllBytes(path, content);
-
-            return Task.FromResult(file);
+            
+            return Task.FromResult(new FileInfo(path).Length);
         }
 
-        public async Task<File> WriteFileAsync(File file, System.IO.Stream stream, CancellationToken? token = null)
+        public async Task<long> WriteFileAsync(File file, System.IO.Stream stream, long offset = 0, CancellationToken? token = null)
         {
             var path = GetFilePath(file);
 
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
 
+            long newOffset = 0;
             using (var fileStream = System.IO.File.OpenWrite(path))
             {
+                fileStream.Seek(offset, SeekOrigin.Begin);
                 await stream.CopyToAsync(fileStream, token ?? CancellationToken.None);
+                newOffset = fileStream.Position;
             }
 
-            return file;
+            return newOffset;
         }
 
         private string GetFilePath(File file) 
