@@ -6,7 +6,7 @@ namespace Sencilla.Component.Files
     /// <summary>
     /// 
     /// </summary>
-    public class FileWe : IDtoEntity<File, ulong>
+    public class FileWe : IDtoEntity<File, Guid>
     {
         public FileWe() 
         {
@@ -17,7 +17,7 @@ namespace Sencilla.Component.Files
             FromEntity(file);
         }
 
-        public ulong Id { get; set; }
+        public Guid Id { get; set; }
 
         /// <summary>
         /// 

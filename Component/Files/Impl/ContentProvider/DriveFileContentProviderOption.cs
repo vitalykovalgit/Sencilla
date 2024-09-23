@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.Files
 {
-    public class DriveFileProviderOption
+    public class DriveFileContentProviderOption
     {
         /// <summary>
         /// 
