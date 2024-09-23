@@ -20,4 +20,10 @@ internal static class HttpContextExt
         context.Response.Headers.Append(TusHeaders.UploadOffset, offset.ToString());
         context.Response.StatusCode = StatusCodes.Status204NoContent;
     }
+
+    public async static Task WriteOkWithOffset(this HttpContext context, long offset)
+    {
+        context.Response.Headers.Append(TusHeaders.UploadOffset, offset.ToString());
+        context.Response.StatusCode = StatusCodes.Status200OK;
+    }
 }

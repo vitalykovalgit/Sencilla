@@ -9,7 +9,7 @@ public interface IFileContentProvider
 
     Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken? token = null);
 
-    Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, CancellationToken? token = null);
+    Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken? token = null);
 
     Task<File> DeleteFileAsync(File file, CancellationToken? token = null);
 }

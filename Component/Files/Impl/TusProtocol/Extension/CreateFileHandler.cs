@@ -3,6 +3,8 @@
 [DisableInjection]
 internal class CreateFileHandler : ITusRequestHandler
 {
+    public const string Method = "POST";
+
     private readonly IFileProvider _fileState;
     private readonly IFileContentProvider _fileContent;
 

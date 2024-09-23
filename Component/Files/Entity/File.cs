@@ -16,6 +16,8 @@ public class File
     /// </summary>
     public long Size { get; set; }
 
+    public long Position { get; set; }
+
     /// <summary>
     /// File name 
     /// </summary>

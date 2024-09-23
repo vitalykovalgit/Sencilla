@@ -31,36 +31,54 @@ public class DriveFileContentProvider : IFileContentProvider
         return Task.FromResult(stream);
     }
 
-    public Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken? token = null)
+    public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken? token = null)
     {
         var path = GetFilePath(file);
 
         System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
-        System.IO.File.WriteAllBytes(path, content);
+        await System.IO.File.WriteAllBytesAsync(path, content);
 
-        return Task.FromResult(new FileInfo(path).Length);
+        return new FileInfo(path).Length;
     }
 
-    public async Task<long> WriteFileAsync(File file, System.IO.Stream stream, long offset = 0, CancellationToken? token = null)
+    public async Task<long> WriteFileAsync(File file, System.IO.Stream stream, long offset = 0, long length = -1, CancellationToken? token = null)
     {
         var path = GetFilePath(file);
 
         System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
 
-        long newOffset = 0;
-        using (var fileStream = System.IO.File.OpenWrite(path))
-        {
-            fileStream.Seek(offset, SeekOrigin.Begin);
-            await stream.CopyToAsync(fileStream, token ?? CancellationToken.None);
-            newOffset = fileStream.Position;
-        }
+        using var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
+        fs.Seek(offset, SeekOrigin.Begin);
+
+        //if (length >= 0)
+        //{
+        //    const int bufferSize = 81920; // 80KB
+        //    var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+        //    try
+        //    {
+        //        int bytesRead;
+        //        while ((bytesRead = await stream.ReadAsync(buffer).ConfigureAwait(false)) > 0)
+        //            await fs.WriteAsync(buffer, 0, bytesRead).ConfigureAwait(false);
+        //    }
+        //    finally
+        //    {
+        //        ArrayPool<byte>.Shared.Return(buffer);
+        //    }
+        //}
+        //else
+        //{
+        //    await stream.CopyToAsync(fs, token ?? CancellationToken.None);
+        //}
+        await stream.CopyToAsync(fs, token ?? CancellationToken.None);
+
+        long newOffset = fs.Position;
 
         return newOffset;
     }
 
     private string GetFilePath(File file)
     {
-        var path = file.Name;
+        var path = file.Id.ToString();
         return Path.Combine("uploaded-files", path);
         //var path = BuildFilePath(file);
         //var config = mConfigProvider.GetConfig();
