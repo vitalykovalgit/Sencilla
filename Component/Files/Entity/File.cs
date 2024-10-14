@@ -42,6 +42,8 @@ public class File
 
     public bool UploadCompleted { get; set; }
 
+    public string Attrs { get; set; }
+
     public DateTime CreatedDate { get; set; }
 
     public DateTime UpdatedDate { get; set; }

@@ -1,7 +1,7 @@
 ﻿namespace Sencilla.Component.Files;
 
 [DisableInjection]
-internal class UploadFileHandler : ITusRequestHandler
+public class UploadFileHandler : ITusRequestHandler
 {
     public const string Method = "PATCH";
 
@@ -14,26 +14,26 @@ internal class UploadFileHandler : ITusRequestHandler
         _fileContent = fileContent;
     }
 
-    public async Task Handle(HttpContext context)
+    public async Task Handle(TusContext context)
     {
-        if (!context.Request.Headers.ContainsKey(TusHeaders.UploadOffset))
+        if (!context.HttpContext.Request.Headers.ContainsKey(TusHeaders.UploadOffset))
         {
-            await context.WriteBadRequest($"{TusHeaders.UploadOffset} header is missing.");
+            await context.HttpContext.WriteBadRequest($"{TusHeaders.UploadOffset} header is missing.");
             return;
         }
 
         long offset = 0;
-        if (context.Request.Headers.TryGetValue(TusHeaders.UploadOffset, out var offsetHeader) &&
+        if (context.HttpContext.Request.Headers.TryGetValue(TusHeaders.UploadOffset, out var offsetHeader) &&
             !long.TryParse(offsetHeader, out offset))
         {
-            await context.WriteBadRequest($"Invalid {TusHeaders.UploadOffset} header.");
+            await context.HttpContext.WriteBadRequest($"Invalid {TusHeaders.UploadOffset} header.");
             return;
         }
 
-        var segments = context.Request.Path.Value!.Split('/');
+        var segments = context.HttpContext.Request.Path.Value!.Split('/');
         var fileId = Guid.Parse(segments[segments.Length - 1]);
-        var chunk = context.Request.Body;
-        var length = (long)context.Request.ContentLength!;
+        var chunk = context.HttpContext.Request.Body;
+        var length = (long)context.HttpContext.Request.ContentLength!;
 
         var file = await _fileState.GetFile(fileId) ?? await _fileState.CreateFile(new() { Id = fileId });
 
@@ -43,6 +43,9 @@ internal class UploadFileHandler : ITusRequestHandler
         file.UploadCompleted = file.Size == file.Position;
         await _fileState.UpdateFile(file);
 
-        await context.WriteNoContentWithOffset(newOffset);
+        if (file.UploadCompleted && context.Configuration.OnUploadCompleteAsync is not null)
+            await context.Configuration.OnUploadCompleteAsync(file.Id);
+
+        await context.HttpContext.WriteNoContentWithOffset(newOffset);
     }
 }

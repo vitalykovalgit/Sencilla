@@ -3,6 +3,7 @@
 public class TusResumableUploadOptions
 {
     public string Route { get; set; }
+    public Func<Guid, Task> OnUploadCompleteAsync { get; set; }
 }
 
 [DisableInjection]
@@ -25,7 +26,8 @@ public class TusResumableUploadMiddleware
             return;
         }
 
-        await TusRequestRouter.Handle(container, context);
+        // TODO: Make it allocation free
+        await TusRequestRouter.Handle(container, new TusContext { HttpContext = context, Configuration = _options });
     }
 }
 
