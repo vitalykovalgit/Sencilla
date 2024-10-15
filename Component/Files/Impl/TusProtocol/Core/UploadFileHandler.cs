@@ -7,11 +7,13 @@ public class UploadFileHandler : ITusRequestHandler
 
     private readonly IFileProvider _fileState;
     private readonly IFileContentProvider _fileContent;
+    private readonly IEventDispatcher _events;
 
-    public UploadFileHandler(IFileProvider fileState, IFileContentProvider fileContent)
+    public UploadFileHandler(IFileProvider fileState, IFileContentProvider fileContent, IEventDispatcher events)
     {
         _fileState = fileState;
         _fileContent = fileContent;
+        _events = events;
     }
 
     public async Task Handle(TusContext context)
@@ -43,8 +45,8 @@ public class UploadFileHandler : ITusRequestHandler
         file.UploadCompleted = file.Size == file.Position;
         await _fileState.UpdateFile(file);
 
-        if (file.UploadCompleted && context.Configuration.OnUploadCompleteAsync is not null)
-            await context.Configuration.OnUploadCompleteAsync(file.Id);
+        if (file.UploadCompleted)
+            await _events.PublishAsync(new FileUploadedEvent { File = file });
 
         await context.HttpContext.WriteNoContentWithOffset(newOffset);
     }

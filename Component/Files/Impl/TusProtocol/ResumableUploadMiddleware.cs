@@ -3,7 +3,6 @@
 public class TusResumableUploadOptions
 {
     public string Route { get; set; }
-    public Func<Guid, Task> OnUploadCompleteAsync { get; set; }
 }
 
 [DisableInjection]
