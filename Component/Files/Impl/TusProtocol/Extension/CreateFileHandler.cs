@@ -7,11 +7,13 @@ internal class CreateFileHandler : ITusRequestHandler
 
     private readonly IFileProvider _fileState;
     private readonly IFileContentProvider _fileContent;
+    private readonly IEventDispatcher _events;
 
-    public CreateFileHandler(IFileProvider state, IFileContentProvider fileContent)
+    public CreateFileHandler(IFileProvider state, IFileContentProvider fileContent, IEventDispatcher events)
     {
         _fileState = state;
         _fileContent = fileContent;
+        _events = events;
     }
 
     public async Task Handle(TusContext context)
@@ -62,6 +64,8 @@ internal class CreateFileHandler : ITusRequestHandler
             Extension = fileExt
         });
 
+        await _events.PublishAsync(new FileCreatedEvent { File = file });
+
         // TODO: test cancellation token on middleware
         //       and test writing empty array to file
         await _fileContent.WriteFileAsync(file, []);
@@ -81,9 +85,9 @@ internal class CreateFileHandler : ITusRequestHandler
 
     private static string FromBase64(string b64) => Encoding.UTF8.GetString(Convert.FromBase64String(b64));
 
-    private static string MimeTypeExt(string mimeType) => mimeType switch
+    private static string? MimeTypeExt(string mimeType) => mimeType switch
     {
         MediaTypeNames.Image.Jpeg => ".jpg",
-        _ => ".unknown"
+        _ => null
     };
 }
