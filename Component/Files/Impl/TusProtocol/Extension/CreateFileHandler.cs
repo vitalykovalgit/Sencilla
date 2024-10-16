@@ -1,4 +1,6 @@
-﻿namespace Sencilla.Component.Files;
+﻿using System.Collections.Immutable;
+
+namespace Sencilla.Component.Files;
 
 [DisableInjection]
 internal class CreateFileHandler : ITusRequestHandler
@@ -51,8 +53,8 @@ internal class CreateFileHandler : ITusRequestHandler
         var metadataHeader = context.HttpContext.Request.Headers[TusHeaders.UploadMetadata];
 
         var metadata = ParseMetadataHeader(metadataHeader);
-        var fileName = FromBase64(metadata["filename"]);
-        var fileMimeType = FromBase64(metadata["filetype"]);
+        var fileName = metadata["filename"];
+        var fileMimeType = metadata["filetype"];
         var fileExt = MimeTypeExt(fileMimeType);
 
         var file = await _fileState.CreateFile(new()
@@ -64,7 +66,7 @@ internal class CreateFileHandler : ITusRequestHandler
             Extension = fileExt
         });
 
-        await _events.PublishAsync(new FileCreatedEvent { File = file });
+        await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });
 
         // TODO: test cancellation token on middleware
         //       and test writing empty array to file
@@ -81,7 +83,7 @@ internal class CreateFileHandler : ITusRequestHandler
         {
             var kv = x.Split(' ');
             return (key: kv[0], value: kv[1]);
-        }).ToDictionary(kv => kv.key, kv => kv.value);
+        }).ToImmutableDictionary(kv => kv.key, kv => FromBase64(kv.value));
 
     private static string FromBase64(string b64) => Encoding.UTF8.GetString(Convert.FromBase64String(b64));
 
