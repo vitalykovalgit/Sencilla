@@ -1,64 +1,59 @@
-using System;
-using System.ComponentModel.DataAnnotations.Schema;
+namespace Sencilla.Component.Files;
 
-using Sencilla.Core;
-
-namespace Sencilla.Component.Files
+public class File
+    : IEntity<Guid>
+    , IEntityCreateable
+    , IEntityUpdateable
+    , IEntityRemoveable
+    , IEntityDeleteable
 {
-	public class File 
-        : IEntity<ulong>
-        , IEntityCreateable
-        , IEntityUpdateable
-        , IEntityRemoveable
-        , IEntityDeleteable
-    {
-		public ulong Id { get; set; }
+    public Guid Id { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-		public long Size { get; set; }
+    /// <summary>
+    /// File size in bytes
+    /// </summary>
+    public long Size { get; set; }
 
-        /// <summary>
-        /// File name 
-        /// </summary>
-	    public string Name { get; set; }
+    /// <summary>
+    /// Current byte position
+    /// </summary>
+    public long Position { get; set; }
 
-        /// <summary>
-        /// Path to file on disk 
-        /// </summary>
-        //public string Path { get; set; }
+    /// <summary>
+    /// File name
+    /// </summary>
+    public string Name { get; set; }
 
-        /// <summary>
-        /// Mime type 
-        /// </summary>
-        public string MimeType { get; set; }
+    /// <summary>
+    /// Full file name with path
+    /// </summary>
+    public string? FullName { get; set; }
 
-        /// <summary>
-        /// Storage file type 
-        /// </summary>
-        public long? StorageFileTypeId { get; set; }
+    /// <summary>
+    /// Mime type
+    /// </summary>
+    public string MimeType { get; set; }
 
-        public DateTime CreatedDate { get; set; }
+    /// <summary>
+    /// File extension with dot: '.jpg', '.png'
+    /// </summary>
+    public string? Extension { get; set; }
 
-		public DateTime UpdatedDate { get; set; }
+    /// <summary>
+    /// Storage file type
+    /// </summary>
+    public long? StorageFileTypeId { get; set; }
 
-        public DateTime? DeletedDate { get; set; }
+    /// <summary>
+    /// True if file upload completed (Size == Position)
+    /// </summary>
+    public bool UploadCompleted { get; set; }
 
+    public string? Attrs { get; set; }
 
-        [ForeignKey(nameof(Id))]
-		public FileContent FileContent { get; set; }
+    public DateTime CreatedDate { get; set; }
 
-		public File SetContent(byte[] content)
-		{
-			Size = content.Length;
-			FileContent.Content = content;
-			return this;
-		}
+    public DateTime UpdatedDate { get; set; }
 
-		public byte[] Content()
-		{
-		    return FileContent?.Content ?? new byte[] { };
-		}
-	}
+    public DateTime? DeletedDate { get; set; }
 }
