@@ -1,7 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.IO;
-
-namespace Sencilla.Component.Files;
+﻿namespace Sencilla.Component.Files;
 
 public class InMemoryFileContentProvider : IFileContentProvider
 {

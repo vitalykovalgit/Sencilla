@@ -1,5 +1,4 @@
-﻿
-namespace Sencilla.Component.Files;
+﻿namespace Sencilla.Component.FilesTus;
 
 [DisableInjection]
 internal class HeadFileHandler : ITusRequestHandler

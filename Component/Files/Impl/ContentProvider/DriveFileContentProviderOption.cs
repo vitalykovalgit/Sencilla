@@ -1,10 +1,9 @@
-﻿namespace Sencilla.Component.Files
+﻿namespace Sencilla.Component.Files;
+
+public class DriveFileContentProviderOption
 {
-    public class DriveFileContentProviderOption
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        public string RootPath { get; set; }
-    }
+    /// <summary>
+    /// 
+    /// </summary>
+    public string RootPath { get; set; }
 }

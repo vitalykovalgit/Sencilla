@@ -1,4 +1,4 @@
-﻿namespace Sencilla.Component.Files;
+﻿namespace Sencilla.Component.FilesTus;
 
 [DisableInjection]
 public class UploadFileHandler : ITusRequestHandler

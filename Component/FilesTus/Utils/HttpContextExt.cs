@@ -1,4 +1,4 @@
-﻿namespace Sencilla.Component.Files;
+﻿namespace Microsoft.AspNetCore.Http;
 
 internal static class HttpContextExt
 {

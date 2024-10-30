@@ -3,13 +3,7 @@ global using Sencilla.Core;
 global using Sencilla.Component.Config;
 global using Sencilla.Component.Files;
 
-global using System.Text;
-global using System.Buffers;
-global using System.Net.Mime;
-
 global using Microsoft.AspNetCore.Http;
-global using Microsoft.AspNetCore.Builder;
-global using Microsoft.Extensions.DependencyInjection;
 
 [assembly: AutoDiscovery]
 
@@ -31,10 +25,5 @@ public class FilesComponent : IComponent
         container.RegisterType<IConfigProvider<DriveFileContentProviderOption>, AppSettingsJsonConfigProvider<DriveFileContentProviderOption>>();
 
         container.RegisterType<IFileProvider, DbFileProvider>();
-
-        // Tus Resumable Upload
-        container.RegisterType<ITusRequestHandler, CreateFileHandler>(ITusRequestHandler.ServiceKey(CreateFileHandler.Method));
-        container.RegisterType<ITusRequestHandler, UploadFileHandler>(ITusRequestHandler.ServiceKey(UploadFileHandler.Method));
-        container.RegisterType<ITusRequestHandler, HeadFileHandler>(ITusRequestHandler.ServiceKey(HeadFileHandler.Method));
     }
 }

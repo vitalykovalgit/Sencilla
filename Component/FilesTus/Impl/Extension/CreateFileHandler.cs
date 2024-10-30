@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-
-namespace Sencilla.Component.Files;
+﻿namespace Sencilla.Component.FilesTus;
 
 [DisableInjection]
 internal class CreateFileHandler : ITusRequestHandler
@@ -87,9 +85,5 @@ internal class CreateFileHandler : ITusRequestHandler
 
     private static string FromBase64(string b64) => Encoding.UTF8.GetString(Convert.FromBase64String(b64));
 
-    private static string? MimeTypeExt(string mimeType) => mimeType switch
-    {
-        MediaTypeNames.Image.Jpeg => ".jpg",
-        _ => null
-    };
+    private static string? MimeTypeExt(string mimeType) => IFormFileEx.MimeTypeToExt[mimeType];
 }

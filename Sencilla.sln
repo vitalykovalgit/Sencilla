@@ -63,6 +63,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityF
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.EntityFrameworkCore.Extension", "Extension\EntityFrameworkCore\Microsoft.EntityFrameworkCore.Extension.csproj", "{06C45A6D-D821-46DE-BB89-0AE56C3DC96C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.FilesTus", "Component\FilesTus\Sencilla.Component.FilesTus.csproj", "{8269397F-EFA8-43D2-B9EA-729967F85C95}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -153,6 +155,10 @@ Global
 		{06C45A6D-D821-46DE-BB89-0AE56C3DC96C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{06C45A6D-D821-46DE-BB89-0AE56C3DC96C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{06C45A6D-D821-46DE-BB89-0AE56C3DC96C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8269397F-EFA8-43D2-B9EA-729967F85C95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8269397F-EFA8-43D2-B9EA-729967F85C95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8269397F-EFA8-43D2-B9EA-729967F85C95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8269397F-EFA8-43D2-B9EA-729967F85C95}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -180,6 +186,7 @@ Global
 		{062F3A53-9CAD-4118-9258-9F9F252EAAD3} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
 		{B98F9496-15C3-4F82-9DA7-02500E09BFAE} = {062F3A53-9CAD-4118-9258-9F9F252EAAD3}
 		{06C45A6D-D821-46DE-BB89-0AE56C3DC96C} = {4EF87FA7-8BCE-4B8D-854A-51E7FB0D2B42}
+		{8269397F-EFA8-43D2-B9EA-729967F85C95} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5EE15D7B-0AF6-4664-9D0B-7140B5B5961F}

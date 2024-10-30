@@ -62,10 +62,9 @@ public class DriveFileContentProvider : IFileContentProvider
     {
         var rootPath = _config.GetConfig().RootPath ?? string.Empty;
         var directory = Path.GetDirectoryName(file.FullName) ?? string.Empty;
-        var fileName = file.Id.ToString();
-        var ext = file.Extension ?? Path.GetExtension(file.Name);
+        var fileNameWithExt = Path.GetFileName(file.FullName) ?? $"{file.Id}{file.Extension ?? Path.GetExtension(file.Name)}";
 
-        return Path.Combine(rootPath, directory, fileName + ext);
+        return Path.Combine(rootPath, directory, fileNameWithExt);
     }
 
     private void CreateFileDirectory(string path)

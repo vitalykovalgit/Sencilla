@@ -1,10 +1,8 @@
-﻿using System.Collections.Concurrent;
-
-namespace Sencilla.Component.Files;
+﻿namespace Sencilla.Component.Files;
 
 public class InMemoryFileProvider : IFileProvider
 {
-    private readonly ConcurrentDictionary<Guid, File> _files = new();
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, File> _files = new();
 
     public Task<File> CreateFile(File file) => Task.FromResult(_files[file.Id] = file);
 
