@@ -1,20 +1,15 @@
-﻿using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+﻿namespace Sencilla.Component.Files;
 
-namespace Sencilla.Component.Files
+/// <summary>
+/// Save file and retrieve to/from storage 
+/// </summary>
+public interface IFileContentProvider
 {
-    /// <summary>
-    /// Save file and retrieve to/from storage 
-    /// </summary>
-    public interface IFileContentProvider
-    {
-        Task<Stream> ReadFileAsync(File file, CancellationToken? token = null);
+    Task<Stream> ReadFileAsync(File file, CancellationToken? token = null);
 
-        Task<File> WriteFileAsync(File file, byte[] content, CancellationToken? token = null);
+    Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken? token = null);
 
-        Task<File> WriteFileAsync(File file, Stream stream, CancellationToken? token = null);
+    Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken? token = null);
 
-        Task<File> DeleteFileAsync(File file, CancellationToken? token = null);
-    }
+    Task<File> DeleteFileAsync(File file, CancellationToken? token = null);
 }
