@@ -12,7 +12,8 @@ public class Resource : IEntity<string>
     [NotMapped]
     public DateTime UpdatedDate { get; set; }
 
+    [InverseProperty(nameof(Translation.Resource))]
     public ICollection<Translation> Translations { get; set; }
 
-    public string[] SearchBy => new[] { nameof(Id), nameof(Description) };
+    public string[] SearchBy => [nameof(Id), nameof(Description)];
 }

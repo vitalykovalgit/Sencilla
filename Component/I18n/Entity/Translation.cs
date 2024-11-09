@@ -15,6 +15,12 @@ public class Translation : IEntity, IEntityCreateable
 
     [NotMapped]
     public DateTime UpdatedDate { get; set; }
+
+    [ForeignKey(nameof(ResourceId))]
+    public Resource Resource { get; set; }
+
+    [ForeignKey(nameof(ResourceId))]
+    public ResourceView ResourceView { get; set; }
 }
 
 public class TranslationFilter : Filter<Translation>

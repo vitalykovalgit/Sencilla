@@ -15,7 +15,7 @@ public class I18nController : ApiController
         _supportedLanguagesProvider = supportedLanguagesProvider;
     }
 
-    [HttpPost]
+    [HttpGet]
     [Route("{ns}/{locale}.json")]
     [Route("{locale}.json")]
     public async Task<IActionResult> GetJson(string locale, string ns)
