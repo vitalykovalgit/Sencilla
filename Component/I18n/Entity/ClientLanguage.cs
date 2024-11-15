@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.I18n;
 
-public class ClientLanguage : IEntity
+public class ClientLanguage : IEntity, IEntityUpdateable, IEntityCreateable, IEntityDeleteable
 {
     public int Id { get; set; }
 

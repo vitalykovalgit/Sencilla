@@ -72,6 +72,7 @@ public class TranslateService : ITranslateService
 
         var translationsToUpdate = translateDefinitions.Select(p => p.Translation).ToList();
 
-        await _translationCreateRepo.UpsertAsync(translationsToUpdate, x => x.Id);
+        if (translationsToUpdate.Any())
+            await _translationCreateRepo.UpsertAsync(translationsToUpdate, x => x.Id);
     }
 }
