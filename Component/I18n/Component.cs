@@ -1,4 +1,5 @@
 ﻿global using Sencilla.Core;
+global using Sencilla.Web;
 global using Sencilla.Component.I18n;
 
 global using System.Globalization;

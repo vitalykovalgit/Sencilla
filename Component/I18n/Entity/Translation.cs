@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.I18n;
 
-public class Translation : IEntity, IEntityCreateable
+public class Translation : IEntity, IEntityCreateable, IEntityUpdateable, IEntityDeleteable
 {
     public int Id { get; set; }
 
