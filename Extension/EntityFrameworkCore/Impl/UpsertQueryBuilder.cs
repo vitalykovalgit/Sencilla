@@ -86,6 +86,9 @@ public class UpsertQueryBuilder<TEntity>
 
         var props = entities.First().GetType().GetProperties().ToList();
 
+        bool canMap(PropertyInfo p) =>
+            p.GetCustomAttribute<NotMappedAttribute>() is null && !p.PropertyType.IsAssignableTo(typeof(IBaseEntity));
+
         using (var eIterator = entities.GetEnumerator())
         {
             if (eIterator.MoveNext())
@@ -93,8 +96,7 @@ public class UpsertQueryBuilder<TEntity>
                 dict[VALS] += "(";
                 foreach (var p in props)
                 {
-                    var nma = p.GetCustomAttribute<NotMappedAttribute>();
-                    if (nma == null)
+                    if (canMap(p))
                     {
                         var ca = p.GetCustomAttribute<ColumnAttribute>();
                         dict[COLS] += $"[{ca?.Name ?? p.Name}],";
@@ -112,8 +114,7 @@ public class UpsertQueryBuilder<TEntity>
 
                     foreach (var p in props)
                     {
-                        var nma = p.GetCustomAttribute<NotMappedAttribute>();
-                        if (nma == null)
+                        if (canMap(p))
                         {
                             var ov = _qp.ToSqlParameterValue(p, p.GetValue(eIterator.Current));
                             dict[VALS] += $"{ov},";

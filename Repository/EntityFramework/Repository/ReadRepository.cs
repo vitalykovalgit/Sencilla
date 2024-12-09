@@ -30,19 +30,34 @@ public class ReadRepository<TEntity, TContext, TKey> : BaseRepository<TContext>,
     public async Task<TEntity?> GetById(TKey id, CancellationToken token = default, params Expression<Func<TEntity, object>>[] with)
     {
         var query = await Query(null);
+
+        if (with is not null)
+            foreach (var prop in with)
+                query = query.Include(prop);
+
         return await query.FirstOrDefaultAsync(e => e.Id.Equals(id), token).ConfigureAwait(false);
     }
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
 
-    public async Task<IEnumerable<TEntity>> GetByIds(IEnumerable<TKey> ids, CancellationToken token = default, params Expression<Func<TEntity, object>>[] includes)
+    public async Task<IEnumerable<TEntity>> GetByIds(IEnumerable<TKey> ids, CancellationToken token = default, params Expression<Func<TEntity, object>>[] with)
     {
         var query = await Query(null);
+
+        if (with is not null)
+            foreach (var prop in with)
+                query = query.Include(prop);
+
         return await query.Where(e => ids.Contains(e.Id)).ToListAsync(token).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<TEntity>> GetAll(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[] with)
     {
         var query = await Query(filter);
+
+        if (with is not null)
+            foreach (var prop in with)
+                query = query.Include(prop);
+
         return await query.ToListAsync(token).ConfigureAwait(false);
     }
 
