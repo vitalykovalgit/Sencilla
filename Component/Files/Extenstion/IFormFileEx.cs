@@ -31,42 +31,42 @@ public static class IFormFileEx
         {"text/csv", ".csv"}
     };
 
-    public static Sencilla.Component.Files.File? ToSencillaFile(this IFormFile formFile)
-    {
-        return formFile == null ? null : new Sencilla.Component.Files.File
-        {
-            Size = formFile.Length,
-            Name = formFile.FileName,
-            //Path = string.Empty, // TODO: add path to file
-            // TODO: Specify dictionary with mime types and use it 
-            MimeType = "application/octet-stream",
-            CreatedDate = DateTime.UtcNow,
-            UpdatedDate = DateTime.UtcNow,
-            DeletedDate = null
-        };
-    }
+    //public static Sencilla.Component.Files.File? ToSencillaFile(this IFormFile formFile)
+    //{
+    //    return formFile == null ? null : new Sencilla.Component.Files.File
+    //    {
+    //        //Size = formFile.Length,
+    //        Name = formFile.FileName,
+    //        //Path = string.Empty, // TODO: add path to file
+    //        // TODO: Specify dictionary with mime types and use it 
+    //        MimeType = "application/octet-stream",
+    //        CreatedDate = DateTime.UtcNow,
+    //        UpdatedDate = DateTime.UtcNow,
+    //        DeletedDate = null
+    //    };
+    //}
 
-    public static Dictionary<int, Sencilla.Component.Files.File> ToSencillaFiles(this IFormFileCollection formFiles)
-    {
-        if (formFiles == null) { return null; }
+    //public static Dictionary<int, Sencilla.Component.Files.File> ToSencillaFiles(this IFormFileCollection formFiles)
+    //{
+    //    if (formFiles == null) { return null; }
 
-        var pairs = new Dictionary<int, Sencilla.Component.Files.File>();
+    //    var pairs = new Dictionary<int, Sencilla.Component.Files.File>();
 
-        foreach (var formFile in formFiles)
-        {
-            pairs.Add(
-                formFile.GetHashCode(),
-                new Sencilla.Component.Files.File
-                {
-                    Size = formFile.Length,
-                    Name = formFile.FileName,
-                    MimeType = "application/octet-stream",
-                    CreatedDate = DateTime.UtcNow,
-                    UpdatedDate = DateTime.UtcNow,
-                    DeletedDate = null
-                });
-        }
+    //    foreach (var formFile in formFiles)
+    //    {
+    //        pairs.Add(
+    //            formFile.GetHashCode(),
+    //            new Sencilla.Component.Files.File
+    //            {
+    //                Size = formFile.Length,
+    //                Name = formFile.FileName,
+    //                MimeType = "application/octet-stream",
+    //                CreatedDate = DateTime.UtcNow,
+    //                UpdatedDate = DateTime.UtcNow,
+    //                DeletedDate = null
+    //            });
+    //    }
 
-        return pairs;
-    }
+    //    return pairs;
+    //}
 }

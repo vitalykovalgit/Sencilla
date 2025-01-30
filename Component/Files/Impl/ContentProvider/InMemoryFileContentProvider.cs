@@ -4,14 +4,24 @@ public class InMemoryFileContentProvider : IFileContentProvider
 {
     //private readonly ConcurrentDictionary<Guid, Stream> _files = new();
 
-    private readonly IFileProvider _fileProvider;
+    private readonly IFileRepository _fileProvider;
 
-    public InMemoryFileContentProvider(IFileProvider fileProvider)
+    public InMemoryFileContentProvider(IFileRepository fileProvider)
     {
         _fileProvider = fileProvider;
     }
 
     public Task<File> DeleteFileAsync(File file, CancellationToken? token = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Stream OpenFileStream(File file, long offset = 0, CancellationToken? token = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Stream ReadFile(File file, CancellationToken? token = null)
     {
         throw new NotImplementedException();
     }

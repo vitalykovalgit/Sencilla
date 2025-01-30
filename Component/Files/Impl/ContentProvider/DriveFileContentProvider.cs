@@ -20,7 +20,9 @@ public class DriveFileContentProvider : IFileContentProvider
         return Task.FromResult(file);
     }
 
-    public Task<Stream> ReadFileAsync(File file, CancellationToken? token = null)
+    public Task<Stream> ReadFileAsync(File file, CancellationToken? token = null) => Task.FromResult(ReadFile(file, token));
+
+    public Stream ReadFile(File file, CancellationToken? token = null)
     {
         var path = GetFilePath(file);
 
@@ -28,7 +30,7 @@ public class DriveFileContentProvider : IFileContentProvider
         if (System.IO.File.Exists(path))
             stream = System.IO.File.OpenRead(path);
 
-        return Task.FromResult(stream);
+        return stream;
     }
 
     public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken? token = null)
@@ -56,6 +58,18 @@ public class DriveFileContentProvider : IFileContentProvider
         long newOffset = fs.Position;
 
         return newOffset;
+    }
+
+    public Stream OpenFileStream(File file, long offset = 0, CancellationToken? token = null)
+    {
+        var path = GetFilePath(file);
+
+        CreateFileDirectory(path);
+
+        var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
+        fs.Seek(offset, SeekOrigin.Begin);
+
+        return fs;
     }
 
     private string GetFilePath(File file)

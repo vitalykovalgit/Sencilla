@@ -42,7 +42,7 @@ namespace Sencilla.Component.Files
         public void FromEntity(File entity)
         {
             Id = entity.Id;
-            Size = entity.Size;
+            //Size = entity.Size;
             Name = entity.Name;
             CreatedDate = entity.CreatedDate;
             UpdatedDate = entity.UpdatedDate;
@@ -51,7 +51,7 @@ namespace Sencilla.Component.Files
         public File ToEntity(File dbEntity)
         {
             dbEntity.Name = Name ?? dbEntity.Name;
-            dbEntity.Size = Size ?? dbEntity.Size;
+            //dbEntity.Size = Size ?? dbEntity.Size;
             return dbEntity;
         }
     }

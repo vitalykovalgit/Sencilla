@@ -21,4 +21,14 @@ public class DbFileContentProvider : IFileContentProvider
     {
         throw new System.NotImplementedException();
     }
+
+    public Stream OpenFileStream(File file, long offset = 0, CancellationToken? token = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Stream ReadFile(File file, CancellationToken? token = null)
+    {
+        throw new NotImplementedException();
+    }
 }

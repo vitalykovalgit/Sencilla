@@ -5,13 +5,19 @@ internal class CreateFileHandler : ITusRequestHandler
 {
     public const string Method = "POST";
 
-    private readonly IFileProvider _fileState;
+    private readonly IFileRepository _fileRepository;
+    private readonly IFileUploadRepository _fileUploadRepository;
     private readonly IFileContentProvider _fileContent;
     private readonly IEventDispatcher _events;
 
-    public CreateFileHandler(IFileProvider state, IFileContentProvider fileContent, IEventDispatcher events)
+    public CreateFileHandler(
+        IFileRepository fileRepository,
+        IFileUploadRepository fileUploadRepository,
+        IFileContentProvider fileContent,
+        IEventDispatcher events)
     {
-        _fileState = state;
+        _fileRepository = fileRepository;
+        _fileUploadRepository = fileUploadRepository;
         _fileContent = fileContent;
         _events = events;
     }
@@ -55,13 +61,19 @@ internal class CreateFileHandler : ITusRequestHandler
         var fileMimeType = metadata["filetype"];
         var fileExt = MimeTypeExt(fileMimeType);
 
-        var file = await _fileState.CreateFile(new()
+        var file = await _fileRepository.CreateFile(new()
         {
             Id = fileId,
             Name = fileName,
-            Size = uploadLength,
             MimeType = fileMimeType,
-            Extension = fileExt
+            Extension = fileExt,
+            Origin = FileOrigin.User
+        });
+
+        var fileUpload = await _fileUploadRepository.CreateFileUpload(new()
+        {
+            Id = fileId,
+            Size = uploadLength
         });
 
         await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });

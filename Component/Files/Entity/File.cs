@@ -10,14 +10,9 @@ public class File
     public Guid Id { get; set; }
 
     /// <summary>
-    /// File size in bytes
+    /// Original file
     /// </summary>
-    public long Size { get; set; }
-
-    /// <summary>
-    /// Current byte position
-    /// </summary>
-    public long Position { get; set; }
+    public Guid? OriginalFileId { get; set; }
 
     /// <summary>
     /// File name
@@ -32,7 +27,7 @@ public class File
     /// <summary>
     /// Mime type
     /// </summary>
-    public string MimeType { get; set; }
+    public string? MimeType { get; set; }
 
     /// <summary>
     /// File extension with dot: '.jpg', '.png'
@@ -40,14 +35,9 @@ public class File
     public string? Extension { get; set; }
 
     /// <summary>
-    /// Storage file type
+    /// Where is this file from (System, User upload)
     /// </summary>
-    public long? StorageFileTypeId { get; set; }
-
-    /// <summary>
-    /// True if file upload completed (Size == Position)
-    /// </summary>
-    public bool UploadCompleted { get; set; }
+    public FileOrigin Origin { get; set; } = FileOrigin.None;
 
     public string? Attrs { get; set; }
 
