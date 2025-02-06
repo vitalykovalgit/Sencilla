@@ -8,6 +8,7 @@ CREATE TABLE [sec].[User]
 
     [Email]             NVARCHAR (255)  NOT NULL,
     [Phone]             BIGINT NULL,
+    [PwdHash]           NVARCHAR (255)  NOT NULL,
 
     [Pic]               NVARCHAR (1024) NULL,
     
