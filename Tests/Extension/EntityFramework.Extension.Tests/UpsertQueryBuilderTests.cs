@@ -156,7 +156,7 @@ public class UpsertQueryBuilderTests
         _te.Email = "asdlf@gmail.com' Drop Database";
 
         Assert.Pass();
-        Assert.IsTrue(builder.Build(new List<TestEntity> { _te }).Contains('\''));
+        Assert.That(builder.Build(new List<TestEntity> { _te }).Contains('\''));
     }
 
     [Test]
