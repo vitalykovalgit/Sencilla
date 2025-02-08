@@ -24,6 +24,7 @@ public class FilesComponent : IComponent
         container.RegisterType<IFileContentProvider, DriveFileContentProvider>();
         container.RegisterType<IConfigProvider<DriveFileContentProviderOption>, AppSettingsJsonConfigProvider<DriveFileContentProviderOption>>();
 
-        container.RegisterType<IFileProvider, DbFileProvider>();
+        container.RegisterType<IFileRepository, DbFileRepository>();
+        container.RegisterType<IFileUploadRepository, DbFileUploadRepository>();
     }
 }

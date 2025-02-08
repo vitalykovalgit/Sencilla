@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.Files;
 
-public class InMemoryFileProvider : IFileProvider
+public class InMemoryFileRepository : IFileRepository
 {
     private readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, File> _files = new();
 
