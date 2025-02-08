@@ -10,4 +10,13 @@ public class UserFilter: Filter
     }
 
     public static UserFilter ByEmail(params string?[] emails) => new UserFilter().WithEmail(emails);
+
+    public UserFilter WithId(params int[] ids)
+    {
+        AddProperty(nameof(User.Id), typeof(int), ids);
+        return this;
+    }
+
+    public static UserFilter ById(params int[] ids)
+        => new UserFilter().WithId(ids);
 }
