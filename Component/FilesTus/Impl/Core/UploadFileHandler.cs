@@ -44,7 +44,7 @@ public class UploadFileHandler : ITusRequestHandler
         var length = (long)context.HttpContext.Request.ContentLength!;
 
         var file = await _fileRepository.GetFile(fileId) ?? await _fileRepository.CreateFile(new() { Id = fileId, Origin = FileOrigin.User });
-        var fileUpload = await _fileUploadRepository.GetFileUpload(fileId) ?? await _fileUploadRepository.CreateFileUpload(new() { Id = fileId });
+        var fileUpload = await _fileUploadRepository.GetFileUpload(fileId) ?? await _fileUploadRepository.CreateFileUpload(new() { Id = fileId, StorageFileTypeId = _fileContent.ProviderType });
         var newOffset = await _fileContent.WriteFileAsync(file, chunk, offset, length, CancellationToken.None);
 
         fileUpload.Position = newOffset;

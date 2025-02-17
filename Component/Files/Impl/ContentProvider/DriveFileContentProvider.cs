@@ -2,11 +2,14 @@
 
 public class DriveFileContentProvider : IFileContentProvider
 {
-    private readonly IConfigProvider<DriveFileContentProviderOption> _config;
+    public const FileContentProviderType ProviderType = FileContentProviderType.Drive;
+    FileContentProviderType IFileContentProvider.ProviderType => ProviderType;
 
-    public DriveFileContentProvider(IConfigProvider<DriveFileContentProviderOption> config)
+    private readonly FileContentProviderOptions _config;
+
+    public DriveFileContentProvider(IConfigProvider<FileContentProviderOptions> config)
     {
-        _config = config;
+        _config = config.GetConfig();
     }
 
     public Task<File> DeleteFileAsync(File file, CancellationToken? token = null)
@@ -74,7 +77,7 @@ public class DriveFileContentProvider : IFileContentProvider
 
     private string GetFilePath(File file)
     {
-        var rootPath = _config.GetConfig().RootPath ?? string.Empty;
+        var rootPath = _config.RootPath ?? string.Empty;
         var directory = Path.GetDirectoryName(file.FullName) ?? string.Empty;
         var fileNameWithExt = Path.GetFileName(file.FullName) ?? $"{file.Id}{file.Extension ?? Path.GetExtension(file.Name)}";
 

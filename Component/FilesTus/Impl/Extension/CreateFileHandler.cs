@@ -73,7 +73,8 @@ internal class CreateFileHandler : ITusRequestHandler
         var fileUpload = await _fileUploadRepository.CreateFileUpload(new()
         {
             Id = fileId,
-            Size = uploadLength
+            Size = uploadLength,
+            StorageFileTypeId = _fileContent.ProviderType
         });
 
         await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });

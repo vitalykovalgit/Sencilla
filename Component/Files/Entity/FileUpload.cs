@@ -24,7 +24,7 @@ public class FileUpload
     /// <summary>
     /// Storage file type
     /// </summary>
-    public int StorageFileTypeId { get; set; }
+    public FileContentProviderType StorageFileTypeId { get; set; }
 
     /// <summary>
     /// True if file upload completed (Size == Position)

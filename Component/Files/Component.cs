@@ -5,6 +5,9 @@ global using Sencilla.Component.Files;
 
 global using Microsoft.AspNetCore.Http;
 
+global using Azure.Storage.Blobs;
+global using Azure.Storage.Blobs.Specialized;
+
 [assembly: AutoDiscovery]
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -21,8 +24,14 @@ public class FilesComponent : IComponent
         //container.AddRepositoriesFor<File, ulong, FileDbContext>();
         //container.AddRepositoriesFor<FileContent, ulong, FileDbContext>();
 
-        container.RegisterType<IFileContentProvider, DriveFileContentProvider>();
-        container.RegisterType<IConfigProvider<DriveFileContentProviderOption>, AppSettingsJsonConfigProvider<DriveFileContentProviderOption>>();
+        container.RegisterType<IFileContentProvider, AzureBlobStorageContentProvider>(
+            IFileContentProvider.ServiceKey(AzureBlobStorageContentProvider.ProviderType));
+        container.RegisterType<IFileContentProvider, DriveFileContentProvider>(
+            IFileContentProvider.ServiceKey(DriveFileContentProvider.ProviderType));
+
+        container.RegisterType<IConfigProvider<FileContentProviderOptions>, AppSettingsJsonConfigProvider<FileContentProviderOptions>>();
+
+        container.RegisterType(provider => provider.Resolve<IFileContentProvider>(IFileContentProvider.ServiceKey(provider.Resolve<IConfigProvider<FileContentProviderOptions>>()!.GetConfig().ContentProvider))!);
 
         container.RegisterType<IFileRepository, DbFileRepository>();
         container.RegisterType<IFileUploadRepository, DbFileUploadRepository>();
