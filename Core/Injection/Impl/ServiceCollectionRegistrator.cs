@@ -20,6 +20,7 @@
         public IContainer RegisterTypePerRequest(Type srv, Type impl, string? name = null) { if (name is not null) C.AddKeyedScoped(srv, name, impl); else C.AddScoped(srv, impl); return this; }
 
         public IContainer RegisterType<TSrv>(string? name = null) where TSrv : class { if (name is not null) C.AddKeyedTransient<TSrv>(name); else C.AddTransient<TSrv>(); return this; }
+        public IContainer RegisterType<TSrv>(Func < IResolver, TSrv> implementationFactory) where TSrv : class { C.AddTransient(provider => implementationFactory(new ServiceCollectionResolver(provider))); return this; }
         public IContainer RegisterTypeSingleton<TSrv>(string? name = null) where TSrv : class { if (name is not null) C.AddKeyedSingleton<TSrv>(name); else C.AddSingleton<TSrv>(); return this; }
         public IContainer RegisterTypePerRequest<TSrv>(string? name = null) where TSrv : class { if (name is not null) C.AddKeyedScoped<TSrv>(name); else C.AddScoped<TSrv>(); return this; }
 

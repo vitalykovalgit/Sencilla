@@ -2,6 +2,9 @@
 
 public class InMemoryFileContentProvider : IFileContentProvider
 {
+    public const FileContentProviderType ProviderType = FileContentProviderType.InMemory;
+    FileContentProviderType IFileContentProvider.ProviderType => ProviderType;
+
     //private readonly ConcurrentDictionary<Guid, Stream> _files = new();
 
     private readonly IFileRepository _fileProvider;

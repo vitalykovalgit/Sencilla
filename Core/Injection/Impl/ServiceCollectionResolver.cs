@@ -17,7 +17,7 @@ public class ServiceCollectionResolver : IResolver
 
     public TServcie? Resolve<TServcie>(string name)
     {
-        return Resolve<TServcie>();
+        return Provider.GetKeyedService<TServcie>(name);
     }
 
     public object? Resolve(Type type)
