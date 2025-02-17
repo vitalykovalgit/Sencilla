@@ -1,5 +1,7 @@
 namespace Sencilla.Component.Files;
 
+//[CrudApi("api/v1/files")]
+//[CrudApi("api/v1/files/content")]
 public class File
     : IEntity<Guid>
     , IEntityCreateable
