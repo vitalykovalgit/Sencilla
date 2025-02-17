@@ -18,6 +18,7 @@ namespace Sencilla.Core
         IContainer RegisterTypePerRequest(Type service, Type implementation, string? name = null);
 
         IContainer RegisterType<TService>(string? name = null) where TService: class;
+        IContainer RegisterType<TService>(Func<IResolver, TService> implementationFactory) where TService : class;
         IContainer RegisterTypeSingleton<TService>(string? name = null) where TService: class;
         IContainer RegisterTypePerRequest<TService>(string? name = null) where TService: class;
 

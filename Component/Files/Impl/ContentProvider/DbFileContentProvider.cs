@@ -2,6 +2,9 @@
 
 public class DbFileContentProvider : IFileContentProvider
 {
+    public const FileContentProviderType ProviderType = FileContentProviderType.Db;
+    FileContentProviderType IFileContentProvider.ProviderType => ProviderType;
+
     public Task<Stream> ReadFileAsync(File file, CancellationToken? token = null)
     {
         throw new System.NotImplementedException();
