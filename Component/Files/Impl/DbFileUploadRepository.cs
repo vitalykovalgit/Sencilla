@@ -19,9 +19,11 @@ public class DbFileUploadRepository : IFileUploadRepository
         _deleteRepository = deleteRepository;
     }
 
-    public Task<FileUpload> CreateFileUpload(FileUpload fileUpload) => _createRepository.Create(fileUpload);
+    public Task<FileUpload?> CreateFileUpload(FileUpload fileUpload) => _createRepository.Create(fileUpload);
 
-    public Task<FileUpload> GetFileUpload(Guid fileId) => _readRepository.GetById(fileId);
+    public Task<FileUpload?> GetFileUpload(Guid fileUploadId) => _readRepository.GetById(fileUploadId);
 
-    public Task<FileUpload> UpdateFileUpload(FileUpload fileUpload) => _updateRepository.Update(fileUpload);
+    public Task<FileUpload?> UpdateFileUpload(FileUpload fileUpload) => _updateRepository.Update(fileUpload);
+
+    public Task<int> DeleteFileUpload(Guid fileUploadId) => _deleteRepository.Delete(fileUploadId);
 }
