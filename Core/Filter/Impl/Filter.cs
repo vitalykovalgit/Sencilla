@@ -26,7 +26,7 @@ namespace Sencilla.Core
 
         public IDictionary<string, FilterProperty>? Properties { get; set; }
 
-        public void AddProperty(string name, Type? type, params object[] values)
+        public void AddProperty(string name, Type? type, params object?[] values)
         {
             Properties ??= new Dictionary<string, FilterProperty>();
             
@@ -41,7 +41,7 @@ namespace Sencilla.Core
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public IEnumerable<object>? GetProperty(string name)
+        public IEnumerable<object?>? GetProperty(string name)
         {
             return Properties?[name].Values;
         }

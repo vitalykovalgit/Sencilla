@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.Files;
 
-[Route("api/v1/files/content")]
+[Route("api/v1/files/stream")]
 public class FileContentController : ApiController
 {
     private readonly IResolver _resolver;
@@ -12,6 +12,35 @@ public class FileContentController : ApiController
     {
         _resolver = resolver;
         _fileRepository = fileRepository;
+    }
+
+    [HttpGet, Route("{fileId}")]
+    public async Task<IActionResult> GetFileStream(
+        [FromServices] IReadRepository<File, Guid> fileRepo,
+        Guid fileId, int? dim, CancellationToken token)
+    {
+        var files = await fileRepo.GetAll(new FileFilter().ByOriginalId(fileId).ByDimmension(dim));
+        var file = files.FirstOrDefault();
+        if (file == null)
+            return new NotFoundResult();
+
+        var fileContentProvider = ResolveFileContentProvider(file);
+        var stream = await fileContentProvider.ReadFileAsync(file, token);
+        if (stream == null)
+            return new NotFoundResult();
+
+        //Response...
+        //Response.Headers.Add("X-Content-Type-Options", "nosniff");
+        //Response.Headers.Add("Accept-Ranges", "bytes");
+        Response.Headers.Append("Content-Disposition", new System.Net.Mime.ContentDisposition
+        {
+            FileName = file.Name,
+            //false = prompt the user for downloading;  
+            //true = browser to try to show the file inline
+            Inline = true
+        }.ToString());
+
+        return File(stream, file.MimeType ?? "", true);
     }
 
     [HttpGet, Route("{fileId}/stream")]

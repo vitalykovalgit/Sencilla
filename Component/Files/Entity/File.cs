@@ -21,6 +21,11 @@ public class File
     public string Name { get; set; }
 
     /// <summary>
+    /// Dimensions 
+    /// </summary>
+    public int? Dim { get; set; }
+
+    /// <summary>
     /// Full file name with path
     /// </summary>
     public string? FullName { get; set; }

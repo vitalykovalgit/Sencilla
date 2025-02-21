@@ -19,7 +19,7 @@ namespace Sencilla.Core
         /// <summary>
         /// 
         /// </summary>
-        public List<object>? Values {get; set;}
+        public List<object?>? Values {get; set;}
 
         //public List<>
 
@@ -27,9 +27,9 @@ namespace Sencilla.Core
         /// 
         /// </summary>
         /// <param name="values"></param>
-        public void AddValues(params object[] values)
+        public void AddValues(params object?[] values)
         {
-            Values ??= new List<object>();
+            Values ??= new List<object?>();
             Values.AddRange(values);
         }
     }

@@ -83,17 +83,34 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
         if (prop.Values == null || prop.Values.Count == 0)
             return prop.Query;
 
+        if (prop.Values.Count == 1 && prop.Values[0] == null)
+        {
+            return $"{prop.Query} == null";
+        }
+
+        if (prop.Type == typeof(Guid)) 
+        {
+            var exp = new StringBuilder();
+            foreach (var val in prop.Values) 
+            {
+                if (exp.Length > 0)
+                    exp.Append(" || ");
+
+                exp.Append($"{prop.Query} == \"{val}\"");
+            }
+            return exp.ToString();
+        }
+
         var vals = new StringBuilder();
         foreach (var v in prop.Values)
         {
-            if (prop.Type == typeof(string))
-            {
+            // ignore null for now 
+            if (v is null) continue;
+
+            if (prop.Type == typeof(string) || prop.Type == typeof(Guid)) 
                 vals.Append($"\"{v}\",");
-            }
             else
-            {
                 vals.Append($"{v},");
-            }
         }
 
         if (vals.Length > 0)
@@ -104,3 +121,53 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
 }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+/**
+
+    public static string? ToExpression(FilterProperty prop)
+    {
+        if (prop.Type == null)
+            return prop.Query;
+
+        if (prop.Values == null || prop.Values.Count == 0)
+            return prop.Query;
+
+
+        //if (prop.Values.Count == 1 && prop.Values[0] == null)
+        //{
+        //    return $"{prop.Query} IS NULL";
+        //}
+
+        var nullExp = "";
+    var vals = new StringBuilder();
+        foreach (var v in prop.Values)
+        {
+            // if value equals null update isNull
+            if (v == null)
+            {
+                nullExp = $"({prop.Query} IS NULL)";
+                continue;
+            }
+            
+            if (prop.Type == typeof(string))
+    vals.Append($"\"{v}\",");
+else
+    vals.Append($"{v},");
+        }
+
+        // remove last comma 
+        if (vals.Length > 0)
+    vals.Remove(vals.Length - 1, 1);
+
+// 
+var exp = vals.Length > 0 ? $"({prop.Query} in ({vals}))" : "";
+exp = exp.Length > 0 ? $"({exp} OR {nullExp})" : nullExp;
+
+if (exp.Length == 0)
+    return prop.Query;
+
+return exp;
+    }
+}
+
+ */
