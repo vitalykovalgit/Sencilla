@@ -2,8 +2,10 @@
 global using Sencilla.Core;
 global using Sencilla.Component.Config;
 global using Sencilla.Component.Files;
+global using Sencilla.Web;
 
 global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Mvc;
 
 global using Azure.Storage.Blobs;
 global using Azure.Storage.Blobs.Specialized;

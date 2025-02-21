@@ -43,8 +43,8 @@ public class UploadFileHandler : ITusRequestHandler
         var chunk = context.HttpContext.Request.Body;
         var length = (long)context.HttpContext.Request.ContentLength!;
 
-        var file = await _fileRepository.GetFile(fileId) ?? await _fileRepository.CreateFile(new() { Id = fileId, Origin = FileOrigin.User });
-        var fileUpload = await _fileUploadRepository.GetFileUpload(fileId) ?? await _fileUploadRepository.CreateFileUpload(new() { Id = fileId, StorageFileTypeId = _fileContent.ProviderType });
+        var file = await _fileRepository.GetFile(fileId) ?? await _fileRepository.CreateFile(new() { Id = fileId, Origin = FileOrigin.User, StorageFileTypeId = _fileContent.ProviderType });
+        var fileUpload = await _fileUploadRepository.GetFileUpload(fileId) ?? await _fileUploadRepository.CreateFileUpload(new() { Id = fileId });
         var newOffset = await _fileContent.WriteFileAsync(file, chunk, offset, length, CancellationToken.None);
 
         fileUpload.Position = newOffset;
@@ -52,7 +52,10 @@ public class UploadFileHandler : ITusRequestHandler
         fileUpload = await _fileUploadRepository.UpdateFileUpload(fileUpload);
 
         if (fileUpload.UploadCompleted)
+        {
             await _events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });
+            await _fileUploadRepository.DeleteFileUpload(fileId);
+        }
 
         await context.HttpContext.WriteNoContentWithOffset(newOffset);
     }

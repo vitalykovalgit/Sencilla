@@ -1,7 +1,6 @@
 namespace Sencilla.Component.Files;
 
-//[CrudApi("api/v1/files")]
-//[CrudApi("api/v1/files/content")]
+[CrudApi("api/v1/files")]
 public class File
     : IEntity<Guid>
     , IEntityCreateable
@@ -37,9 +36,29 @@ public class File
     public string? Extension { get; set; }
 
     /// <summary>
+    /// File size in bytes
+    /// </summary>
+    public long Size { get; set; }
+
+    /// <summary>
     /// Where is this file from (System, User upload)
     /// </summary>
     public FileOrigin Origin { get; set; } = FileOrigin.None;
+
+    /// <summary>
+    /// Storage file type
+    /// </summary>
+    public FileContentProviderType StorageFileTypeId { get; set; }
+
+    /// <summary>
+    /// Image width dimension
+    /// </summary>
+    public int? Width { get; set; }
+
+    /// <summary>
+    /// Image height dimension
+    /// </summary>
+    public int? Height { get; set; }
 
     public string? Attrs { get; set; }
 
