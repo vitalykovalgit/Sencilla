@@ -1,10 +1,5 @@
 ﻿namespace Sencilla.Component.FilesTus;
 
-public class TusResumableUploadOptions
-{
-    public string Route { get; set; }
-}
-
 [DisableInjection]
 public class TusResumableUploadMiddleware
 {
@@ -26,24 +21,9 @@ public class TusResumableUploadMiddleware
         }
 
         // TODO: Make it allocation free
-        await TusRequestRouter.Handle(container, new TusContext { HttpContext = context, Configuration = _options });
-    }
-}
+        var handler = container.GetKeyedService<ITusRequestHandler>(ITusRequestHandler.ServiceKey(context.Request.Method)) ?? throw new NotImplementedException();
+        await handler.Handle(context);
 
-public static class TusResumableUploadMiddlewareExtensions
-{
-    public static IApplicationBuilder UseTusResumableUpload(
-        this IApplicationBuilder builder, Action<TusResumableUploadOptions> configure)
-    {
-        var options = new TusResumableUploadOptions();
-        configure(options);
-        return builder.UseMiddleware<TusResumableUploadMiddleware>(options);
-    }
-
-    public static IApplicationBuilder UseTusResumableUpload(
-        this IApplicationBuilder builder, string route)
-    {
-        var options = new TusResumableUploadOptions() { Route = route };
-        return builder.UseMiddleware<TusResumableUploadMiddleware>(options);
+        //await TusRequestRouter.Handle(container, new TusContext { HttpContext = context, Configuration = _options });
     }
 }

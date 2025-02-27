@@ -22,26 +22,26 @@ public class UploadFileHandler : ITusRequestHandler
         _events = events;
     }
 
-    public async Task Handle(TusContext context)
+    public async Task Handle(HttpContext context)
     {
-        if (!context.HttpContext.Request.Headers.ContainsKey(TusHeaders.UploadOffset))
+        if (!context.Request.Headers.ContainsKey(TusHeaders.UploadOffset))
         {
-            await context.HttpContext.WriteBadRequest($"{TusHeaders.UploadOffset} header is missing.");
+            await context.WriteBadRequest($"{TusHeaders.UploadOffset} header is missing.");
             return;
         }
 
         long offset = 0;
-        if (context.HttpContext.Request.Headers.TryGetValue(TusHeaders.UploadOffset, out var offsetHeader) &&
+        if (context.Request.Headers.TryGetValue(TusHeaders.UploadOffset, out var offsetHeader) &&
             !long.TryParse(offsetHeader, out offset))
         {
-            await context.HttpContext.WriteBadRequest($"Invalid {TusHeaders.UploadOffset} header.");
+            await context.WriteBadRequest($"Invalid {TusHeaders.UploadOffset} header.");
             return;
         }
 
-        var segments = context.HttpContext.Request.Path.Value!.Split('/');
+        var segments = context.Request.Path.Value!.Split('/');
         var fileId = Guid.Parse(segments[segments.Length - 1]);
-        var chunk = context.HttpContext.Request.Body;
-        var length = (long)context.HttpContext.Request.ContentLength!;
+        var chunk = context.Request.Body;
+        var length = (long)context.Request.ContentLength!;
 
         var file = await _fileRepository.GetFile(fileId) ?? await _fileRepository.CreateFile(new() { Id = fileId, Origin = FileOrigin.User, StorageFileTypeId = _fileContent.ProviderType });
         var fileUpload = await _fileUploadRepository.GetFileUpload(fileId) ?? await _fileUploadRepository.CreateFileUpload(new() { Id = fileId });
@@ -57,6 +57,6 @@ public class UploadFileHandler : ITusRequestHandler
             await _fileUploadRepository.DeleteFileUpload(fileId);
         }
 
-        await context.HttpContext.WriteNoContentWithOffset(newOffset);
+        await context.WriteNoContentWithOffset(newOffset);
     }
 }

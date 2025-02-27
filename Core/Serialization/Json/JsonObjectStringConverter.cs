@@ -20,9 +20,9 @@ public class JsonObjectStringConverter : JsonConverter<string>
     {
         if (string.IsNullOrWhiteSpace(value))
             return;
-
+        
+        // TODO: combine with array by reading first char in value { or [
         var obj = JsonSerializer.Deserialize<Dictionary<string, object>>(value, options);
-
         JsonSerializer.Serialize(writer, obj, options);
     }
 }

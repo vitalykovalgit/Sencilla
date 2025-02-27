@@ -22,39 +22,39 @@ internal class CreateFileHandler : ITusRequestHandler
         _events = events;
     }
 
-    public async Task Handle(TusContext context)
+    public async Task Handle(HttpContext context)
     {
         var fileId = Guid.NewGuid();
 
-        var uploadMetadataExists = context.HttpContext.Request.Headers.ContainsKey(TusHeaders.UploadMetadata);
-        var uploadLengthExists = context.HttpContext.Request.Headers.ContainsKey(TusHeaders.UploadLength);
-        var uploadDeferLengthExists = context.HttpContext.Request.Headers.ContainsKey(TusHeaders.UploadDeferLength);
+        var uploadMetadataExists = context.Request.Headers.ContainsKey(TusHeaders.UploadMetadata);
+        var uploadLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadLength);
+        var uploadDeferLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadDeferLength);
 
         // TODO: headers validation
         if (!uploadMetadataExists)
         {
-            await context.HttpContext.WriteBadRequest($"{TusHeaders.UploadMetadata} header is missing.");
+            await context.WriteBadRequest($"{TusHeaders.UploadMetadata} header is missing.");
             return;
         }
 
         if (!uploadLengthExists && !uploadDeferLengthExists)
         {
-            await context.HttpContext.WriteBadRequest($"{TusHeaders.UploadLength} or {TusHeaders.UploadLength} should be specified.");
+            await context.WriteBadRequest($"{TusHeaders.UploadLength} or {TusHeaders.UploadLength} should be specified.");
             return;
         }
 
-        if (context.HttpContext.Request.Headers.TryGetValue(TusHeaders.UploadDeferLength, out var uploadDeferLengthHeader) &&
+        if (context.Request.Headers.TryGetValue(TusHeaders.UploadDeferLength, out var uploadDeferLengthHeader) &&
             uploadDeferLengthHeader != "1")
         {
-            await context.HttpContext.WriteBadRequest($"Invalid {TusHeaders.UploadDeferLength} value.");
+            await context.WriteBadRequest($"Invalid {TusHeaders.UploadDeferLength} value.");
             return;
         }
 
         long uploadLength = uploadLengthExists
-            ? uploadLength = long.Parse(context.HttpContext.Request.Headers[TusHeaders.UploadLength])
+            ? uploadLength = long.Parse(context.Request.Headers[TusHeaders.UploadLength])
             : -1;
 
-        var metadataHeader = context.HttpContext.Request.Headers[TusHeaders.UploadMetadata];
+        var metadataHeader = context.Request.Headers[TusHeaders.UploadMetadata];
 
         var metadata = ParseMetadataHeader(metadataHeader);
         var fileName = metadata["filename"];
@@ -85,8 +85,8 @@ internal class CreateFileHandler : ITusRequestHandler
         await _fileContent.WriteFileAsync(file, []);
 
         // think about location for uploading, probably can be S3/CloudFare directly
-        var location = $"{context.HttpContext.Request.Path.Value}/{fileId}";
-        await context.HttpContext.WriteCreated(location);
+        var location = $"{context.Request.Path.Value}/{fileId}";
+        await context.WriteCreated(location);
     }
 
     //"filename cGV4ZWxzLWNvZHkta2luZy0xMTE4NjY3LmpwZw==,filetype aW1hZ2UvanBlZw=="
