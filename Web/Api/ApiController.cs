@@ -1,17 +1,15 @@
-using System.Net;
-
 namespace Microsoft.AspNetCore.Mvc;
 
 public class ApiController : ControllerBase
 {
-    protected ILogger? Logger { get; set; }
+    //protected ILogger? Logger { get; set; }
 
     protected IResolver Resolver { get; set; }
 
     public ApiController(IResolver resolver) 
     {
         Resolver = resolver;
-        Logger = resolver.Resolve<ILogger>();
+        //Logger = resolver.Resolve<ILogger>();
     }
 
     protected TService? R<TService>()
@@ -69,7 +67,7 @@ public class ApiController : ControllerBase
     {
         try
         {
-            var service = R<TService>();
+            var service = Resolver.Resolve<TService>();
             if (service == null)
                 return NotImplemented();
 
@@ -78,7 +76,7 @@ public class ApiController : ControllerBase
         }
         catch (Exception ex)
         {
-            Logger?.Error(ex);
+            Resolver.Resolve<Sencilla.Core.ILogger>()?.Error(ex);
             return ExceptionToResponse(ex);
         }
     }

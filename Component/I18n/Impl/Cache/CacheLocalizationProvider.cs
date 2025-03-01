@@ -7,7 +7,7 @@ public class CacheLocalizationProvider: ILocalizationProvider
     private readonly ILocalizationProvider _provider;
     private readonly int _cacheLevel;
 
-    private readonly Dictionary<string, Dictionary<string, string>> _caches = new Dictionary<string, Dictionary<string, string>>();
+    private readonly Dictionary<string, Dictionary<string, string>> _caches = new ();
 
     public CacheLocalizationProvider(ILocalizationProvider provider, int cacheLevel = 1)
     {
