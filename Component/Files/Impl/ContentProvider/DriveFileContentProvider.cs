@@ -69,7 +69,7 @@ public class DriveFileContentProvider : IFileContentProvider
 
         CreateFileDirectory(path);
 
-        var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
+        var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
         fs.Seek(offset, SeekOrigin.Begin);
 
         return fs;
