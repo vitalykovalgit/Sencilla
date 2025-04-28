@@ -5,38 +5,36 @@ internal class CreateFileHandler : ITusRequestHandler
 {
     public const string Method = "POST";
 
-    private readonly IFileRepository _fileRepository;
-    private readonly IFileUploadRepository _fileUploadRepository;
-    private readonly IFileContentProvider _fileContent;
     private readonly IEventDispatcher _events;
 
+    private readonly IFileRepository _fileRepository;
+    private readonly IFileContentProvider _fileContent;
+    private readonly IFileUploadRepository _fileUploadRepository;
+    
     public CreateFileHandler(
+        IEventDispatcher events,
         IFileRepository fileRepository,
-        IFileUploadRepository fileUploadRepository,
         IFileContentProvider fileContent,
-        IEventDispatcher events)
+        IFileUploadRepository fileUploadRepository)
     {
+        _events = events;
+        _fileContent = fileContent;
         _fileRepository = fileRepository;
         _fileUploadRepository = fileUploadRepository;
-        _fileContent = fileContent;
-        _events = events;
     }
 
     public async Task Handle(HttpContext context)
     {
-        var fileId = Guid.NewGuid();
-
-        var uploadMetadataExists = context.Request.Headers.ContainsKey(TusHeaders.UploadMetadata);
-        var uploadLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadLength);
-        var uploadDeferLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadDeferLength);
-
         // TODO: headers validation
+        var uploadMetadataExists = context.Request.Headers.ContainsKey(TusHeaders.UploadMetadata);
         if (!uploadMetadataExists)
         {
             await context.WriteBadRequest($"{TusHeaders.UploadMetadata} header is missing.");
             return;
         }
 
+        var uploadLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadLength);
+        var uploadDeferLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadDeferLength);
         if (!uploadLengthExists && !uploadDeferLengthExists)
         {
             await context.WriteBadRequest($"{TusHeaders.UploadLength} or {TusHeaders.UploadLength} should be specified.");
@@ -50,17 +48,15 @@ internal class CreateFileHandler : ITusRequestHandler
             return;
         }
 
-        long uploadLength = uploadLengthExists
-            ? uploadLength = long.Parse(context.Request.Headers[TusHeaders.UploadLength])
-            : -1;
+        long uploadLength = uploadLengthExists ? long.Parse(context.Request.Headers[TusHeaders.UploadLength]) : -1;
 
         var metadataHeader = context.Request.Headers[TusHeaders.UploadMetadata];
-
         var metadata = ParseMetadataHeader(metadataHeader);
-        var fileName = metadata["filename"];
-        var fileMimeType = metadata["filetype"];
-        var fileExt = MimeTypeExt(fileMimeType);
 
+        var fileMimeType = metadata["filetype"];
+        var fileName = metadata["filename"];
+        var fileExt = IFormFileEx.MimeTypeToExt[fileMimeType];
+        var fileId = Guid.NewGuid();
         var file = await _fileRepository.CreateFile(new()
         {
             Id = fileId,
@@ -98,6 +94,4 @@ internal class CreateFileHandler : ITusRequestHandler
         }).ToImmutableDictionary(kv => kv.key, kv => FromBase64(kv.value));
 
     private static string FromBase64(string b64) => Encoding.UTF8.GetString(Convert.FromBase64String(b64));
-
-    private static string? MimeTypeExt(string mimeType) => IFormFileEx.MimeTypeToExt[mimeType];
 }

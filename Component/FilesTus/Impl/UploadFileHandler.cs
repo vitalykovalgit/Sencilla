@@ -5,10 +5,10 @@ public class UploadFileHandler : ITusRequestHandler
 {
     public const string Method = "PATCH";
 
-    private readonly IFileRepository _fileRepository;
-    private readonly IFileUploadRepository _fileUploadRepository;
-    private readonly IFileContentProvider _fileContent;
     private readonly IEventDispatcher _events;
+    private readonly IFileRepository _fileRepository;
+    private readonly IFileContentProvider _fileContent;
+    private readonly IFileUploadRepository _fileUploadRepository;
 
     public UploadFileHandler(
         IFileRepository fileRepository,

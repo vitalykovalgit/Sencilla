@@ -25,6 +25,6 @@ internal class HeadFileHandler : ITusRequestHandler
 
         var file = await _fileUploadRepository.GetFileUpload(fileId) ?? await _fileUploadRepository.CreateFileUpload(new() { Id = fileId });
 
-        await context.WriteOkWithOffset(file.Position);
+        await context.WriteOkWithOffset(file?.Position ?? 0);
     }
 }
