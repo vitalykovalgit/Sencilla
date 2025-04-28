@@ -13,7 +13,7 @@ public class File
     /// <summary>
     /// Original file
     /// </summary>
-    public Guid? OriginalFileId { get; set; }
+    public Guid? ParentId { get; set; }
 
     /// <summary>
     /// File name
