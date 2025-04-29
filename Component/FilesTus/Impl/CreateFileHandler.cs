@@ -24,8 +24,6 @@ internal class CreateFileHandler : ITusRequestHandler
 
     public async Task Handle(HttpContext context)
     {
-        var fileId = Guid.NewGuid();
-
         var uploadMetadataExists = context.Request.Headers.ContainsKey(TusHeaders.UploadMetadata);
         var uploadLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadLength);
         var uploadDeferLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadDeferLength);
@@ -57,6 +55,7 @@ internal class CreateFileHandler : ITusRequestHandler
         var metadataHeader = context.Request.Headers[TusHeaders.UploadMetadata];
 
         var metadata = ParseMetadataHeader(metadataHeader);
+        var fileId = Guid.TryParse(metadata["id"], out var _fileId) ? _fileId : Guid.Empty;
         var fileName = metadata["filename"];
         var fileMimeType = metadata["filetype"];
         var fileExt = MimeTypeExt(fileMimeType);
@@ -69,7 +68,8 @@ internal class CreateFileHandler : ITusRequestHandler
             Extension = fileExt,
             Size = uploadLength,
             Origin = FileOrigin.User,
-            StorageFileTypeId = _fileContent.ProviderType
+            StorageFileTypeId = _fileContent.ProviderType,
+            FullName = metadata["fullPath"]
         });
 
         var fileUpload = await _fileUploadRepository.CreateFileUpload(new()
@@ -78,8 +78,8 @@ internal class CreateFileHandler : ITusRequestHandler
             Size = uploadLength,
         });
 
-        await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });
-
+        await _fileRepository.UpdateFile(file);
+       
         // TODO: test cancellation token on middleware
         //       and test writing empty array to file
         await _fileContent.WriteFileAsync(file, []);
