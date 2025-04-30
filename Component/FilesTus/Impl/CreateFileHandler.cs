@@ -59,7 +59,7 @@ internal class CreateFileHandler : ITusRequestHandler
         var fileName = metadata["filename"];
         var fileMimeType = metadata["filetype"];
         var fileExt = MimeTypeExt(fileMimeType);
-
+        
         var file = await _fileRepository.CreateFile(new()
         {
             Id = fileId,
@@ -67,11 +67,11 @@ internal class CreateFileHandler : ITusRequestHandler
             MimeType = fileMimeType,
             Extension = fileExt,
             Size = uploadLength,
-            Origin = FileOrigin.User,
+            Origin = Enum.TryParse<FileOrigin>(metadata["fileOrigin"], out var origin) ? origin : FileOrigin.User,
             StorageFileTypeId = _fileContent.ProviderType,
             FullName = metadata["fullPath"]
-        });
-
+            });
+        
         var fileUpload = await _fileUploadRepository.CreateFileUpload(new()
         {
             Id = fileId,
