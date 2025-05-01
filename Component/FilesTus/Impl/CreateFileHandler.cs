@@ -26,6 +26,8 @@ internal class CreateFileHandler : ITusRequestHandler
 
     public async Task Handle(HttpContext context)
     {
+        var fileId = Guid.NewGuid();
+
         var uploadMetadataExists = context.Request.Headers.ContainsKey(TusHeaders.UploadMetadata);
         var uploadLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadLength);
         var uploadDeferLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadDeferLength);
@@ -57,11 +59,11 @@ internal class CreateFileHandler : ITusRequestHandler
         var metadataHeader = context.Request.Headers[TusHeaders.UploadMetadata];
 
         var metadata = metadataHeader.ToString()?.ParseMetadataHeader();
-        var fileId = Guid.TryParse(metadata["id"], out var _fileId) ? _fileId : Guid.Empty;
+        var fileOrigin = Enum.TryParse<FileOrigin>(metadata["fileOrigin"], out var origin) ? origin : FileOrigin.User;
         var fileName = metadata["filename"];
         var fileMimeType = metadata["filetype"];
         var fileExt = fileMimeType.MimeTypeExt();
-
+        var filePath = GetFullPath(metadata, fileExt, fileId, fileOrigin);
         var file = await _fileRepository.CreateFile(new()
         {
             Id = fileId,
@@ -69,10 +71,10 @@ internal class CreateFileHandler : ITusRequestHandler
             MimeType = fileMimeType,
             Extension = fileExt,
             Size = uploadLength,
-            Origin = Enum.TryParse<FileOrigin>(metadata["fileOrigin"], out var origin) ? origin : FileOrigin.User,
+            Origin = fileOrigin,
             StorageFileTypeId = _fileContent.ProviderType,
-            FullName = metadata["fullPath"]
-            });
+            FullName = filePath
+        });
         
         var fileUpload = await _fileUploadRepository.CreateFileUpload(new()
         {
@@ -93,5 +95,14 @@ internal class CreateFileHandler : ITusRequestHandler
         await context.WriteCreated(location);
     }
 
-    
+    private string GetFullPath(IDictionary<string, string> metadata, string fileExt, Guid fileId, FileOrigin origin)
+    {
+        var fileName = $"{fileId}{fileExt}";
+        return origin switch
+        {
+            FileOrigin.User => Path.Combine($"user{metadata["userId"]}", $"project{metadata["projectId"]}",$"{ fileName }"),
+            FileOrigin.System => $"system/{fileName}",
+            _ => $"none/{fileName}"
+        };
+    }
 }
