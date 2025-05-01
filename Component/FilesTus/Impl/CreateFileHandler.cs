@@ -54,12 +54,12 @@ internal class CreateFileHandler : ITusRequestHandler
 
         var metadataHeader = context.Request.Headers[TusHeaders.UploadMetadata];
 
-        var metadata = ParseMetadataHeader(metadataHeader);
+        var metadata = metadataHeader.ToString()?.ParseMetadataHeader();
         var fileId = Guid.TryParse(metadata["id"], out var _fileId) ? _fileId : Guid.Empty;
         var fileName = metadata["filename"];
         var fileMimeType = metadata["filetype"];
-        var fileExt = MimeTypeExt(fileMimeType);
-        
+        var fileExt = fileMimeType.MimeTypeExt();
+
         var file = await _fileRepository.CreateFile(new()
         {
             Id = fileId,
@@ -79,7 +79,9 @@ internal class CreateFileHandler : ITusRequestHandler
         });
 
         await _fileRepository.UpdateFile(file);
-       
+        if(file.Origin == FileOrigin.User) 
+            await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });
+        
         // TODO: test cancellation token on middleware
         //       and test writing empty array to file
         await _fileContent.WriteFileAsync(file, []);
@@ -89,15 +91,5 @@ internal class CreateFileHandler : ITusRequestHandler
         await context.WriteCreated(location);
     }
 
-    //"filename cGV4ZWxzLWNvZHkta2luZy0xMTE4NjY3LmpwZw==,filetype aW1hZ2UvanBlZw=="
-    private static IDictionary<string, string> ParseMetadataHeader(string metadataHeader) =>
-        metadataHeader.Split(',').Select(x =>
-        {
-            var kv = x.Split(' ');
-            return (key: kv[0], value: kv[1]);
-        }).ToImmutableDictionary(kv => kv.key, kv => FromBase64(kv.value));
-
-    private static string FromBase64(string b64) => Encoding.UTF8.GetString(Convert.FromBase64String(b64));
-
-    private static string? MimeTypeExt(string mimeType) => IFormFileEx.MimeTypeToExt[mimeType];
+    
 }
