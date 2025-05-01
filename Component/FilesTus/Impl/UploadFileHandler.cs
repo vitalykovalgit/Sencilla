@@ -5,10 +5,10 @@ public class UploadFileHandler : ITusRequestHandler
 {
     public const string Method = "PATCH";
 
-    private readonly IFileRepository _fileRepository;
-    private readonly IFileUploadRepository _fileUploadRepository;
-    private readonly IFileContentProvider _fileContent;
     private readonly IEventDispatcher _events;
+    private readonly IFileRepository _fileRepository;
+    private readonly IFileContentProvider _fileContent;
+    private readonly IFileUploadRepository _fileUploadRepository;
 
     public UploadFileHandler(
         IFileRepository fileRepository,
@@ -43,14 +43,16 @@ public class UploadFileHandler : ITusRequestHandler
         var chunk = context.Request.Body;
         var length = (long)context.Request.ContentLength!;
 
+        // create if not exists 
         var file = await _fileRepository.GetFile(fileId) ?? await _fileRepository.CreateFile(new() { Id = fileId, Origin = FileOrigin.User, StorageFileTypeId = _fileContent.ProviderType });
-        var fileUpload = await _fileUploadRepository.GetFileUpload(fileId) ?? await _fileUploadRepository.CreateFileUpload(new() { Id = fileId });
+        
         var newOffset = await _fileContent.WriteFileAsync(file, chunk, offset, length, CancellationToken.None);
 
+        // Update file upload status and notify the system 
+        var fileUpload = await _fileUploadRepository.GetFileUpload(fileId) ?? await _fileUploadRepository.CreateFileUpload(new() { Id = fileId });
         fileUpload.Position = newOffset;
         fileUpload.UploadCompleted = fileUpload.Size == fileUpload.Position;
         fileUpload = await _fileUploadRepository.UpdateFileUpload(fileUpload);
-
         if (fileUpload.UploadCompleted)
         {
             await _events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });

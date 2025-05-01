@@ -7,38 +7,36 @@ internal class CreateFileHandler : ITusRequestHandler
 {
     public const string Method = "POST";
 
-    private readonly IFileRepository _fileRepository;
-    private readonly IFileUploadRepository _fileUploadRepository;
-    private readonly IFileContentProvider _fileContent;
     private readonly IEventDispatcher _events;
 
+    private readonly IFileRepository _fileRepository;
+    private readonly IFileContentProvider _fileContent;
+    private readonly IFileUploadRepository _fileUploadRepository;
+    
     public CreateFileHandler(
+        IEventDispatcher events,
         IFileRepository fileRepository,
-        IFileUploadRepository fileUploadRepository,
         IFileContentProvider fileContent,
-        IEventDispatcher events)
+        IFileUploadRepository fileUploadRepository)
     {
+        _events = events;
+        _fileContent = fileContent;
         _fileRepository = fileRepository;
         _fileUploadRepository = fileUploadRepository;
-        _fileContent = fileContent;
-        _events = events;
     }
 
     public async Task Handle(HttpContext context)
     {
-        var fileId = Guid.NewGuid();
-
-        var uploadMetadataExists = context.Request.Headers.ContainsKey(TusHeaders.UploadMetadata);
-        var uploadLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadLength);
-        var uploadDeferLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadDeferLength);
-
         // TODO: headers validation
+        var uploadMetadataExists = context.Request.Headers.ContainsKey(TusHeaders.UploadMetadata);
         if (!uploadMetadataExists)
         {
             await context.WriteBadRequest($"{TusHeaders.UploadMetadata} header is missing.");
             return;
         }
 
+        var uploadLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadLength);
+        var uploadDeferLengthExists = context.Request.Headers.ContainsKey(TusHeaders.UploadDeferLength);
         if (!uploadLengthExists && !uploadDeferLengthExists)
         {
             await context.WriteBadRequest($"{TusHeaders.UploadLength} or {TusHeaders.UploadLength} should be specified.");
@@ -52,17 +50,16 @@ internal class CreateFileHandler : ITusRequestHandler
             return;
         }
 
-        long uploadLength = uploadLengthExists
-            ? uploadLength = long.Parse(context.Request.Headers[TusHeaders.UploadLength])
-            : -1;
+        long uploadLength = uploadLengthExists ? long.Parse(context.Request.Headers[TusHeaders.UploadLength]) : -1;
 
         var metadataHeader = context.Request.Headers[TusHeaders.UploadMetadata];
-
         var metadata = metadataHeader.ToString()?.ParseMetadataHeader();
+
         var fileOrigin = Enum.TryParse<FileOrigin>(metadata["fileOrigin"], out var origin) ? origin : FileOrigin.User;
         var fileName = metadata["filename"];
         var fileMimeType = metadata["filetype"];
         var fileExt = fileMimeType.MimeTypeExt();
+        var fileId = Guid.NewGuid();
         var filePath = GetFullPath(metadata, fileExt, fileId, fileOrigin);
         var file = await _fileRepository.CreateFile(new()
         {
@@ -75,7 +72,7 @@ internal class CreateFileHandler : ITusRequestHandler
             StorageFileTypeId = _fileContent.ProviderType,
             FullName = filePath
         });
-        
+
         var fileUpload = await _fileUploadRepository.CreateFileUpload(new()
         {
             Id = fileId,
@@ -83,9 +80,9 @@ internal class CreateFileHandler : ITusRequestHandler
         });
 
         await _fileRepository.UpdateFile(file);
-        if(file.Origin == FileOrigin.User) 
+        if (file.Origin == FileOrigin.User)
             await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });
-        
+
         // TODO: test cancellation token on middleware
         //       and test writing empty array to file
         await _fileContent.WriteFileAsync(file, []);
@@ -100,7 +97,7 @@ internal class CreateFileHandler : ITusRequestHandler
         var fileName = $"{fileId}{fileExt}";
         return origin switch
         {
-            FileOrigin.User => Path.Combine($"user{metadata["userId"]}", $"project{metadata["projectId"]}",$"{ fileName }"),
+            FileOrigin.User => Path.Combine($"user{metadata["userId"]}", $"project{metadata["projectId"]}", $"{fileName}"),
             FileOrigin.System => $"system/{fileName}",
             _ => $"none/{fileName}"
         };
