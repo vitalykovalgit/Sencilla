@@ -1,4 +1,6 @@
-﻿namespace Sencilla.Component.FilesTus;
+﻿using Sencilla.Component.FilesTus.Extension;
+
+namespace Sencilla.Component.FilesTus;
 
 [DisableInjection]
 internal class CreateFileHandler : ITusRequestHandler
