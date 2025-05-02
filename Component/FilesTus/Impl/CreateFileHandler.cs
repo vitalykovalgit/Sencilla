@@ -1,4 +1,6 @@
-﻿namespace Sencilla.Component.FilesTus;
+﻿using Sencilla.Component.FilesTus.Extension;
+
+namespace Sencilla.Component.FilesTus;
 
 [DisableInjection]
 internal class CreateFileHandler : ITusRequestHandler
@@ -51,12 +53,14 @@ internal class CreateFileHandler : ITusRequestHandler
         long uploadLength = uploadLengthExists ? long.Parse(context.Request.Headers[TusHeaders.UploadLength]) : -1;
 
         var metadataHeader = context.Request.Headers[TusHeaders.UploadMetadata];
-        var metadata = ParseMetadataHeader(metadataHeader);
+        var metadata = metadataHeader.ToString()?.ParseMetadataHeader();
 
-        var fileMimeType = metadata["filetype"];
+        var fileOrigin = Enum.TryParse<FileOrigin>(metadata["fileOrigin"], out var origin) ? origin : FileOrigin.User;
         var fileName = metadata["filename"];
-        var fileExt = IFormFileEx.MimeTypeToExt[fileMimeType];
+        var fileMimeType = metadata["filetype"];
+        var fileExt = fileMimeType.MimeTypeExt();
         var fileId = Guid.NewGuid();
+        var filePath = GetFullPath(metadata, fileExt, fileId, fileOrigin);
         var file = await _fileRepository.CreateFile(new()
         {
             Id = fileId,
@@ -64,8 +68,9 @@ internal class CreateFileHandler : ITusRequestHandler
             MimeType = fileMimeType,
             Extension = fileExt,
             Size = uploadLength,
-            Origin = FileOrigin.User,
-            StorageFileTypeId = _fileContent.ProviderType
+            Origin = fileOrigin,
+            StorageFileTypeId = _fileContent.ProviderType,
+            FullName = filePath
         });
 
         var fileUpload = await _fileUploadRepository.CreateFileUpload(new()
@@ -74,7 +79,9 @@ internal class CreateFileHandler : ITusRequestHandler
             Size = uploadLength,
         });
 
-        await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });
+        await _fileRepository.UpdateFile(file);
+        if (file.Origin == FileOrigin.User)
+            await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });
 
         // TODO: test cancellation token on middleware
         //       and test writing empty array to file
@@ -85,13 +92,14 @@ internal class CreateFileHandler : ITusRequestHandler
         await context.WriteCreated(location);
     }
 
-    //"filename cGV4ZWxzLWNvZHkta2luZy0xMTE4NjY3LmpwZw==,filetype aW1hZ2UvanBlZw=="
-    private static IDictionary<string, string> ParseMetadataHeader(string metadataHeader) =>
-        metadataHeader.Split(',').Select(x =>
+    private string GetFullPath(IDictionary<string, string> metadata, string fileExt, Guid fileId, FileOrigin origin)
+    {
+        var fileName = $"{fileId}{fileExt}";
+        return origin switch
         {
-            var kv = x.Split(' ');
-            return (key: kv[0], value: kv[1]);
-        }).ToImmutableDictionary(kv => kv.key, kv => FromBase64(kv.value));
-
-    private static string FromBase64(string b64) => Encoding.UTF8.GetString(Convert.FromBase64String(b64));
+            FileOrigin.User => Path.Combine($"user{metadata["userId"]}", $"project{metadata["projectId"]}", $"{fileName}"),
+            FileOrigin.System => $"system/{fileName}",
+            _ => $"none/{fileName}"
+        };
+    }
 }
