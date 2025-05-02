@@ -2,7 +2,7 @@ namespace Sencilla.Component.Files;
 
 public class FileFilter : Filter
 {
-    public FileFilter ByOriginalId(params Guid[] filesId)
+    public FileFilter ByParentId(params Guid[] filesId)
     {
         foreach (var fileId in filesId)
             AddProperty(nameof(File.ParentId), typeof(Guid), fileId);

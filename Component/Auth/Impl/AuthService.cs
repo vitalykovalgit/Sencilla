@@ -1,54 +1,38 @@
-﻿using global::Sencilla.Component.Users.Auth;
-using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-
+﻿
 namespace Sencilla.Component.Users.Auth;
 
 public class AuthService : IAuthService
 {
-    private readonly ICreateRepository<User> _createRepo;
-    private readonly IReadRepository<User> _readRepo;
-    private readonly ICreateRepository<UserRefreshToken> _createTokenRepo;
-    private readonly IReadRepository<UserRefreshToken> _readTokenRepo;
-
     private readonly AuthOptions _authOptions; // JWT config
 
+    private readonly ICreateRepository<User> _createUserRepo;
+    private readonly IUpdateRepository<UserPassword> _updatePasswordRepo;
+    private readonly ICreateRepository<UserRefreshToken> _createTokenRepo;
+
     public AuthService(
+        IOptions<AuthOptions> authOptions,
         ICreateRepository<User> createRepo,
-        IReadRepository<User> readRepo,
-        ICreateRepository<UserRefreshToken> createTokenRepo,
-        IReadRepository<UserRefreshToken> readTokenRepo,
-        IOptions<AuthOptions> authOptions
-    )
+        IUpdateRepository<UserPassword> updatePasswordRepo,
+        ICreateRepository<UserRefreshToken> createTokenRepo)
     {
-        _createRepo = createRepo;
-        _readRepo = readRepo;
-        _createTokenRepo = createTokenRepo;
-        _readTokenRepo = readTokenRepo;
         _authOptions = authOptions.Value;
+
+        _createUserRepo = createRepo;
+        _createTokenRepo = createTokenRepo;
+        _updatePasswordRepo = updatePasswordRepo;
     }
 
     public async Task<TokenResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
     {
         // 1) Check if user exists 
-        var existingUser = (await _readRepo.GetAll(
-            UserFilter.ByEmail(request.Email), ct
-        )).FirstOrDefault();
-
+        var existingUser = (await _updatePasswordRepo.GetAll(UserFilter.ByEmail(request.Email), ct)).FirstOrDefault();
         if (existingUser != null)
-        {
             throw new Exception("User already registered with that email");
-        }
 
         // 2) Create user
         var user = new User
         {
             Email = request.Email,
-            PasswordHash = PasswordHashHelper.HashPassword(request.Password),
             Phone = request.Phone,
             CreatedDate = DateTime.UtcNow,
             UpdatedDate = DateTime.UtcNow
@@ -56,7 +40,15 @@ public class AuthService : IAuthService
         user.AddRole((int)RoleType.User);
 
         // 3) Upsert to DB
-        await _createRepo.UpsertAsync(user, u => u.Email);
+        var dbUser = await _createUserRepo.UpsertAsync(user, u => u.Email);
+
+        // 3.1) Create password
+        await _updatePasswordRepo.Update(new UserPassword
+        {
+            Id = dbUser.Id,
+            Email = dbUser.Email,
+            PasswordHash = request.Password.HashPassword()
+        });
 
         // 4) Return tokens
         return await GenerateTokenResponse(user, ct);
@@ -65,20 +57,16 @@ public class AuthService : IAuthService
     public async Task<TokenResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
         // 1) Find user 
-        var user = (await _readRepo.GetAll(
-            UserFilter.ByEmail(request.Email), ct
-        )).FirstOrDefault();
-
-        if (user == null)
+        var userPwd = (await _updatePasswordRepo.GetAll(UserFilter.ByEmail(request.Email), ct)).FirstOrDefault();
+        if (userPwd == null)
             throw new Exception("No user with that email");
 
         // 2) Check password
-        bool isValid = PasswordHashHelper.VerifyPassword(
-            user.PasswordHash,
-            request.Password
-        );
+        bool isValid = userPwd.PasswordHash.VerifyPassword(request.Password); //PasswordHashHelper.VerifyPassword(user.PasswordHash, request.Password);
         if (!isValid)
             throw new Exception("Invalid password");
+
+        var user = (await _createUserRepo.GetAll(UserFilter.ByEmail(request.Email), ct)).FirstOrDefault();
 
         // 3) Return tokens
         return await GenerateTokenResponse(user, ct);
@@ -86,10 +74,7 @@ public class AuthService : IAuthService
 
     public async Task<TokenResponse> RefreshTokenAsync(string refreshToken, CancellationToken ct = default)
     {
-        var tokenObj = (await _readTokenRepo.GetAll(
-            UserRefreshTokenFilter.ByToken(refreshToken)
-        )).FirstOrDefault();
-
+        var tokenObj = (await _createTokenRepo.GetAll(UserRefreshTokenFilter.ByToken(refreshToken))).FirstOrDefault();
         if (tokenObj is null
             || tokenObj.ExpiresAt < DateTime.UtcNow
             || tokenObj.RevokedAt.HasValue)
@@ -99,9 +84,7 @@ public class AuthService : IAuthService
         }
 
         // Grab user
-        var user = (await _readRepo.GetAll(
-            UserFilter.ById(tokenObj.UserId)
-        )).FirstOrDefault();
+        var user = (await _createUserRepo.GetAll(UserFilter.ById(tokenObj.UserId))).FirstOrDefault();
         if (user == null)
             throw new Exception("User no longer exists");
 
@@ -114,8 +97,11 @@ public class AuthService : IAuthService
         return await GenerateTokenResponse(user, ct);
     }
 
-    private async Task<TokenResponse> GenerateTokenResponse(User user, CancellationToken ct)
+    private async Task<TokenResponse> GenerateTokenResponse(User? user, CancellationToken ct)
     {
+        if (user == null)
+            throw new Exception("User not found");
+
         // 1) Build the claims
         var claims = new List<Claim>
         {
@@ -125,9 +111,7 @@ public class AuthService : IAuthService
         };
 
         // 2) Create the JWT 
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_authOptions.SecretKey)
-        );
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authOptions.SecretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var expires = DateTime.UtcNow.AddMinutes(_authOptions.JwtExpiresMinutes);

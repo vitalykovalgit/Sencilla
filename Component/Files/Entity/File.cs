@@ -18,7 +18,7 @@ public class File
     /// <summary>
     /// File name
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = default!;
 
     /// <summary>
     /// Dimensions 

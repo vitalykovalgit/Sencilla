@@ -1,5 +1,4 @@
-﻿
-namespace Sencilla.Component.Users;
+﻿namespace Sencilla.Component.Users;
 
 [Table(nameof(User), Schema = "sec")]
 public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityRemoveable
@@ -11,7 +10,6 @@ public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEnt
 
     public string? Email { get; set; }
     public bool EmailConf { get; set; }
-    public string PasswordHash { get; set; }
 
     public string? FirstName { get; set; }
     public string? LastName { get; set; }

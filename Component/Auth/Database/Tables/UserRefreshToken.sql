@@ -11,6 +11,5 @@
     [ReplacedByToken]  NVARCHAR(2000) NULL,
 
     CONSTRAINT [PK_UserRefreshToken] PRIMARY KEY CLUSTERED ([Id] ASC),
-    CONSTRAINT [FK_UserRefreshToken_UserId] 
-        FOREIGN KEY ([UserId]) REFERENCES [sec].[User]([Id])
+    CONSTRAINT [FK_UserRefreshToken_UserId] FOREIGN KEY ([UserId]) REFERENCES [sec].[User]([Id])
 )

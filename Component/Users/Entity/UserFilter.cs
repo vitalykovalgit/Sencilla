@@ -17,6 +17,5 @@ public class UserFilter: Filter
         return this;
     }
 
-    public static UserFilter ById(params int[] ids)
-        => new UserFilter().WithId(ids);
+    public static UserFilter ById(params int[] ids) => new UserFilter().WithId(ids);
 }

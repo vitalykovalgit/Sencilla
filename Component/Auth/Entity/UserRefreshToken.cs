@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Sencilla.Component.Users.Auth;
+﻿namespace Sencilla.Component.Users.Auth;
 
 [Table(nameof(UserRefreshToken), Schema = "sec")]
 public class UserRefreshToken : IEntity

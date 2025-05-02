@@ -19,7 +19,7 @@ public class FileContentController : ApiController
         [FromServices] IReadRepository<File, Guid> fileRepo,
         Guid fileId, int? dim, CancellationToken token)
     {
-        var files = await fileRepo.GetAll(new FileFilter().ByOriginalId(fileId).ByDimmension(dim));
+        var files = await fileRepo.GetAll(new FileFilter().ByParentId(fileId).ByDimmension(dim));
         var file = files.FirstOrDefault();
         if (file == null)
             return new NotFoundResult();
