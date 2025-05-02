@@ -5,8 +5,8 @@ namespace Sencilla.Repository.EntityFramework.Tests
     {
         public int Id { get; set; }
         
-        public string Name { get; set; }
-        
+        public string Name { get; set; } = default!;
+
         public bool IsRegistered { get; set; }
         
         public int Status { get; set; }
