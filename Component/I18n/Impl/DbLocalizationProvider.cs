@@ -9,7 +9,7 @@ public class DbLocalizationProvider : ILocalizationProvider
         _readRepository = readRepository;
     }
 
-    public async Task<string> GetString(string resourceKey, string locale) =>
+    public async Task<string?> GetString(string resourceKey, string locale) =>
         (await _readRepository.GetAll(new TranslationViewFilter().ByLocale(locale).ByKey(resourceKey))).FirstOrDefault()?.Value;
 
     public async Task<Dictionary<string, string>> GetStrings(string locale) =>

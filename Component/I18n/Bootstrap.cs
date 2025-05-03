@@ -17,12 +17,7 @@ public static class Bootstrap
 
     internal static IServiceCollection AddI18nServices(this IServiceCollection services)
     {
-        //services.AddTransient<IEntityExporter<Resource>, EntityExporter<Resource, Filter<Resource, string>, string>>();
-        //services.AddTransient<IEntityExporter<Translation>, EntityExporter<Translation, TranslationFilter, int>>();
-        //services.AddTransient<IEntityFormatter, SqlMergeFormatter>();
-
         services.AddTransient<DbLocalizationProvider>();
-
         services.AddTransient<ILocalizationProvider>((serviceProvider) =>
         {
             var dbProvider = serviceProvider.GetService<DbLocalizationProvider>();
@@ -40,8 +35,6 @@ public static class Bootstrap
 
             return aggregator;
         });
-
-        services.AddTransient<ISupportedLanguagesProvider, DbSupportedLanguagesProvider>();
 
         services.TryAdd(new ServiceDescriptor(
             typeof(IStringLocalizerFactory),

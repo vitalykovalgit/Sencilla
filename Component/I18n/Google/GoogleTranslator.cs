@@ -7,7 +7,7 @@ public class GoogleTranslator : ITranslator
     public bool Default => true;
 
     private readonly GoogleTranslatorOptions _options;
-    private GoogleCredential _credential;
+    //private GoogleCredential _credential;
 
     public GoogleTranslator(IOptions<GoogleTranslatorOptions> options)
     {

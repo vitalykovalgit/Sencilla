@@ -5,16 +5,16 @@ public class TranslationView : IEntity
     [Key]
     public int Id { get; set; }
 
-    public string Key { get; set; }
+    public string Key { get; set; } = default!;
 
-    public string Locale { get; set; }
+    public string Locale { get; set; } = default!;
 
-    public string Value { get; set; }
+    public string Value { get; set; } = default!;
 }
 
 public class TranslationViewFilter : Filter<TranslationView>
 {
-    public string KeyStartWith { get; private set; }
+    public string KeyStartWith { get; private set; } = default!;
 
     public TranslationViewFilter ByLocale(string locale)
     {

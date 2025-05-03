@@ -1,19 +1,25 @@
 ﻿namespace Sencilla.Component.I18n;
 
-public class Resource : IEntity<string>
+/// <summary>
+/// Resource entity
+/// </summary>
+[CrudApi("api/v1/i18n/resources")]
+public class Resource 
+        : IEntity<string>
+        , IEntityCreateableTrack
+        , IEntityUpdateableTrack
+        , IEntityDeleteable
 {
-    public string Id { get; set; }
+    public string Id { get; set; } = default!;
 
-    public string Description { get; set; }
+    public string Description { get; set; } = default!;
 
-    [NotMapped]
     public DateTime CreatedDate { get; set; }
 
-    [NotMapped]
     public DateTime UpdatedDate { get; set; }
 
     [InverseProperty(nameof(Translation.Resource))]
-    public ICollection<Translation> Translations { get; set; }
+    public ICollection<Translation>? Translations { get; set; }
 
-    public string[] SearchBy => [nameof(Id), nameof(Description)];
+    //public string[] SearchBy => [nameof(Id), nameof(Description)];
 }

@@ -1,26 +1,25 @@
 ﻿namespace Sencilla.Component.I18n;
 
+/// <summary>
+/// 
+/// </summary>
+[CrudApi("api/v1/i18n/translations")]
 public class Translation : IEntity, IEntityCreateable, IEntityUpdateable, IEntityDeleteable
 {
     public int Id { get; set; }
 
-    public string ResourceId { get; set; }
+    public string ResourceId { get; set; } = default!;
 
     public int LanguageId { get; set; }
 
-    public string Value { get; set; }
+    public string Value { get; set; } = default!;
 
-    [NotMapped]
-    public DateTime CreatedDate { get; set; }
-
-    [NotMapped]
-    public DateTime UpdatedDate { get; set; }
 
     [ForeignKey(nameof(ResourceId))]
-    public Resource Resource { get; set; }
+    public Resource? Resource { get; set; }
 
     [ForeignKey(nameof(ResourceId))]
-    public ResourceView ResourceView { get; set; }
+    public ResourceView? ResourceView { get; set; }
 }
 
 public class TranslationFilter : Filter<Translation>
