@@ -61,6 +61,12 @@ public class ReadRepository<TEntity, TContext, TKey> : BaseRepository<TContext>,
         return await query.ToListAsync(token).ConfigureAwait(false);
     }
 
+    public Task<TEntity?> FirstOrDefault(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[] with)
+    {
+        return GetAll(filter, token, with).ContinueWith(t => t.Result.FirstOrDefault(), token);
+    }
+
+
     public async Task<int> GetCount(IFilter? filter = null, CancellationToken token = default)
     {
         var query = await Query(filter);

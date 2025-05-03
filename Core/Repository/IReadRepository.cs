@@ -44,6 +44,15 @@ namespace Sencilla.Core
         /// <param name="includes"></param>
         /// <returns></returns>
         Task<IEnumerable<TEntity>> GetAll(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[] with);
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="token"></param>
+        /// <param name="with"></param>
+        /// <returns></returns>
+        Task<TEntity?> FirstOrDefault(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[] with);
 
         /// <summary>
         /// Retrive count of the entities 
