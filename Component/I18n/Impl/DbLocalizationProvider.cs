@@ -4,7 +4,7 @@ public class DbLocalizationProvider : ILocalizationProvider
 {
     private readonly IReadRepository<TranslationView> _readRepository;
 
-    public DbLocalizationProvider(IReadRepository<TranslationView> readRepository, IOptions<DbLocalizationOptions> options)
+    public DbLocalizationProvider(IReadRepository<TranslationView> readRepository)
     {
         _readRepository = readRepository;
     }
