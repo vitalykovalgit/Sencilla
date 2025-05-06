@@ -5,22 +5,17 @@ public class BaseRepository<TContext> : Resolveable, IBaseRepository where TCont
     /// <summary>
     /// 
     /// </summary>
-    public TContext DbContext { get; }
-
-    /// <summary>
-    /// Resolve here allows us to avoid circular dependency 
-    /// </summary>
-    //public IEnumerable<IReadConstraint>? Constraints => R<IEnumerable<IReadConstraint>>();
-
+    protected TContext DbContext { get; }
+    
     /// <summary>
     /// Reposiroty dependency
     /// </summary>
-    public RepositoryDependency D { get; }
+    protected RepositoryDependency D { get; }
 
     /// <summary>
     /// 
     /// </summary>
-    public BaseRepository(RepositoryDependency dependency, TContext context): base(dependency.Resolver)
+    protected BaseRepository(RepositoryDependency dependency, TContext context): base(dependency.Resolver)
     {
         D = dependency;
         DbContext = context;

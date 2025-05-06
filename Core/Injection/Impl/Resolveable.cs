@@ -6,9 +6,9 @@ namespace Sencilla.Core;
 /// </summary>
 public class Resolveable
 {
-    protected IResolver Resolver { get; }
+    private IResolver Resolver { get; }
 
-    public Resolveable(IResolver resolver)
+    protected Resolveable(IResolver resolver)
     {
         Resolver = resolver;
     }

@@ -1,26 +1,14 @@
 ﻿namespace Sencilla.Component.FilesTus;
 
 [DisableInjection]
-public class UploadFileHandler : ITusRequestHandler
+public class UploadFileHandler(
+    IFileRepository fileRepository,
+    IFileUploadRepository fileUploadRepository,
+    IFileContentProvider fileContent,
+    IEventDispatcher events)
+    : ITusRequestHandler
 {
     public const string Method = "PATCH";
-
-    private readonly IEventDispatcher _events;
-    private readonly IFileRepository _fileRepository;
-    private readonly IFileContentProvider _fileContent;
-    private readonly IFileUploadRepository _fileUploadRepository;
-
-    public UploadFileHandler(
-        IFileRepository fileRepository,
-        IFileUploadRepository fileUploadRepository,
-        IFileContentProvider fileContent,
-        IEventDispatcher events)
-    {
-        _fileRepository = fileRepository;
-        _fileUploadRepository = fileUploadRepository;
-        _fileContent = fileContent;
-        _events = events;
-    }
 
     public async Task Handle(HttpContext context)
     {
@@ -44,19 +32,19 @@ public class UploadFileHandler : ITusRequestHandler
         var length = (long)context.Request.ContentLength!;
 
         // create if not exists 
-        var file = await _fileRepository.GetFile(fileId) ?? await _fileRepository.CreateFile(new() { Id = fileId, Origin = FileOrigin.User, StorageFileTypeId = _fileContent.ProviderType });
+        var file = await fileRepository.GetFile(fileId) ?? await fileRepository.CreateFile(new() { Id = fileId, Origin = FileOrigin.User, StorageFileTypeId = fileContent.ProviderType });
         
-        var newOffset = await _fileContent.WriteFileAsync(file, chunk, offset, length, CancellationToken.None);
+        var newOffset = await fileContent.WriteFileAsync(file, chunk, offset, length, CancellationToken.None);
 
         // Update file upload status and notify the system 
-        var fileUpload = await _fileUploadRepository.GetFileUpload(fileId) ?? await _fileUploadRepository.CreateFileUpload(new() { Id = fileId });
+        var fileUpload = await fileUploadRepository.GetFileUpload(fileId) ?? await fileUploadRepository.CreateFileUpload(new() { Id = fileId });
         fileUpload.Position = newOffset;
         fileUpload.UploadCompleted = fileUpload.Size == fileUpload.Position;
-        fileUpload = await _fileUploadRepository.UpdateFileUpload(fileUpload);
+        fileUpload = await fileUploadRepository.UpdateFileUpload(fileUpload);
         if (fileUpload.UploadCompleted)
         {
-            await _events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });
-            await _fileUploadRepository.DeleteFileUpload(fileId);
+            await events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });
+            await fileUploadRepository.DeleteFileUpload(fileId);
         }
 
         await context.WriteNoContentWithOffset(newOffset);

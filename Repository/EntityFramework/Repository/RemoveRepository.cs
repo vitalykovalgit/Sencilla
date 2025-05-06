@@ -5,27 +5,22 @@
 /// </summary>
 /// <typeparam name="TEntity"></typeparam>
 /// <typeparam name="TContext"></typeparam>
-public class RemoveRepository<TEntity, TContext> : RemoveRepository<TEntity, TContext, int>, IRemoveRepository<TEntity>
-   where TEntity : class, IEntity<int>, IEntityRemoveable, new()
-   where TContext : DbContext
-{
-    public RemoveRepository(RepositoryDependency dependency, TContext context) : base(dependency, context) { }
-}
+public class RemoveRepository<TEntity, TContext>(RepositoryDependency dependency, TContext context)
+    : RemoveRepository<TEntity, TContext, int>(dependency, context), IRemoveRepository<TEntity>
+    where TEntity : class, IEntity<int>, IEntityRemoveable, new()
+    where TContext : DbContext;
 
 /// <summary>
 /// 
 /// </summary>
-public class RemoveRepository<TEntity, TContext, TKey> : UpdateRepository<TEntity, TContext, TKey>, IRemoveRepository<TEntity, TKey>
-       where TEntity : class, IEntity<TKey>, IEntityRemoveable, new()
-       where TContext : DbContext
+public class RemoveRepository<TEntity, TContext, TKey>(RepositoryDependency dependency, TContext context)
+    : UpdateRepository<TEntity, TContext, TKey>(dependency, context), IRemoveRepository<TEntity, TKey>
+    where TEntity : class, IEntity<TKey>, IEntityRemoveable, new()
+    where TContext : DbContext
 {
-    public RemoveRepository(RepositoryDependency dependency, TContext context): base(dependency, context)
-    {
-    }
-
     public async Task<TEntity?> Remove(TEntity entity, CancellationToken token = default)
     {
-        return (await Remove(new[] { entity }, token)).FirstOrDefault();
+        return (await Remove([entity], token)).FirstOrDefault();
     }
 
     public async Task<IEnumerable<TEntity>> Remove(IEnumerable<TEntity> entities, CancellationToken token = default)
@@ -39,7 +34,7 @@ public class RemoveRepository<TEntity, TContext, TKey> : UpdateRepository<TEntit
 
     public async Task<TEntity?> Undo(TEntity entity, CancellationToken token = default)
     {
-        return (await Undo(new[] { entity }, token)).FirstOrDefault();
+        return (await Undo([entity], token)).FirstOrDefault();
     }
 
     public async Task<IEnumerable<TEntity>> Undo(IEnumerable<TEntity> entities, CancellationToken token = default)
@@ -48,7 +43,6 @@ public class RemoveRepository<TEntity, TContext, TKey> : UpdateRepository<TEntit
             e.DeletedDate = null;
 
         await Update(entities, token);
-
         return entities;
     }
 }

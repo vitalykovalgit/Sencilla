@@ -2,16 +2,9 @@
 namespace Sencilla.Repository.EntityFramework;
 
 [PerRequestLifetime]
-public class RepositoryDependency
+public class RepositoryDependency(IResolver resolver, IEventDispatcher events, ICommandDispatcher commands)
 {
-    public RepositoryDependency(IResolver resolver, IEventDispatcher events, ICommandDispatcher commands)
-    {
-        Resolver = resolver;
-        Commands = commands;
-        Events = events;
-    }
-
-    public IResolver Resolver { get; }
-    public IEventDispatcher Events { get; }
-    public ICommandDispatcher Commands { get; }
+    public IResolver Resolver { get; } = resolver;
+    public IEventDispatcher Events { get; } = events;
+    public ICommandDispatcher Commands { get; } = commands;
 }

@@ -6,12 +6,10 @@ namespace Sencilla.Repository.EntityFramework;
 /// </summary>
 /// <typeparam name="TEntity"></typeparam>
 /// <typeparam name="TContext"></typeparam>
-public class UpdateRepository<TEntity, TContext> : UpdateRepository<TEntity, TContext, int>, IUpdateRepository<TEntity>
+public class UpdateRepository<TEntity, TContext>(RepositoryDependency dependency, TContext context)
+    : UpdateRepository<TEntity, TContext, int>(dependency, context), IUpdateRepository<TEntity>
     where TEntity : class, IEntity<int>, IEntityUpdateable, new()
-    where TContext : DbContext
-{
-    public UpdateRepository(RepositoryDependency dependency, TContext context) : base(dependency, context) { }
-}
+    where TContext : DbContext;
 
 /// <summary>
 /// 
@@ -19,17 +17,14 @@ public class UpdateRepository<TEntity, TContext> : UpdateRepository<TEntity, TCo
 /// <typeparam name="TEntity"></typeparam>
 /// <typeparam name="TContext"></typeparam>
 /// <typeparam name="TKey"></typeparam>
-public class UpdateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity, TContext, TKey>, IUpdateRepository<TEntity, TKey>
-        where TEntity : class, IEntity<TKey>, IEntityUpdateable, new()
-        where TContext : DbContext
+public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency dependency, TContext context)
+    : ReadRepository<TEntity, TContext, TKey>(dependency, context), IUpdateRepository<TEntity, TKey>
+    where TEntity : class, IEntity<TKey>, IEntityUpdateable, new()
+    where TContext : DbContext
 {
-    public UpdateRepository(RepositoryDependency dependency, TContext context) : base(dependency, context)
-    {
-    }
-
     public async Task<TEntity?> Update(TEntity entity, CancellationToken token = default)
     {
-        return (await Update(new[] { entity })).FirstOrDefault();
+        return (await Update([entity])).FirstOrDefault();
     }
 
     public Task<IEnumerable<TEntity>> Update(params TEntity[] entities)
@@ -40,24 +35,25 @@ public class UpdateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
     public async Task<IEnumerable<TEntity>> Update(IEnumerable<TEntity> entities, CancellationToken token = default)
     {
         // Notify before updating 
-        var eventUpdating = new EntityUpdatingEvent<TEntity> { Entities = entities.AsQueryable() };
+        var query = entities.AsQueryable();
+        var eventUpdating = new EntityUpdatingEvent<TEntity> { Entities = query };
         await D.Events.PublishAsync(eventUpdating);
 
         // TODO: Move to trackable 
-        foreach (var e in entities)
+        foreach (var e in query)
         {
-            if (e is IEntityUpdateableTrack)
-                ((IEntityUpdateableTrack)e).UpdatedDate = DateTime.UtcNow;
+            if (e is IEntityUpdateableTrack track)
+                track.UpdatedDate = DateTime.UtcNow;
         }
 
-        DbContext.UpdateRange(entities);
+        DbContext.UpdateRange(query);
         await Save(token);
 
         // Notify that entity updated
-        var eventUpdated = new EntityUpdatedEvent<TEntity> { Entities = entities.AsQueryable() };
+        var eventUpdated = new EntityUpdatedEvent<TEntity> { Entities = query };
         await D.Events.PublishAsync(eventUpdated);
 
-        return entities;
+        return query;
     }
 }
 
