@@ -55,7 +55,8 @@ public class UploadFileHandler : ITusRequestHandler
         fileUpload = await _fileUploadRepository.UpdateFileUpload(fileUpload);
         if (fileUpload.UploadCompleted)
         {
-            await _events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });
+            if(file.ParentId == null)
+                await _events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });
             await _fileUploadRepository.DeleteFileUpload(fileId);
         }
 
