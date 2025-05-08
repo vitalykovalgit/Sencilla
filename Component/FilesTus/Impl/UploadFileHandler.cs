@@ -44,8 +44,8 @@ public class UploadFileHandler(
         if (fileUpload.UploadCompleted)
         {
             if(file.ParentId == null)
-                await _events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });
-            await _fileUploadRepository.DeleteFileUpload(fileId);
+                await events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });
+            await fileUploadRepository.DeleteFileUpload(fileId);
         }
 
         await context.WriteNoContentWithOffset(newOffset);
