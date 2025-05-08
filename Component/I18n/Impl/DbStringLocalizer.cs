@@ -14,7 +14,6 @@ public class DbStringLocalizer : IStringLocalizer
         get
         {
             var value = _localizationProvider.GetString(name, CultureInfo.CurrentUICulture.Name).Result;
-
             return new LocalizedString(name, value ?? name, value == null);
         }
     }
@@ -29,8 +28,7 @@ public class DbStringLocalizer : IStringLocalizer
             var transform = new NumericTranslateTextTransform();
             transform.Transform(textDefinition);
 
-            format = textDefinition.Text.Replace("{{", "{").Replace("}}", "}");
-
+            format = textDefinition.Text?.Replace("{{", "{").Replace("}}", "}");
             var value = string.Format(CultureInfo.CurrentCulture, format ?? name, arguments);
 
             return new LocalizedString(name, value ?? name, value == null);
@@ -40,7 +38,6 @@ public class DbStringLocalizer : IStringLocalizer
     public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures)
     {
         var values = _localizationProvider.GetStrings(CultureInfo.CurrentUICulture.Name).Result;
-
         return values.Select(value => new LocalizedString(value.Key, value.Value ?? value.Key, value.Value == null));
     }
 }

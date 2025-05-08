@@ -10,3 +10,6 @@ obj
 *.dbmdl
 *.jfm
 .DS_Store
+
+*.DotSettings
+/.idea

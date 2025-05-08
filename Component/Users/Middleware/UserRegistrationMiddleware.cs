@@ -24,14 +24,12 @@ public class UserRegistrationMiddleware
             if (!user.IsAnonymous())
             {
                 // check if user already exists
-                var userReadRepo = container.GetService<IReadRepository<User>>();
-                var dbUser = (await userReadRepo.GetAll(ByEmail(user.Email))).FirstOrDefault();
-                
+                var userRepo = container.GetService<ICreateRepository<User>>();
+                var dbUser = await userRepo!.FirstOrDefault(ByEmail(user.Email));
                 if (dbUser == null)
                 {
                     // create if not exists 
-                    dbUser = await UpsertUserAsync(container, userReadRepo, user,
-                        authType: userProvider.CurrentPrincipal?.Identity?.AuthenticationType);
+                    dbUser = await UpsertUserAsync(container, userRepo, user, userProvider.CurrentPrincipal?.Identity?.AuthenticationType);
                 }
                 
                 user = dbUser;
@@ -53,14 +51,11 @@ public class UserRegistrationMiddleware
     }
 
 
-    private async Task<User> UpsertUserAsync(IServiceProvider sp,
-        IReadRepository<User> rr, User user, string? authType)
+    private async Task<User> UpsertUserAsync(IServiceProvider sp, ICreateRepository<User> userRepo, User user, string? authType)
     {
         // TODO: Think about saving this in transaction
-        var userRepo = sp.GetService<ICreateRepository<User>>();
-        await userRepo.UpsertAsync(user, u => u.Email);
-
-        var dbUser = (await rr.GetAll(ByEmail(user.Email))).FirstOrDefault();
+        await userRepo.UpsertAsync(user, u => u.Email!);
+        var dbUser = await userRepo.FirstOrDefault(ByEmail(user.Email));
 
         var userAuth = new UserAuth()
         {

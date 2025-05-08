@@ -1,6 +1,4 @@
-﻿using Sencilla.Component.FilesTus.Extension;
-
-namespace Sencilla.Component.FilesTus;
+﻿namespace Sencilla.Component.FilesTus;
 
 [DisableInjection]
 internal class CreateFileHandler : ITusRequestHandler
@@ -53,7 +51,11 @@ internal class CreateFileHandler : ITusRequestHandler
         long uploadLength = uploadLengthExists ? long.Parse(context.Request.Headers[TusHeaders.UploadLength]) : -1;
 
         var metadataHeader = context.Request.Headers[TusHeaders.UploadMetadata];
-        var metadata = metadataHeader.ToString()?.ParseMetadataHeader();
+        var metadata = metadataHeader.ToString().ParseMetadataHeader();
+        //if (metadata == null)
+        //{
+        //    return;
+        //}
 
         var fileOrigin = Enum.TryParse<FileOrigin>(metadata["fileOrigin"], out var origin) ? origin : FileOrigin.User;
         var fileName = metadata["filename"];

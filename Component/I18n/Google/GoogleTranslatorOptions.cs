@@ -5,8 +5,8 @@ public class GoogleTranslatorOptions
     public const string GoogleTranslator = "GoogleTranslator";
     public const string PrivateKeyParam = "{private_key}";
 
-    public string ApiKey { get; set; }
-    public string PrivateKey { get; set; }
-    public string CredentialsFile { get; set; }
-    public string Project { get; set; }
+    public string ApiKey { get; set; } = default!;
+    public string PrivateKey { get; set; } = default!;
+    public string CredentialsFile { get; set; } = default!;
+    public string Project { get; set; } = default!;
 }

@@ -84,9 +84,6 @@ public class AzureBlobStorageContentProvider : IFileContentProvider
         var appendBlobClient = blobContainerClient.GetAppendBlobClient(blobName);
         await appendBlobClient.CreateIfNotExistsAsync();
 
-        if (stream.Length == 0)
-            return 0;
-
         using var ms = new MemoryStream();
         if (!stream.CanSeek)
         {
@@ -95,9 +92,12 @@ public class AzureBlobStorageContentProvider : IFileContentProvider
             stream = ms;
         }
 
-        int maxBlockSize = appendBlobClient.AppendBlobMaxAppendBlockBytes;
+        if (stream.Length == 0)
+            return 0;
+
+        var maxBlockSize = appendBlobClient.AppendBlobMaxAppendBlockBytes;
         long commitedOffset = 0, lastBlockSize = 0, bytesLeft = stream.Length;
-        byte[] buffer = new byte[maxBlockSize];
+        var buffer = new byte[bytesLeft];
 
         while (bytesLeft > 0)
         {

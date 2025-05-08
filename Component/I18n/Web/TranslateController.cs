@@ -12,12 +12,14 @@ public class TranslateController : ApiController
         _translator = translator;
     }
 
-    [HttpGet("languages")] public async Task<IActionResult> GetLanguages() => Ok(await _translator.GetSupportedLanguages());
+    [HttpGet("languages")] 
+    public async Task<IActionResult> GetLanguages() => Ok(await _translator.GetSupportedLanguages());
 
-    [HttpGet] public async Task<IActionResult> Translate() => Ok(await _translator.TranslateText(["hello, world", "how are you?"], "en", "uk"));
+    [HttpGet] 
+    public async Task<IActionResult> Translate() => Ok(await _translator.TranslateText(["hello, world", "how are you?"], "en", "uk"));
 
     [HttpPost("language")]
-    public async Task<IActionResult> Translate([FromBody] TranslateSettingsWe settingsWe)
+    public async Task<IActionResult> Translate([FromBody] TranslateSettings settingsWe)
     {
         var settings = new TranslateSettings
         {
@@ -31,7 +33,7 @@ public class TranslateController : ApiController
     }
 
     [HttpPost("language/all")]
-    public async Task<IActionResult> TranslateAll([FromBody] TranslateSettingsWe settingsWe)
+    public async Task<IActionResult> TranslateAll([FromBody] TranslateSettings settingsWe)
     {
         var settings = new TranslateSettings
         {

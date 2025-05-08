@@ -4,12 +4,12 @@ public class DbLocalizationProvider : ILocalizationProvider
 {
     private readonly IReadRepository<TranslationView> _readRepository;
 
-    public DbLocalizationProvider(IReadRepository<TranslationView> readRepository, IOptions<DbLocalizationOptions> options)
+    public DbLocalizationProvider(IReadRepository<TranslationView> readRepository)
     {
         _readRepository = readRepository;
     }
 
-    public async Task<string> GetString(string resourceKey, string locale) =>
+    public async Task<string?> GetString(string resourceKey, string locale) =>
         (await _readRepository.GetAll(new TranslationViewFilter().ByLocale(locale).ByKey(resourceKey))).FirstOrDefault()?.Value;
 
     public async Task<Dictionary<string, string>> GetStrings(string locale) =>

@@ -1,20 +1,17 @@
 ﻿namespace Sencilla.Component.I18n;
 
+/// <summary>
+/// TODO: Move to geo component and use from there
+/// </summary>
 public class Language : IEntity
 {
     public int Id { get; set; }
 
-    public string Name { get; set; }
+    public string Name { get; set; } = default!;
 
-    public string NativeName { get; set; }
+    public string NativeName { get; set; } = default!;
 
-    public string Locale { get; set; }
+    public string Locale { get; set; } = default!;
 
     public int Order { set; get; }
-
-    [NotMapped]
-    public DateTime CreatedDate { get; set; }
-
-    [NotMapped]
-    public DateTime UpdatedDate { get; set; }
 }

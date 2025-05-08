@@ -12,7 +12,7 @@ namespace Sencilla.Repository.EntityFramework.Tests
         DbContextOptions<DynamicDbContext> DbOptions;
         RepositoryRegistrator RepoRegistrator = new();
 
-        RepositoryDependency RepositoryDependency;
+        RepositoryDependency? RepositoryDependency;
 
         [SetUp]
         public void Setup()
@@ -63,7 +63,6 @@ namespace Sencilla.Repository.EntityFramework.Tests
         [Test]
         public async Task EntityCreateWithConstraints_ShouldBeCreated()
         {
-
             // Test repo 
             var repo = new CreateRepository<Entity, DynamicDbContext>(RepositoryDependency, new DynamicDbContext(DbOptions, RepoRegistrator));
             var created = await repo.Create(new Entity 

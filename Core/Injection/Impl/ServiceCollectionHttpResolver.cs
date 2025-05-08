@@ -11,7 +11,7 @@ public class ServiceCollectionHttpResolver : IResolver
     }
 
     public TServcie? Resolve<TServcie>(string name) => Resolve<TServcie>();
-    public TServcie? Resolve<TServcie>() => ContextAccessor.HttpContext.RequestServices.GetService<TServcie>();
-    public object? Resolve(Type type) => ContextAccessor.HttpContext.RequestServices.GetService(type);
-    public IEnumerable<TType> ResolveAll<TType>() => ContextAccessor.HttpContext.RequestServices.GetServices<TType>();
+    public TServcie? Resolve<TServcie>() => ContextAccessor.HttpContext!.RequestServices.GetService<TServcie>();
+    public object? Resolve(Type type) => ContextAccessor.HttpContext!.RequestServices.GetService(type);
+    public IEnumerable<TType> ResolveAll<TType>() => ContextAccessor.HttpContext!.RequestServices.GetServices<TType>();
 }

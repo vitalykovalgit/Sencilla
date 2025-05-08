@@ -1,5 +1,4 @@
-﻿
-namespace Sencilla.Component.Users;
+﻿namespace Sencilla.Component.Users;
 
 public class ClaimType 
 {

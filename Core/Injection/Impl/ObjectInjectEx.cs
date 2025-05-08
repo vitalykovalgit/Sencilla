@@ -22,7 +22,7 @@ public static class ObjectInjectEx
     }
 
     /// <summary>
-    /// 
+    /// TODO: Remove it!! 
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="obj"></param>
