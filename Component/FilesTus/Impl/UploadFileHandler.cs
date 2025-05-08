@@ -43,7 +43,8 @@ public class UploadFileHandler(
         fileUpload = await fileUploadRepository.UpdateFileUpload(fileUpload);
         if (fileUpload.UploadCompleted)
         {
-            await events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });
+            if(file.ParentId == null)
+                await events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });
             await fileUploadRepository.DeleteFileUpload(fileId);
         }
 
