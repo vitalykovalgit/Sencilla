@@ -63,28 +63,36 @@ internal class CreateFileHandler : ITusRequestHandler
         var fileExt = fileMimeType.MimeTypeExt();
         var fileId = Guid.NewGuid();
         var filePath = GetFullPath(metadata, fileExt, fileId, fileOrigin);
-        var file = await _fileRepository.CreateFile(new()
-        {
-            Id = fileId,
-            Name = fileName,
-            MimeType = fileMimeType,
-            Extension = fileExt,
-            Size = uploadLength,
-            Origin = fileOrigin,
-            StorageFileTypeId = _fileContent.ProviderType,
-            FullName = filePath
-        });
 
+        var fileToCreate = metadata.TryGetValue("parentId", out var parentIdObj) && parentIdObj is string parentIdStr &&
+            Guid.TryParse(parentIdStr, out Guid parentId)
+                ? getResizerFile(fileId, parentId, filePath, fileMimeType, metadata)
+                : new Files.File()
+                {
+                    Id = fileId,
+                    Name = fileName,
+                    MimeType = fileMimeType,
+                    Extension = fileExt,
+                    Size = uploadLength,
+                    Origin = fileOrigin,
+                    StorageFileTypeId = _fileContent.ProviderType,
+                    FullName = filePath
+                };
+
+        if (int.TryParse(metadata["userId"], out var userId))
+            fileToCreate.UserId = userId;
+
+        var file = await _fileRepository.CreateFile(fileToCreate);
         var fileUpload = await _fileUploadRepository.CreateFileUpload(new()
         {
             Id = fileId,
             Size = uploadLength,
         });
-
         await _fileRepository.UpdateFile(file);
-        if (file.Origin == FileOrigin.User)
-            await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });
 
+        if (file.Origin == FileOrigin.User && file.ParentId == null)
+            await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });
+        
         // TODO: test cancellation token on middleware
         //       and test writing empty array to file
         await _fileContent.WriteFileAsync(file, []);
@@ -94,14 +102,54 @@ internal class CreateFileHandler : ITusRequestHandler
         await context.WriteCreated(location);
     }
 
-    private string GetFullPath(IDictionary<string, string> metadata, string fileExt, Guid fileId, FileOrigin origin)
+    private Files.File getResizerFile(Guid fileId, Guid? parentId, string filePath, string? fileMimeType, IDictionary<string, string> metadata)
     {
-        var fileName = $"{fileId}{fileExt}";
-        return origin switch
+        string folderName = metadata.TryGetValue("folderName", out var _folderName) ? _folderName : "compressed";
+        int dim = metadata.TryGetValue("dim", out var _dim) && int.TryParse(_dim, out var dimValue) ? dimValue : 100;
+        return new Files.File()
         {
-            FileOrigin.User => Path.Combine($"user{metadata["userId"]}", $"project{metadata["projectId"]}", $"{fileName}"),
-            FileOrigin.System => $"system/{fileName}",
-            _ => $"none/{fileName}"
+            Id = fileId,
+            ParentId = parentId,
+            StorageFileTypeId = _fileContent.ProviderType,
+            Dim = dim,
+            Name = RescaledFileName(filePath, dim),
+            FullName = filePath?.Substring(0, filePath.LastIndexOf('/') + 1) + RescaledFullName(filePath, folderName, dim),
+            MimeType = fileMimeType,
+            Origin = FileOrigin.System,
         };
+    }
+
+    private string GetFullPath(IDictionary<string, string> metadata, string fileExt, Guid fileId, FileOrigin origin)
+        {
+            var fileName = $"{fileId}{fileExt}";
+            return origin switch
+            {
+                FileOrigin.User => Path.Combine($"user{metadata["userId"]}", $"project{metadata["projectId"]}", $"{fileName}"),
+                FileOrigin.System => $"system/{fileName}",
+                _ => $"none/{fileName}"
+            };
+        }
+    private string RescaledFileName(string filePath, int size)
+    {
+        var pathParts = filePath.Split(Path.DirectorySeparatorChar);
+        var fileName = pathParts[pathParts.Length - 1];
+
+        return $"{Path.GetFileNameWithoutExtension(fileName)}_{size}px{Path.GetExtension(fileName)}";
+    }
+
+    private string RescaledFullName(string filePath, string directory, int size)
+    {
+        var pathParts = filePath.Split(Path.DirectorySeparatorChar);
+        var fileName = pathParts[pathParts.Length - 1];
+        var sb = new StringBuilder();
+
+        for (int i = 0; i < pathParts.Length - 1; i++)
+            sb.Append($"{pathParts[i]}{Path.DirectorySeparatorChar}");
+
+        if (!string.IsNullOrEmpty(directory))
+            sb.Append($"{directory}{Path.DirectorySeparatorChar}");
+        sb.Append(RescaledFileName(filePath, size));
+
+        return sb.ToString();
     }
 }

@@ -46,6 +46,11 @@ public class File
     public long Size { get; set; }
 
     /// <summary>
+    /// User
+    /// </summary>
+    public int? UserId { get; set; }
+
+    /// <summary>
     /// Where is this file from (System, User upload)
     /// </summary>
     public FileOrigin Origin { get; set; } = FileOrigin.None;
