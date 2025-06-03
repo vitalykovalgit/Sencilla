@@ -3,69 +3,85 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32602.215
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Core", "Core\Sencilla.Core.csproj", "{3C5B8832-AFD4-44FA-938D-09DD43BEE6A2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Core", "libs\core\Sencilla.Core.csproj", "{3C5B8832-AFD4-44FA-938D-09DD43BEE6A2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Web", "Web\Sencilla.Web.csproj", "{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Web", "libs\web\Sencilla.Web.csproj", "{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Component", "Component", "{1E20ABEB-943D-4651-8C7D-B2DFF3662747}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "components", "components", "{1E20ABEB-943D-4651-8C7D-B2DFF3662747}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Config", "Component\Config\Sencilla.Component.Config.csproj", "{F150A5AF-23BC-420A-B782-B4C6F88F9512}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Config", "libs\components\Config\Sencilla.Component.Config.csproj", "{F150A5AF-23BC-420A-B782-B4C6F88F9512}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mapper", "Mapper", "{D83ACE0F-B833-44E8-B34F-DCFAF36131FA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mappers", "mappers", "{D83ACE0F-B833-44E8-B34F-DCFAF36131FA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mapper.Sql", "Mapper\Sql\Sencilla.Mapper.Sql.csproj", "{D162185D-CEF7-4160-8F60-E9EF7A560C97}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mapper.Sql", "libs\mappers\Sql\Sencilla.Mapper.Sql.csproj", "{D162185D-CEF7-4160-8F60-E9EF7A560C97}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mapper.Entity", "Mapper\Entity\Sencilla.Mapper.Entity.csproj", "{D6CAFCA3-DB5F-476B-8643-057A16FD0114}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mapper.Entity", "libs\mappers\Entity\Sencilla.Mapper.Entity.csproj", "{D6CAFCA3-DB5F-476B-8643-057A16FD0114}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mapper.Excel", "Mapper\Excel\Sencilla.Mapper.Excel.csproj", "{C07DF10D-7DD1-483D-AF39-CD10B38EECE7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mapper.Excel", "libs\mappers\Excel\Sencilla.Mapper.Excel.csproj", "{C07DF10D-7DD1-483D-AF39-CD10B38EECE7}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository", "Repository", "{EAFE8751-7E1F-4BFE-82DA-B747451EF49A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "repositories", "repositories", "{EAFE8751-7E1F-4BFE-82DA-B747451EF49A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.SqlMapper", "Repository\SqlMapper\Sencilla.Repository.SqlMapper.csproj", "{FA2F0F7D-0A3B-42E6-AF0E-D539F56647B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.SqlMapper", "libs\repositories\SqlMapper\Sencilla.Repository.SqlMapper.csproj", "{FA2F0F7D-0A3B-42E6-AF0E-D539F56647B3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityFramework", "Repository\EntityFramework\Sencilla.Repository.EntityFramework.csproj", "{AFDA1854-0128-4801-B6F5-7C2494490D38}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityFramework", "libs\repositories\EntityFramework\Sencilla.Repository.EntityFramework.csproj", "{AFDA1854-0128-4801-B6F5-7C2494490D38}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Users", "Component\Users\Sencilla.Component.Users.csproj", "{8F4E9A41-747E-4133-96F7-DA1122BD7B3C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Users", "libs\components\Users\Sencilla.Component.Users.csproj", "{8F4E9A41-747E-4133-96F7-DA1122BD7B3C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Files", "Component\Files\Sencilla.Component.Files.csproj", "{8D6C609D-32FD-4719-BDB1-587343AE4894}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Files", "libs\components\Files\Sencilla.Component.Files.csproj", "{8D6C609D-32FD-4719-BDB1-587343AE4894}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Geography", "Component\Geography\Sencilla.Component.Geography.csproj", "{FB4B1060-4435-4F9E-9F83-B926BF60F79B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Geography", "libs\components\Geography\Sencilla.Component.Geography.csproj", "{FB4B1060-4435-4F9E-9F83-B926BF60F79B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Security", "Component\Security\Sencilla.Component.Security.csproj", "{522EF56D-387D-4C89-9A2C-F0E89B723490}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Security", "libs\components\Security\Sencilla.Component.Security.csproj", "{522EF56D-387D-4C89-9A2C-F0E89B723490}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Validation", "Component\Validation\Sencilla.Component.Validation.csproj", "{31D2DA7D-A4C8-4280-B92E-24351D4DAC2F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Validation", "libs\components\Validation\Sencilla.Component.Validation.csproj", "{31D2DA7D-A4C8-4280-B92E-24351D4DAC2F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.HttpClient", "Repository\HttpClient\Sencilla.Repository.HttpClient.csproj", "{CA769FFC-19A6-4909-BE8A-99114ECD0A62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.HttpClient", "libs\repositories\HttpClient\Sencilla.Repository.HttpClient.csproj", "{CA769FFC-19A6-4909-BE8A-99114ECD0A62}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mobile", "Mobile", "{986CA949-ABB6-41F4-90EA-A2C2201E9CFE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mobile", "Mobile", "{986CA949-ABB6-41F4-90EA-A2C2201E9CFE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mobile.Core", "Mobile\Core\Sencilla.Mobile.Core.csproj", "{0CE3D262-2AA8-4DF4-837D-B9C6071B86B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Mobile.Core", "libs\mobile\Core\Sencilla.Mobile.Core.csproj", "{0CE3D262-2AA8-4DF4-837D-B9C6071B86B3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{82D292C4-D134-42A4-8D9A-7E1D5B7C260F}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{82D292C4-D134-42A4-8D9A-7E1D5B7C260F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Component", "Component", "{20C65D60-A80A-4583-8CBE-01BA9E306BA3}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "components", "components", "{20C65D60-A80A-4583-8CBE-01BA9E306BA3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Security.Tests", "Tests\Component\Security\Sencilla.Component.Security.Tests.csproj", "{8D521BDE-16D9-4715-88D8-E50A78DF5713}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Security.Tests", "tests\components\Security\Sencilla.Component.Security.Tests.csproj", "{8D521BDE-16D9-4715-88D8-E50A78DF5713}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityFramework.Tests", "Tests\Repository\EntityFramework\Sencilla.Repository.EntityFramework.Tests.csproj", "{7E57A4E6-DA08-44F7-96C8-AF06E7180E41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityFramework.Tests", "tests\repositories\EntityFramework\Sencilla.Repository.EntityFramework.Tests.csproj", "{7E57A4E6-DA08-44F7-96C8-AF06E7180E41}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository", "Repository", "{98A5679D-EA35-49A0-A7D8-738DA4868592}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "repositories", "repositories", "{98A5679D-EA35-49A0-A7D8-738DA4868592}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Core.Tests", "Tests\Core\Sencilla.Core.Tests.csproj", "{B4479087-3435-42DA-88B1-7D32C7358EB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Core.Tests", "tests\core\Sencilla.Core.Tests.csproj", "{B4479087-3435-42DA-88B1-7D32C7358EB9}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extension", "Extension", "{4EF87FA7-8BCE-4B8D-854A-51E7FB0D2B42}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extensions", "extensions", "{4EF87FA7-8BCE-4B8D-854A-51E7FB0D2B42}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extension", "Extension", "{062F3A53-9CAD-4118-9258-9F9F252EAAD3}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extensions", "extensions", "{062F3A53-9CAD-4118-9258-9F9F252EAAD3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityFramework.Extension.Tests", "Tests\Extension\EntityFramework.Extension.Tests\Sencilla.Repository.EntityFramework.Extension.Tests.csproj", "{B98F9496-15C3-4F82-9DA7-02500E09BFAE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityFramework.Extension.Tests", "tests\extensions\EntityFramework.Extension.Tests\Sencilla.Repository.EntityFramework.Extension.Tests.csproj", "{B98F9496-15C3-4F82-9DA7-02500E09BFAE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.EntityFrameworkCore.Extension", "Extension\EntityFrameworkCore\Microsoft.EntityFrameworkCore.Extension.csproj", "{06C45A6D-D821-46DE-BB89-0AE56C3DC96C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.EntityFrameworkCore.Extension", "libs\extensions\EntityFrameworkCore\Microsoft.EntityFrameworkCore.Extension.csproj", "{06C45A6D-D821-46DE-BB89-0AE56C3DC96C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.FilesTus", "Component\FilesTus\Sencilla.Component.FilesTus.csproj", "{8269397F-EFA8-43D2-B9EA-729967F85C95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.FilesTus", "libs\components\FilesTus\Sencilla.Component.FilesTus.csproj", "{8269397F-EFA8-43D2-B9EA-729967F85C95}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.I18n", "Component\I18n\Sencilla.Component.I18n.csproj", "{EF05C823-3EF0-432F-AF05-D8C33BCA00AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.I18n", "libs\components\I18n\Sencilla.Component.I18n.csproj", "{EF05C823-3EF0-432F-AF05-D8C33BCA00AD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Users.Auth", "Component\Auth\Sencilla.Component.Users.Auth.csproj", "{1C5101BC-E173-4EBB-9125-2EE833F0EFD6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Users.Auth", "libs\components\Auth\Sencilla.Component.Users.Auth.csproj", "{1C5101BC-E173-4EBB-9125-2EE833F0EFD6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "messaging", "messaging", "{E8166BE3-7AA5-4664-8EC4-B0567659727B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Messaging", "libs\messaging\Core\Sencilla.Messaging.csproj", "{216337C6-87E7-4994-9789-8C5385CE8E81}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Messaging.InMemoryQueue", "libs\messaging\InMemoryQueue\Sencilla.Messaging.InMemoryQueue.csproj", "{61390C80-5789-4A08-AA18-B51D4E3E9249}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Messaging.RabbitMQ", "libs\messaging\RabbitMQ\Sencilla.Messaging.RabbitMQ.csproj", "{3691998E-2F86-4007-BCBE-9356F6A34D86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Messaging.Kafka", "libs\messaging\Kafka\Sencilla.Messaging.Kafka.csproj", "{932346D1-FF90-4EFA-AF44-CE14D43F2A40}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "promts", "promts", "{782C0AC8-599A-EB63-2EF6-BCE0800E479C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{208BA388-4CEE-2CBF-559C-5607C099C1F8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -165,15 +181,34 @@ Global
 		{1C5101BC-E173-4EBB-9125-2EE833F0EFD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C5101BC-E173-4EBB-9125-2EE833F0EFD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C5101BC-E173-4EBB-9125-2EE833F0EFD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{216337C6-87E7-4994-9789-8C5385CE8E81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{216337C6-87E7-4994-9789-8C5385CE8E81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{216337C6-87E7-4994-9789-8C5385CE8E81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{216337C6-87E7-4994-9789-8C5385CE8E81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61390C80-5789-4A08-AA18-B51D4E3E9249}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61390C80-5789-4A08-AA18-B51D4E3E9249}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61390C80-5789-4A08-AA18-B51D4E3E9249}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61390C80-5789-4A08-AA18-B51D4E3E9249}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3691998E-2F86-4007-BCBE-9356F6A34D86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3691998E-2F86-4007-BCBE-9356F6A34D86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3691998E-2F86-4007-BCBE-9356F6A34D86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3691998E-2F86-4007-BCBE-9356F6A34D86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{932346D1-FF90-4EFA-AF44-CE14D43F2A40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{932346D1-FF90-4EFA-AF44-CE14D43F2A40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{932346D1-FF90-4EFA-AF44-CE14D43F2A40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{932346D1-FF90-4EFA-AF44-CE14D43F2A40}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{1E20ABEB-943D-4651-8C7D-B2DFF3662747} = {6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}
 		{F150A5AF-23BC-420A-B782-B4C6F88F9512} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
+		{D83ACE0F-B833-44E8-B34F-DCFAF36131FA} = {6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}
 		{D162185D-CEF7-4160-8F60-E9EF7A560C97} = {D83ACE0F-B833-44E8-B34F-DCFAF36131FA}
 		{D6CAFCA3-DB5F-476B-8643-057A16FD0114} = {D83ACE0F-B833-44E8-B34F-DCFAF36131FA}
 		{C07DF10D-7DD1-483D-AF39-CD10B38EECE7} = {D83ACE0F-B833-44E8-B34F-DCFAF36131FA}
+		{EAFE8751-7E1F-4BFE-82DA-B747451EF49A} = {6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}
 		{FA2F0F7D-0A3B-42E6-AF0E-D539F56647B3} = {EAFE8751-7E1F-4BFE-82DA-B747451EF49A}
 		{AFDA1854-0128-4801-B6F5-7C2494490D38} = {EAFE8751-7E1F-4BFE-82DA-B747451EF49A}
 		{8F4E9A41-747E-4133-96F7-DA1122BD7B3C} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
@@ -182,18 +217,25 @@ Global
 		{522EF56D-387D-4C89-9A2C-F0E89B723490} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
 		{31D2DA7D-A4C8-4280-B92E-24351D4DAC2F} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
 		{CA769FFC-19A6-4909-BE8A-99114ECD0A62} = {EAFE8751-7E1F-4BFE-82DA-B747451EF49A}
+		{986CA949-ABB6-41F4-90EA-A2C2201E9CFE} = {6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}
 		{0CE3D262-2AA8-4DF4-837D-B9C6071B86B3} = {986CA949-ABB6-41F4-90EA-A2C2201E9CFE}
 		{20C65D60-A80A-4583-8CBE-01BA9E306BA3} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
 		{8D521BDE-16D9-4715-88D8-E50A78DF5713} = {20C65D60-A80A-4583-8CBE-01BA9E306BA3}
 		{7E57A4E6-DA08-44F7-96C8-AF06E7180E41} = {98A5679D-EA35-49A0-A7D8-738DA4868592}
 		{98A5679D-EA35-49A0-A7D8-738DA4868592} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
 		{B4479087-3435-42DA-88B1-7D32C7358EB9} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
+		{4EF87FA7-8BCE-4B8D-854A-51E7FB0D2B42} = {6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}
 		{062F3A53-9CAD-4118-9258-9F9F252EAAD3} = {82D292C4-D134-42A4-8D9A-7E1D5B7C260F}
 		{B98F9496-15C3-4F82-9DA7-02500E09BFAE} = {062F3A53-9CAD-4118-9258-9F9F252EAAD3}
 		{06C45A6D-D821-46DE-BB89-0AE56C3DC96C} = {4EF87FA7-8BCE-4B8D-854A-51E7FB0D2B42}
 		{8269397F-EFA8-43D2-B9EA-729967F85C95} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
 		{EF05C823-3EF0-432F-AF05-D8C33BCA00AD} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
 		{1C5101BC-E173-4EBB-9125-2EE833F0EFD6} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
+		{E8166BE3-7AA5-4664-8EC4-B0567659727B} = {6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}
+		{216337C6-87E7-4994-9789-8C5385CE8E81} = {E8166BE3-7AA5-4664-8EC4-B0567659727B}
+		{61390C80-5789-4A08-AA18-B51D4E3E9249} = {E8166BE3-7AA5-4664-8EC4-B0567659727B}
+		{3691998E-2F86-4007-BCBE-9356F6A34D86} = {E8166BE3-7AA5-4664-8EC4-B0567659727B}
+		{932346D1-FF90-4EFA-AF44-CE14D43F2A40} = {E8166BE3-7AA5-4664-8EC4-B0567659727B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5EE15D7B-0AF6-4664-9D0B-7140B5B5961F}
