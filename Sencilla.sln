@@ -51,7 +51,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityF
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "repositories", "repositories", "{98A5679D-EA35-49A0-A7D8-738DA4868592}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Core.Tests", "tests\core\Sencilla.Core.Tests.csproj", "{B4479087-3435-42DA-88B1-7D32C7358EB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Core.Tests", "tests\cores\Sencilla.Core.Tests.csproj", "{B4479087-3435-42DA-88B1-7D32C7358EB9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extensions", "extensions", "{4EF87FA7-8BCE-4B8D-854A-51E7FB0D2B42}"
 EndProject
