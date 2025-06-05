@@ -52,6 +52,7 @@ This document contains coding standards and best practices
 - do not use regions 
 - do not use `using` in the file instead move all usings to Bootstrap.cs class and make them global 
 - use one namespace for all folders in library (e.g. if you have lib `Company.Test.Data`, then namespace should be `Company.Test.Data` for all classes in the library regardless fodler structure)
+- use file scoped namespace 
 
 ## Dependency Injection 
 

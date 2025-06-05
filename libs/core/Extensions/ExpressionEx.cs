@@ -49,5 +49,5 @@ public static class ExpressionEx
 [DisableInjection]
 public class ReplaceExpressionVisitor(Expression oldValue, Expression newValue) : ExpressionVisitor
 {
-    public override Expression Visit(Expression node) => node == oldValue ? newValue : base.Visit(node);
+    public override Expression? Visit(Expression? node) => node == oldValue ? newValue : base.Visit(node);
 }

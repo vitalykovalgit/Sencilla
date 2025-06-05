@@ -19,9 +19,9 @@ public class DbFileRepository : IFileRepository
         _deleteRepository = deleteRepository;
     }
 
-    public Task<File> CreateFile(File file) => _createRepository.Create(file);
+    public Task<File?> CreateFile(File file) => _createRepository.Create(file);
 
-    public Task<File> GetFile(Guid fileId) => _readRepository.GetById(fileId);
+    public Task<File?> GetFile(Guid fileId) => _readRepository.GetById(fileId);
 
-    public Task<File> UpdateFile(File file) => _updateRepository.Update(file);
+    public Task<File?> UpdateFile(File file) => _updateRepository.Update(file);
 }

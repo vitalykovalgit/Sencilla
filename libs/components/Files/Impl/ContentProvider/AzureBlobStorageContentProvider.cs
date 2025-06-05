@@ -13,7 +13,7 @@ public class AzureBlobStorageContentProvider : IFileContentProvider
         _blobServiceClient = new BlobServiceClient(config.ConnectionString);
     }
 
-    public Task<File> DeleteFileAsync(File file, CancellationToken? token = null)
+    public Task<File?> DeleteFileAsync(File? file, CancellationToken? token = null)
     {
         throw new NotImplementedException();
     }

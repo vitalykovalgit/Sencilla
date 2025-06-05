@@ -10,7 +10,7 @@ public class DbFileContentProvider : IFileContentProvider
         throw new System.NotImplementedException();
     }
 
-    public Task<File> DeleteFileAsync(File file, CancellationToken? token = null)
+    public Task<File?> DeleteFileAsync(File? file, CancellationToken? token = null)
     {
         throw new System.NotImplementedException();
     }

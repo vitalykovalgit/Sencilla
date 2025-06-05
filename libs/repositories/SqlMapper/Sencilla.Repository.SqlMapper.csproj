@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
-    <ProjectReference Include="..\..\Mapper\Sql\Sencilla.Mapper.Sql.csproj" />
+    <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
+    <ProjectReference Include="..\..\mappers\Sql\Sencilla.Mapper.Sql.csproj" />
   </ItemGroup>
 
 </Project>

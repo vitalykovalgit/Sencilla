@@ -99,7 +99,7 @@ internal class CreateFileHandler : ITusRequestHandler
 
         // think about location for uploading, probably can be S3/CloudFare directly
         var location = $"{context.Request.Path.Value}/{fileId}";
-        await context.WriteCreated(location);
+        context.WriteCreated(location);
     }
 
     private Files.File getResizerFile(Guid fileId, Guid? parentId, string filePath, string? fileMimeType, IDictionary<string, string> metadata)

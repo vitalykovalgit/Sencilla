@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
+    <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
   </ItemGroup>
 
 </Project>

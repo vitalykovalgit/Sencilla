@@ -15,6 +15,6 @@ public class FileContent : IEntity<long>
     /// <summary>
     /// Content of the file
     /// </summary>
-    public byte[] Content { get; set; }
+    public byte[]? Content { get; set; }
 
 }

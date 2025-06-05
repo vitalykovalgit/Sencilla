@@ -15,8 +15,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Component\Users\Sencilla.Component.Users.csproj" />
-		<ProjectReference Include="..\..\Core\Sencilla.Core.csproj" />
+		<ProjectReference Include="..\Users\Sencilla.Component.Users.csproj" />
+		<ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

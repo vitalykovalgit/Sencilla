@@ -48,6 +48,6 @@ public class UploadFileHandler(
             await fileUploadRepository.DeleteFileUpload(fileId);
         }
 
-        await context.WriteNoContentWithOffset(newOffset);
+        context.WriteNoContentWithOffset(newOffset);
     }
 }

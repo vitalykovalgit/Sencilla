@@ -12,7 +12,7 @@ public class DriveFileContentProvider : IFileContentProvider
         _config = config.GetConfig();
     }
 
-    public Task<File> DeleteFileAsync(File file, CancellationToken? token = null)
+    public Task<File?> DeleteFileAsync(File? file, CancellationToken? token = null)
     {
         if (file != null)
         {
@@ -23,13 +23,13 @@ public class DriveFileContentProvider : IFileContentProvider
         return Task.FromResult(file);
     }
 
-    public Task<Stream> ReadFileAsync(File file, CancellationToken? token = null) => Task.FromResult(ReadFile(file, token));
+    public Task<Stream?> ReadFileAsync(File file, CancellationToken? token = null) => Task.FromResult(ReadFile(file, token));
 
-    public Stream ReadFile(File file, CancellationToken? token = null)
+    public Stream? ReadFile(File file, CancellationToken? token = null)
     {
         var path = GetFilePath(file);
 
-        Stream stream = null;
+        Stream? stream = null;
         if (System.IO.File.Exists(path))
             stream = System.IO.File.OpenRead(path);
 
