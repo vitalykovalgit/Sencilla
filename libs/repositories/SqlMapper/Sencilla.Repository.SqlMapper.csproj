@@ -1,9 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
     <ProjectReference Include="..\..\mappers\Sql\Sencilla.Mapper.Sql.csproj" />
