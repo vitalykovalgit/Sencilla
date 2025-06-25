@@ -14,12 +14,12 @@ public class RabbitMQMiddleware : IMessageMiddleware
         _logger = logger;
     }
 
-    public async Task ProcessAsync<TMessage>(TMessage msg) where TMessage : class
+    public async Task ProcessAsync<T>(Message<T>? msg)
     {
         try
         {
             // Check if message has routing attributes or use default routing
-            var messageType = typeof(TMessage);
+            var messageType = typeof(T);
             var queueAttribute = messageType.GetCustomAttribute<QueueAttribute>();
             var topicAttribute = messageType.GetCustomAttribute<TopicAttribute>();
 
@@ -46,8 +46,7 @@ public class RabbitMQMiddleware : IMessageMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to process message {MessageType} through RabbitMQ middleware", 
-                typeof(TMessage).Name);
+            _logger.LogError(ex, "Failed to process message {MessageType} through RabbitMQ middleware", typeof(T).Name);
             throw;
         }
     }

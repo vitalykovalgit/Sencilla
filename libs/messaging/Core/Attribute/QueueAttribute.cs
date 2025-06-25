@@ -1,4 +1,4 @@
-namespace Sencilla.Messaging.RabbitMQ;
+namespace Sencilla.Messaging;
 
 /// <summary>
 /// Attribute to specify queue routing for messages

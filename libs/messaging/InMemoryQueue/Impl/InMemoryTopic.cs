@@ -2,48 +2,41 @@ namespace Sencilla.Messaging.InMemoryQueue;
 
 public class InMemoryTopic<T> : IDisposable
 {
-    private readonly ConcurrentDictionary<string, InMemorySubscription<T>> _subscriptions;
+    private readonly ConcurrentDictionary<string, InMemorySubscription<T>> Subscriptions;
 
     //private readonly object _lock = new();
     private bool _disposed;
 
     public InMemoryTopic()
     {
-        _subscriptions = new ConcurrentDictionary<string, InMemorySubscription<T>>();
+        Subscriptions = new ConcurrentDictionary<string, InMemorySubscription<T>>();
     }
 
     public async Task PublishAsync(T message, CancellationToken cancellationToken = default)
     {
-        ThrowIfDisposed();
-        
-        var subscriptions = _subscriptions.Values.ToList();
+        var subscriptions = Subscriptions.Values.ToList();
         var tasks = subscriptions.Select(sub => sub.DeliverMessageAsync(message, cancellationToken));
         
         await Task.WhenAll(tasks);
     }
 
-    public InMemorySubscription<T> Subscribe(string subscriptionName, int capacity = 1000)
+    public InMemorySubscription<T> Subscribe(string subscriptionName, int capacity = -1)
     {
-        ThrowIfDisposed();
-        
         var subscription = new InMemorySubscription<T>(subscriptionName, capacity);
-        
-        if (!_subscriptions.TryAdd(subscriptionName, subscription))
+        if (!Subscriptions.TryAdd(subscriptionName, subscription))
         {
             subscription.Dispose();
             throw new InvalidOperationException($"Subscription '{subscriptionName}' already exists.");
         }
 
-        subscription.OnDisposed += () => _subscriptions.TryRemove(subscriptionName, out _);
+        subscription.OnDisposed += () => Subscriptions.TryRemove(subscriptionName, out _);
         
         return subscription;
     }
 
     public bool Unsubscribe(string subscriptionName)
     {
-        ThrowIfDisposed();
-        
-        if (_subscriptions.TryRemove(subscriptionName, out var subscription))
+        if (Subscriptions.TryRemove(subscriptionName, out var subscription))
         {
             subscription.Dispose();
             return true;
@@ -54,25 +47,18 @@ public class InMemoryTopic<T> : IDisposable
 
     public IReadOnlyList<string> GetSubscriptionNames()
     {
-        ThrowIfDisposed();
-        return _subscriptions.Keys.ToList();
-    }
-
-    private void ThrowIfDisposed()
-    {
-        if (_disposed)
-            throw new ObjectDisposedException(nameof(InMemoryTopic<T>));
+        return Subscriptions.Keys.ToList();
     }
 
     public void Dispose()
     {
         if (!_disposed)
         {
-            foreach (var subscription in _subscriptions.Values)
+            foreach (var subscription in Subscriptions.Values)
             {
                 subscription.Dispose();
             }
-            _subscriptions.Clear();
+            Subscriptions.Clear();
             _disposed = true;
         }
     }

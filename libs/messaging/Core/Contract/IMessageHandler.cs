@@ -5,7 +5,7 @@ namespace Sencilla.Messaging;
 /// 
 /// </summary>
 /// <typeparam name="TEvent"></typeparam>
-public interface IMessageHandler<in TEvent> where TEvent : class
+public interface IMessageHandler<in TMessage>
 {
-    Task HandleAsync(TEvent @event);
+    Task HandleAsync(TMessage? message);
 }

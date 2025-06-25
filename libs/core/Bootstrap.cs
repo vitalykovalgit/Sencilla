@@ -67,9 +67,7 @@ public static class Bootstrap
         foreach (var type in types)
         {
             foreach (var r in registrators)
-            {
                 r.Register(container, type);
-            }
         }
 
         // 3. find component registrator and initialize all components 

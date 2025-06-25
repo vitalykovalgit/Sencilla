@@ -1,10 +1,6 @@
 ﻿namespace Sencilla.Messaging;
 
-/// <summary>
-/// 
-/// </summary>
-/// <typeparam name="T"></typeparam>
-public class Message<T> where T : class
+public class Message
 {
     /// <summary>
     /// Gets the unique identifier associated with the message.
@@ -30,7 +26,7 @@ public class Message<T> where T : class
     /// </summary>
     public MessageType Type { get; init; }
 
-    /// <summary>
+        /// <summary>
     /// 
     /// </summary>
     public MessageState State { get; set; } = MessageState.New;
@@ -60,12 +56,19 @@ public class Message<T> where T : class
     /// 
     /// </summary>
     public string? Error { get; set; }
+}
 
+/// <summary>
+/// 
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public class Message<T>: Message
+{
     /// <summary>
     /// 
     /// </summary>
     public T? Payload { get; init; }
-    
+
     /// <summary>
     /// Implicitly converts from type T to Message&lt;T&gt;.
     /// </summary>
@@ -75,5 +78,4 @@ public class Message<T> where T : class
     {
         return new Message<T> { Payload = payload };
     }
-    
 }

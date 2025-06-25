@@ -6,5 +6,8 @@ namespace Sencilla.Messaging;
 /// </summary>
 public interface IMessageMiddleware
 {
-    Task ProcessAsync<TMessage>(TMessage msg) where TMessage : class;
+    /// <summary>
+    /// Processes a message asynchronously.
+    /// </summary>
+    Task ProcessAsync<T>(Message<T>? msg);
 }

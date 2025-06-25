@@ -5,10 +5,6 @@ public class AutoDiscoveryRegistrator : ITypeRegistrator
 {
     public void Register(IContainer container, Type type)
     {
-        if (type.Name == "ParsedConstraint")
-            Console.WriteLine("debug");
-
-
         if (type.IsClass && !type.IsAbstract && !type.IsGenericType && !type.IsAssignableTo(typeof(Attribute)))
         {
             // ignore type registrators 

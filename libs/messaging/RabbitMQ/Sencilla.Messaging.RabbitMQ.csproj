@@ -13,4 +13,8 @@
     <ProjectReference Include="..\core\Sencilla.Messaging.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Attributes\" />
+  </ItemGroup>
+
 </Project>

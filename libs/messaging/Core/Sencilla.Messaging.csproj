@@ -5,7 +5,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Attribute\" />
+      <Folder Include="Config\" />
+      <Folder Include="Routing\Contract\" />
+      <Folder Include="Routing\Impl\" />
     </ItemGroup>
 
 </Project>

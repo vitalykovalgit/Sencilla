@@ -1,17 +1,10 @@
 ﻿
 namespace Microsoft.Extensions.DependencyInjection;
 
-public class ServiceCollectionResolver : IResolver
+public class ServiceCollectionResolver(IServiceProvider provider) : IResolver
 {
-    IServiceProvider Provider;
-
-    public ServiceCollectionResolver(IServiceProvider provider)
-    {
-        Provider = provider;
-    }
-
-    public object? Resolve(Type type) => Provider.GetService(type);
-    public TServcie? Resolve<TServcie>() => Provider.GetService<TServcie>();
-    public TServcie? Resolve<TServcie>(string name) => Provider.GetKeyedService<TServcie>(name);
-    public IEnumerable<TType> ResolveAll<TType>() => Provider.GetServices<TType>();
+    public object? Resolve(Type type) => provider.GetService(type);
+    public TServcie? Resolve<TServcie>() => provider.GetService<TServcie>();
+    public TServcie? Resolve<TServcie>(string name) => provider.GetKeyedService<TServcie>(name);
+    public IEnumerable<TType> ResolveAll<TType>() => provider.GetServices<TType>();
 }
