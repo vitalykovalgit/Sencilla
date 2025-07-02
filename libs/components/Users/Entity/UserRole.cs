@@ -1,13 +1,10 @@
 ﻿namespace Sencilla.Component.Users;
 
-/// <summary>
-/// 
-/// </summary>
 [Table(nameof(UserRole), Schema = "sec")]
-public class UserRole 
-    : IEntity
-    //, IEntityCreateableTrack
-    //, IEntityUpdateableTrack
+[CrudApi("api/v1/users/roles")]
+public class UserRole : IEntity<int>
+    , IEntityCreateable
+    , IEntityUpdateable
     , IEntityDeleteable
 {
     public int Id { get; set; }
