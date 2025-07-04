@@ -15,7 +15,7 @@ public class UsersController : CrudApiController<User>
     {
         // TODO: if user provider will load it from DB then no need to load it from here 
         string email = userProvider?.CurrentUser?.Email;
-        var user = (await userReader.GetAll(ByEmail(email), token)).FirstOrDefault();
+        var user = (await userReader.GetAll(ByEmail(email), token, u => u.Roles)).FirstOrDefault();
 
         return Ok(user);
     }

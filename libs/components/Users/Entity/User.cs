@@ -1,4 +1,6 @@
-﻿namespace Sencilla.Component.Users;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Sencilla.Component.Users;
 
 [Table(nameof(User), Schema = "sec")]
 public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityRemoveable
@@ -32,7 +34,7 @@ public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEnt
     public DateTime? DeletedDate { get; set; }
 
     //[ForeignKey(nameof(UserRole.UserId))]
-    [NotMapped]
+    // [NotMapped]
     public ICollection<UserRole>? Roles { get; set; }
 
     //[ForeignKey(nameof(UserAttribute.UserId))]

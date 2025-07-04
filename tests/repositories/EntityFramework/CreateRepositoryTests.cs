@@ -4,7 +4,7 @@ namespace Sencilla.Repository.EntityFramework.Tests
 
     public class CreateRepositoryTests
     {
-        User CurrentUser = new User { Id = 1, Roles = new List<UserRole> { new UserRole { Id = 1, Role = "user" } } };
+        User CurrentUser = new User { Id = 1, Roles = new List<UserRole> { /*new UserRole { Id = 1, Role = "user" } */} };
 
         Mock<IResolver> Resolver = new ();
         Mock<ICurrentUserProvider> CurrentUserProvider = new ();
@@ -40,7 +40,7 @@ namespace Sencilla.Repository.EntityFramework.Tests
              * Setup Security 
              **/
             // setup current user 
-            var currentUser = new User { Id = 1, Roles = new List<UserRole> { new UserRole { Id = 1, Role = "user" } } };
+            var currentUser = new User { Id = 1, Roles = new List<UserRole> { /*new UserRole { Id = 1, Role = "user" }*/ } };
             CurrentUserProvider.Setup(o => o.CurrentUser).Returns(currentUser);
 
             // setup matrix 
