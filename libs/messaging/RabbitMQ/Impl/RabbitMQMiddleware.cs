@@ -21,7 +21,7 @@ public class RabbitMQMiddleware : IMessageMiddleware
             // Check if message has routing attributes or use default routing
             var messageType = typeof(T);
             var queueAttribute = messageType.GetCustomAttribute<QueueAttribute>();
-            var topicAttribute = messageType.GetCustomAttribute<TopicAttribute>();
+            //var topicAttribute = messageType.GetCustomAttribute<TopicAttribute>();
 
             if (queueAttribute != null)
             {
@@ -29,12 +29,12 @@ public class RabbitMQMiddleware : IMessageMiddleware
                 _logger.LogDebug("Published message {MessageType} to queue {QueueName}", 
                     messageType.Name, queueAttribute.Name);
             }
-            else if (topicAttribute != null)
-            {
-                await _publisher.PublishAsync(msg, topicAttribute.Exchange, topicAttribute.RoutingKey);
-                _logger.LogDebug("Published message {MessageType} to exchange {Exchange} with routing key {RoutingKey}", 
-                    messageType.Name, topicAttribute.Exchange, topicAttribute.RoutingKey);
-            }
+            //else if (topicAttribute != null)
+            //{
+            //    await _publisher.PublishAsync(msg, topicAttribute.Exchange, topicAttribute.RoutingKey);
+            //    _logger.LogDebug("Published message {MessageType} to exchange {Exchange} with routing key {RoutingKey}", 
+            //        messageType.Name, topicAttribute.Exchange, topicAttribute.RoutingKey);
+            //}
             else
             {
                 // Default behavior: publish to queue named after the message type
