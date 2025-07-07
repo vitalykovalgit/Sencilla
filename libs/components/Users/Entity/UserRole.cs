@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Sencilla.Component.Security;
 
 namespace Sencilla.Component.Users;
 
@@ -23,6 +24,8 @@ public class UserRole : IEntity<int>
     [Column("Role")]
     public int RoleId { get; set; }
     public int UserId { get; set; }           
+
+    public ICollection<Matrix> Matrix { get; set; }
 
     [NotMapped]
     public string? Role => ((UserRoleType)RoleId).ToString();

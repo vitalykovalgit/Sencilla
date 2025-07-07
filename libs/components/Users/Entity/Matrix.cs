@@ -6,7 +6,7 @@ public class Matrix : IEntity
     public int Id { get; set; }
     
     [Column("Role")]
-    public int RoleId { get; set; }
+    public int UserRoleId { get; set; } // ?
 
     [NotMapped]
     public string Role { get; set; }
