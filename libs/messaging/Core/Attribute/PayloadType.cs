@@ -4,15 +4,10 @@ namespace Sencilla.Messaging;
 /// Attribute to specify topic routing for messages
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class PayloadTypeAttribute : Attribute
+public class PayloadTypeAttribute(string name) : Attribute
 {
     /// <summary>
     /// Exchange name
     /// </summary>
-    public string Name { get; }
-
-    public PayloadTypeAttribute(string name)
-    {   
-        Name = name;
-    }
+    public string Name { get; } = name;
 }

@@ -9,8 +9,11 @@ public class InMemoryMiddleware(IResolver resolver) : Resolveable(resolver), IEv
 {
     public async Task ProcessAsync<TEvent>(TEvent @event) where TEvent : class, IEvent
     {
-        var handlers = All<IEventHandlerBase<TEvent>>();
+        var handlers = All<IEventHandler<TEvent>>();
         foreach (var handler in handlers)
-            await handler.CallWithInjectAsync(nameof(ICommandHandler<ICommand>.HandleAsync), @event);
+        {
+            await handler.HandleAsync(@event);
+        }
+        //await handler.CallWithInjectAsync(nameof(ICommandHandler<ICommand>.HandleAsync), @event);
     }
 }

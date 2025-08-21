@@ -83,7 +83,7 @@ public static class Bootstrap
     /// <param name="app"></param>
     public static void UseSencilla(this IApplicationBuilder app)
     {
-        app.UseServiceLocator();
+        //app.UseServiceLocator();
         // add other components here...
     }
 

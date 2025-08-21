@@ -1,42 +1,47 @@
 namespace Sencilla.Messaging.InMemoryQueue;
 
-public class InMemoryQueue<T> : IDisposable
+public class InMemoryQueue: IMessageStream, IDisposable
 {
-    private readonly Channel<T> channel;
-    private readonly ChannelWriter<T> Writer;
-    private readonly ChannelReader<T> Reader;
+    private readonly Channel<string> channel;
+    private readonly ChannelWriter<string> Writer;
+    private readonly ChannelReader<string> Reader;
     private readonly CancellationTokenSource CancellationTokenSource = new();
     private bool Disposed = false;
+    public event Action? OnDisposed;
 
-    public InMemoryQueue(int capacity = -1)
+    public string Name { get; }
+
+    public InMemoryQueue(string name, int? capacity = null)
     {
-        var options = new BoundedChannelOptions(capacity)
-        {
-            FullMode = BoundedChannelFullMode.Wait,
-            SingleReader = false,
-            SingleWriter = false
-        };
+        Name = name;
+        channel = capacity == null
+            ? Channel.CreateUnbounded<string>()
+            : Channel.CreateBounded<string>(new BoundedChannelOptions(capacity ?? -1) {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleReader = false,
+                SingleWriter = false
+            });
 
-        channel = capacity == -1 ? Channel.CreateUnbounded<T>() : Channel.CreateBounded<T>(options);
         Writer = channel.Writer;
         Reader = channel.Reader;
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="item"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    public async Task EnqueueAsync(T? item, CancellationToken cancellationToken = default)
+    public Task Write<T>(T? payload, CancellationToken cancellationToken = default)
     {
-        if (item is null) return;
+        if (payload is null) return Task.CompletedTask;
 
-        using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationTokenSource.Token);
-        await Writer.WriteAsync(item, combined.Token);
+        return Write(new Message<T> { Payload = payload }, cancellationToken);
     }
 
-    public async Task<T?> DequeueAsync(CancellationToken cancellationToken = default)
+    public async Task Write<T>(Message<T>? message, CancellationToken cancellationToken = default)
+    {
+        if (message is null || CancellationTokenSource.Token.IsCancellationRequested) return;
+
+        using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationTokenSource.Token);
+        await Writer.WriteAsync(JsonSerializer.Serialize(message), combined.Token);
+    }
+
+    public async Task<string?> Read(CancellationToken cancellationToken = default)
     {
         using var combined = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationTokenSource.Token);
         if (await Reader.WaitToReadAsync(combined.Token))
@@ -50,9 +55,12 @@ public class InMemoryQueue<T> : IDisposable
         return default;
     }
 
-    public bool TryDequeue(out T? item)
+    public async Task<Message<T>?> Read<T>(CancellationToken cancellationToken = default)
     {
-        return Reader.TryRead(out item);
+        var json = await Read(cancellationToken);
+        if (json is null) return default;
+
+        return JsonSerializer.Deserialize<Message<T>>(json);
     }
 
     public void Dispose()
@@ -63,6 +71,7 @@ public class InMemoryQueue<T> : IDisposable
             Writer.Complete();
             CancellationTokenSource.Dispose();
             Disposed = true;
+            OnDisposed?.Invoke();
         }
-    }
+    }    
 }

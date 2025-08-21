@@ -17,12 +17,8 @@ public static class Boostrap
     /// <returns></returns>
     public static MessagingConfig UseMediator(this MessagingConfig builder, Action<MediatorConfig>? config = null)
     {
-        // Create config
-        var mediatRConfig = new MediatorConfig(builder.Services);
-        config?.Invoke(mediatRConfig);
-        builder.Services.AddSingleton(mediatRConfig);
-
-        // Register MediatR services
+        // Register Mediator services
+        builder.AddProviderConfig<MediatorConfig>(config);
         builder.AddMiddleware<MediatorMiddleware>();
         return builder;
     }

@@ -1,28 +1,32 @@
 namespace Sencilla.Messaging.InMemoryQueue;
 
-public class InMemoryTopic<T> : IDisposable
+public class InMemoryTopic(string name): IMessageStream, IDisposable
 {
-    private readonly ConcurrentDictionary<string, InMemorySubscription<T>> Subscriptions;
+    private readonly ConcurrentDictionary<string, InMemoryQueue> Subscriptions = new();
 
-    //private readonly object _lock = new();
+    public string Name { get; } = name;
+
     private bool _disposed;
 
-    public InMemoryTopic()
+    public Task<string?> Read(CancellationToken cancellationToken = default)
     {
-        Subscriptions = new ConcurrentDictionary<string, InMemorySubscription<T>>();
+        throw new NotSupportedException("Reading from a topic is not supported. Use Subscribe to create a subscription and read from it.");
     }
 
-    public async Task PublishAsync(T message, CancellationToken cancellationToken = default)
+    public Task<Message<T>?> Read<T>(CancellationToken cancellationToken = default)
     {
-        var subscriptions = Subscriptions.Values.ToList();
-        var tasks = subscriptions.Select(sub => sub.DeliverMessageAsync(message, cancellationToken));
-        
+        throw new NotSupportedException("Reading from a topic is not supported. Use Subscribe to create a subscription and read from it.");
+    }
+
+    public async Task Write<T>(Message<T>? message, CancellationToken cancellationToken = default)
+    {
+        var tasks = Subscriptions.Values.Select(sub => sub.Write(message, cancellationToken));
         await Task.WhenAll(tasks);
     }
 
-    public InMemorySubscription<T> Subscribe(string subscriptionName, int capacity = -1)
+    public InMemoryQueue Subscribe(string subscriptionName, int capacity = -1)
     {
-        var subscription = new InMemorySubscription<T>(subscriptionName, capacity);
+        var subscription = new InMemoryQueue(subscriptionName, capacity);
         if (!Subscriptions.TryAdd(subscriptionName, subscription))
         {
             subscription.Dispose();

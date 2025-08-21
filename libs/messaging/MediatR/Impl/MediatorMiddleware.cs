@@ -7,7 +7,7 @@ namespace Sencilla.Messaging.Mediator;
 /// </summary>
 public class MediatorMiddleware(IResolver resolver/*, MediatrConfig config*/) : Resolveable(resolver), IMessageMiddleware
 {
-    public async Task ProcessAsync<T>(Message<T>? message)
+    public async Task ProcessAsync<T>(Message<T>? message, CancellationToken cancellationToken = default)
     {
         // process all handlers for the message first 
         var handlers = All<IMessageHandler<Message<T>>>();

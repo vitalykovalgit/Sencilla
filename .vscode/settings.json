@@ -1,0 +1,54 @@
+{
+    "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+    "dotnet.server.useOmnisharp": false,
+    "dotnet.defaultSolution": "Sencilla.sln",
+    "dotnet.build.verbosity": "normal",
+    "dotnet.build.options": [
+        "--consoleLoggerParameters:ForceConsoleColor"
+    ],
+    "terminal.integrated.env.osx": {
+        "DOTNET_CLI_FORCE_UTF8_ENCODING": "true"
+    },
+    "terminal.integrated.env.linux": {
+        "DOTNET_CLI_FORCE_UTF8_ENCODING": "true"
+    },
+    "terminal.integrated.env.windows": {
+        "DOTNET_CLI_FORCE_UTF8_ENCODING": "true"
+    },
+    "cSpell.words": [
+        "Resolveable",
+        "Sencilla"
+    ],
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#34576f",
+        "activityBar.background": "#34576f",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#2b1422",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#e7e7e799",
+        "sash.hoverBorder": "#34576f",
+        "statusBar.background": "#243c4c",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#34576f",
+        "statusBarItem.remoteBackground": "#243c4c",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "titleBar.activeBackground": "#243c4c",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#243c4c99",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.color": "#243C4C",
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/bin": true,
+        "bin": true,
+        "**/obj": true,
+        "obj": true
+    },
+    "explorerExclude.backup": {}
+}

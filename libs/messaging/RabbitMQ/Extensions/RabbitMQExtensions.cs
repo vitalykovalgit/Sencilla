@@ -32,7 +32,7 @@ public static class RabbitMQExtensions
         services.AddSingleton<IRabbitMQConsumer, RabbitMQConsumer>();
 
         // Register middleware
-        services.AddTransient<IMessageMiddleware, RabbitMQMiddleware>();
+        //services.AddTransient<IMessageMiddleware, RabbitMQMiddleware>();
 
         // Register hosted service for consuming messages
         services.AddHostedService<RabbitMQHostedService>();

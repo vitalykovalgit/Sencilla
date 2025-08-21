@@ -4,11 +4,8 @@ namespace Sencilla.Core;
 /// <summary>
 /// Dispatch command 
 /// </summary>
-public class CommandDispatcher: Resolveable, ICommandDispatcher
+public class CommandDispatcher(IResolver resolver) : Resolveable(resolver), ICommandDispatcher
 {
-    public CommandDispatcher(IResolver resolver): base(resolver)
-    {
-    }
 
     /// <summary>
     /// Resolve handler for <see cref="ICommandHandler"/> and process command 
@@ -19,8 +16,8 @@ public class CommandDispatcher: Resolveable, ICommandDispatcher
     public async Task SendAsync(ICommand command, CancellationToken cancellationToken = default)
     {
         // get method and inject parameters but skip first parameter 
-        var handler = R(typeof(ICommandHandlerBase<>).MakeGenericType(command.GetType()));
-        await (handler?.CallWithInjectAsync(nameof(ICommandHandler<ICommand>.HandleAsync), command) ?? Task.CompletedTask);
+        //var handler = R(typeof(ICommandHandlerBase<>).MakeGenericType(command.GetType()));
+        //await (handler?.CallWithInjectAsync(nameof(ICommandHandler<ICommand>.HandleAsync), command) ?? Task.CompletedTask);
     }
 
     /// <summary>
@@ -34,11 +31,11 @@ public class CommandDispatcher: Resolveable, ICommandDispatcher
     /// <returns></returns>
     public async Task<TResponse?> SendAsync<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default)
     {
-        var handler = R(typeof(ICommandHandlerBase<,>).MakeGenericType(command.GetType(), typeof(TResponse)));
-        if (handler == null)
-            return default(TResponse);
-
-        var response = await handler.CallWithInjectAsync<TResponse>(nameof(ICommandHandler<ICommand>.HandleAsync), command);
-        return response;
+        // var handler = R(typeof(ICommandHandlerBase<,>).MakeGenericType(command.GetType(), typeof(TResponse)));
+        // if (handler == null)
+             return default;
+// 
+        // var response = await handler.CallWithInjectAsync<TResponse>(nameof(ICommandHandler<ICommand>.HandleAsync), command);
+        // return response;
     }
 }

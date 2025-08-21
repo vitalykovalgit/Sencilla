@@ -1,5 +1,5 @@
 ﻿namespace Sencilla.Messaging.EntityFramework;
 
-public class Bootstrap
+public static class Bootstrap
 {
 }

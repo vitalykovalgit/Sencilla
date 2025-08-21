@@ -11,15 +11,15 @@ public interface IMessageDispatcher
     /// <typeparam name="T"></typeparam>
     /// <param name="message"></param>
     /// <returns></returns>
-    Task Publish<T>(T message);
+    Task Send<T>(T message, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Publishes a message asynchronously to the message dispatching mechanism.
-    /// </summary>
+    /// </summary>  
     /// <typeparam name="T">The type of the message to be published. Must be a reference type.</typeparam>
     /// <param name="message">The message object to be published.</param>
     /// <returns> A task representing the asynchronous operation.</returns>
-    Task Publish<T>(Message<T> message);
-    
+    Task Send<T>(Message<T> message, CancellationToken cancellationToken = default);
+
 }
 

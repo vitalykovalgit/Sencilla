@@ -9,5 +9,5 @@ public interface IMessageMiddleware
     /// <summary>
     /// Processes a message asynchronously.
     /// </summary>
-    Task ProcessAsync<T>(Message<T>? msg);
+    Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default);
 }
