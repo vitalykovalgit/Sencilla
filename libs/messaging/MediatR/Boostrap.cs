@@ -18,8 +18,8 @@ public static class Boostrap
     public static MessagingConfig UseMediator(this MessagingConfig builder, Action<MediatorConfig>? config = null)
     {
         // Register Mediator services
-        builder.AddProviderConfig<MediatorConfig>(config);
-        builder.AddMiddleware<MediatorMiddleware>();
+        builder.AddProviderConfigOnce<MediatorConfig>(config);
+        builder.AddMiddlewareOnce<MediatorMiddleware>();
         return builder;
     }
 }

@@ -21,15 +21,18 @@ public static class Bootstrap
     /// <returns></returns>
     public static MessagingConfig UseInMemoryQueue(this MessagingConfig builder, Action<InMemoryProviderConfig>? config)
     {
-        var options = builder.AddProviderConfig<InMemoryProviderConfig>(config);
-        builder.AddMiddleware<InMemoryQueueMiddleware>();
+        var options = builder.AddProviderConfigOnce<InMemoryProviderConfig>(config);
 
-        builder.Services.AddSingleton<InMemoryStreamProvider>();
-        
-        if (options.Consumers.HasAnyConsumers)
+        // register if not exists
+        builder.AddMiddlewareOnce<InMemoryQueueMiddleware>();
+        builder.AddStreamProviderOnce<InMemoryStreamProvider>();
+        builder.AddHostedServiceOnce<MessageStreamsConsumer<InMemoryStreamProvider, InMemoryProviderConfig>>(options);
+        builder.AddAppBuilderOnce(app =>
         {
-            builder.Services.AddHostedService<MessageStreamsConsumer<InMemoryStreamProvider, InMemoryProviderConfig>>();
-        }
+            Console.WriteLine("Called 2");
+            //var logger = app.ApplicationServices.GetRequiredService<ILogger<SchedulerMiddleware>>();
+            //app.UseMiddleware<SchedulerMiddleware>(logger);
+        });
 
         return builder;
     }

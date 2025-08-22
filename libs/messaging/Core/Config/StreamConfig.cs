@@ -44,7 +44,7 @@ public class StreamConfig
     /// Indicates whether the queue is durable.
     /// A durable queue will survive broker restarts and retain messages.
     /// </summary>
-    public bool Durable { get; set; } = true;    
+    public bool Durable { get; set; } = true;
 
     public StreamConfig Receive<T>()
     {

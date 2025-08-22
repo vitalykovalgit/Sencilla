@@ -4,13 +4,19 @@
 /// 
 /// </summary>
 [DisableInjection]
-public class MessagingConfig(IServiceCollection services) : ProviderConfig
+public class MessagingConfig : ProviderConfig
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <value></value>
+    public List<Action<IApplicationBuilder>> AppBuilders { get; } = [];
+
     /// <summary>
     /// The service collection for this provider.
     /// </summary>
     /// <value></value>
-    public IServiceCollection Services { get; private set; } = services;
+    public IServiceCollection Services { get; private set; } = null!;
 
     /// <summary>
     /// 
@@ -18,15 +24,50 @@ public class MessagingConfig(IServiceCollection services) : ProviderConfig
     /// <value></value>
     public List<Type> Middlewares { get; } = [];
 
+
     /// <summary>
-    /// Adds a middleware to the messaging pipeline.
+    /// Adds a middleware to the messaging pipeline only once.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public MessagingConfig AddMiddleware<T>() where T : class, IMessageMiddleware
+    public MessagingConfig AddMiddlewareOnce<T>() where T : class, IMessageMiddleware
     {
+        if (Middlewares.Contains(typeof(T)))
+            return this;
+
         Services.AddSingleton<T>();
         Middlewares.Add(typeof(T));
         return this;
+    }
+
+    /// <summary>
+    /// Add stream provider to the messaging pipeline only once.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public MessagingConfig AddStreamProviderOnce<T>() where T : class, IMessageStreamProvider
+    {
+        // check if service already registered
+        if (Services.Any(sd => sd.ServiceType == typeof(T)))
+            return this;
+
+        Services.AddSingleton<T>();
+        return this;
+    }
+
+    public MessagingConfig AddHostedServiceOnce<T>(ProviderConfig config) where T : class, IHostedService
+    {
+        // check if service already registered
+        if (Services.Any(sd => sd.ServiceType == typeof(IHostedService) && sd.ImplementationType == typeof(T)))
+            return this;
+
+        if (config.Consumers.HasAnyConsumers)
+            Services.AddHostedService<T>();
+
+        return this;
+    }
+
+    public T? GetProviderConfig<T>() where T : ProviderConfig
+    {
+        return Services.FirstOrDefault(sd => sd.ServiceType == typeof(T))?.ImplementationInstance as T;
     }
 
     /// <summary>
@@ -35,12 +76,47 @@ public class MessagingConfig(IServiceCollection services) : ProviderConfig
     /// <param name="config"></param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public T AddProviderConfig<T>(Action<T>? config) where T : ProviderConfig, new()
+    public T AddProviderConfigOnce<T>(Action<T>? config) where T : ProviderConfig, new()
     {
-        var providerConfig = new T();
-        config?.Invoke(providerConfig);
-        Services.AddSingleton(providerConfig);
-        return providerConfig;
+        // get options instance
+        var providerConfig = GetProviderConfig<T>();
+        var options = providerConfig ?? new T();
+
+        // invoke config action
+        config?.Invoke(options);
+
+        // Add only if not exists
+        if (providerConfig == null)
+            Services.AddSingleton(options);
+
+        return options;
+    }
+
+    public MessagingConfig AddAppBuilderOnce(Action<IApplicationBuilder> builder)
+    {
+        if (AppBuilders.Contains(builder))
+            return this;
+
+        AppBuilders.Add(builder);
+        return this;
+    }
+
+    /// <summary>
+    /// Build app only once
+    /// </summary>
+    /// <param name="app"></param>
+    public void BuildApp(IApplicationBuilder app)
+    {
+        if (AppBuilders.Count == 0)
+            return;
+
+        AppBuilders.ForEach(builder => builder.Invoke(app));
+        AppBuilders.Clear();
+    }
+
+    internal void Init(IServiceCollection services)
+    {
+        Services = services;
     }
 
     internal void Cleanup()

@@ -5,6 +5,8 @@ global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Hosting;
 
+global using Microsoft.AspNetCore.Builder;
+
 global using Sencilla.Core;
 global using Sencilla.Messaging;
 
@@ -22,13 +24,23 @@ public static class Bootstrap
     /// <returns> The provided service collection.</returns>
     public static IServiceCollection AddSencillaMessaging(this IServiceCollection services, Action<MessagingConfig> config)
     {
-        var options = new MessagingConfig(services);
+        var existingConfig = services.FirstOrDefault(sd => sd.ServiceType == typeof(MessagingConfig))?.ImplementationInstance as MessagingConfig;
+        var options = existingConfig ?? new MessagingConfig();
+
+        options.Init(services);
         config(options);
         options.Cleanup();
 
         // Register the messaging configuration
-        services.AddSingleton(options);
+        if (existingConfig == null)
+            services.AddSingleton(options);
 
         return services;
+    }
+
+    public static void UseSencillaMessaging(this IApplicationBuilder app)
+    {
+        var messagingConfig = app.ApplicationServices.GetRequiredService<MessagingConfig>();
+        messagingConfig.BuildApp(app);
     }
 }

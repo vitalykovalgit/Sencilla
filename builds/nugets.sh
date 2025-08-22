@@ -22,6 +22,7 @@ declare -a packagesInfo=(
     "Sencilla.Messaging.RabbitMQ:messaging/RabbitMQ"
     "Sencilla.Messaging.ServiceBus:messaging/ServiceBus"
     "Sencilla.Messaging.InMemoryQueue:messaging/InMemoryQueue"
+    "Sencilla.Messaging.Scheduler:messaging/Scheduler"
     "Sencilla.Component.I18n:components/I18n"
     "Sencilla.Component.Users:components/Users"
     "Sencilla.Component.Config:components/Config"

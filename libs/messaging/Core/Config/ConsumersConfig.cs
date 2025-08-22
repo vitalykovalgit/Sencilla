@@ -2,7 +2,7 @@ namespace Sencilla.Messaging;
 
 public class ConsumersConfig
 {
-    private ConsumerConfig? DefaultConsumerConfig;
+    private ConsumerConfig DefaultConsumerConfig = new ConsumerConfig();
     private readonly ConcurrentDictionary<string, ConsumerConfig> Consumers = new();
 
     public bool HasAnyConsumers => Consumers.Count > 0;
@@ -14,7 +14,6 @@ public class ConsumersConfig
 
     public ConsumersConfig WithOptions(Action<ConsumerConfig> config)
     {
-        DefaultConsumerConfig = new ConsumerConfig();
         config(DefaultConsumerConfig);
         return this;
     }
