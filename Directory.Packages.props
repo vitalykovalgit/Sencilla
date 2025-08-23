@@ -1,5 +1,4 @@
 <Project>
-  
   <!-- Central Package Management -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -8,7 +7,6 @@
   <ItemGroup>
     <!-- Authorization  -->
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
-
     <!-- Microsoft Extensions -->
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.1" />
@@ -18,13 +16,11 @@
     <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="9.0.1" />
-    
     <!-- Entity Framework -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.1" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.0.1" />
-    
     <!-- Testing Packages -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="NUnit" Version="4.3.2" />
@@ -33,32 +29,26 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="Moq.EntityFrameworkCore" Version="9.0.0.1" />
-     
     <!-- Messaging -->
     <PackageVersion Include="RabbitMQ.Client" Version="6.8.1" />
     <PackageVersion Include="Confluent.Kafka" Version="2.7.0" />
-
-      <!-- JSON & Serialization -->
+    <PackageVersion Include="TickerQ" Version="2.5.1" />
+    <!-- JSON & Serialization -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="System.Text.Json" Version="9.0.1" />
-    
     <!-- Database -->
     <PackageVersion Include="System.Data.SqlClient" Version="4.9.0" />
     <PackageVersion Include="MySql.Data" Version="9.2.0" />
     <PackageVersion Include="System.Data.Common" Version="4.3.0" />
-    
     <!-- Configuration -->
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="9.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.1" />
     <PackageVersion Include="System.Configuration.ConfigurationManager" Version="9.0.1" />
-    
     <!-- Cloud Services -->
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.23.0" />
     <PackageVersion Include="Google.Cloud.Translate.V3" Version="3.9.0" />
-    
     <!-- Other Common Packages -->
     <PackageVersion Include="System.Linq.Dynamic.Core" Version="1.6.0.1" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
   </ItemGroup>
-
 </Project>

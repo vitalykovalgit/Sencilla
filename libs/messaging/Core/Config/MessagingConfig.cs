@@ -10,7 +10,7 @@ public class MessagingConfig : ProviderConfig
     /// 
     /// </summary>
     /// <value></value>
-    public List<Action<IApplicationBuilder>> AppBuilders { get; } = [];
+    public List<Action<IApplicationBuilder?, IHost?>> AppBuilders { get; } = [];
 
     /// <summary>
     /// The service collection for this provider.
@@ -92,7 +92,17 @@ public class MessagingConfig : ProviderConfig
         return options;
     }
 
-    public MessagingConfig AddAppBuilderOnce(Action<IApplicationBuilder> builder)
+    public bool IsTypeRegistered<T>() where T : class
+    {
+        return Services.Any(sd => sd.ServiceType == typeof(T));
+    }
+
+    public bool IsTypeNotRegistered<T>() where T : class
+    {
+        return !IsTypeRegistered<T>();
+    }
+
+    public MessagingConfig AddAppBuilderOnce(Action<IApplicationBuilder?, IHost?> builder)
     {
         if (AppBuilders.Contains(builder))
             return this;
@@ -110,7 +120,16 @@ public class MessagingConfig : ProviderConfig
         if (AppBuilders.Count == 0)
             return;
 
-        AppBuilders.ForEach(builder => builder.Invoke(app));
+        AppBuilders.ForEach(builder => builder.Invoke(app, null));
+        AppBuilders.Clear();
+    }
+
+    public void BuildApp(IHost app)
+    {
+        if (AppBuilders.Count == 0)
+            return;
+
+        AppBuilders.ForEach(builder => builder.Invoke(null, app));
         AppBuilders.Clear();
     }
 

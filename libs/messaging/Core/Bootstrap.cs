@@ -43,4 +43,10 @@ public static class Bootstrap
         var messagingConfig = app.ApplicationServices.GetRequiredService<MessagingConfig>();
         messagingConfig.BuildApp(app);
     }
+
+    public static void UseSencillaMessaging(this IHost app)
+    {
+        var messagingConfig = app.Services.GetRequiredService<MessagingConfig>();
+        messagingConfig.BuildApp(app);
+    }
 }

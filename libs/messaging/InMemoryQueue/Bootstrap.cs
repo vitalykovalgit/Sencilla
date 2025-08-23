@@ -27,13 +27,7 @@ public static class Bootstrap
         builder.AddMiddlewareOnce<InMemoryQueueMiddleware>();
         builder.AddStreamProviderOnce<InMemoryStreamProvider>();
         builder.AddHostedServiceOnce<MessageStreamsConsumer<InMemoryStreamProvider, InMemoryProviderConfig>>(options);
-        builder.AddAppBuilderOnce(app =>
-        {
-            Console.WriteLine("Called 2");
-            //var logger = app.ApplicationServices.GetRequiredService<ILogger<SchedulerMiddleware>>();
-            //app.UseMiddleware<SchedulerMiddleware>(logger);
-        });
-
+        
         return builder;
     }
 }

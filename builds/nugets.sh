@@ -16,6 +16,11 @@ declare -a packagesInfo=(
     "Sencilla.Web:web"
     "Sencilla.Repository.HttpClient:repositories/HttpClient"
     "Sencilla.Repository.EntityFramework:repositories/EntityFramework"
+
+    "Sencilla.Scheduler:scheduler/Core"
+    "Sencilla.Scheduler.EntityFramework:scheduler/EntityFramework"
+    "Sencilla.Scheduler.SourceGenerator:scheduler/SourceGenerator"
+    
     "Sencilla.Messaging:messaging/Core"
     "Sencilla.Messaging.MediatR:messaging/MediatR"
     "Sencilla.Messaging.Kafka:messaging/Kafka"
@@ -23,6 +28,7 @@ declare -a packagesInfo=(
     "Sencilla.Messaging.ServiceBus:messaging/ServiceBus"
     "Sencilla.Messaging.InMemoryQueue:messaging/InMemoryQueue"
     "Sencilla.Messaging.Scheduler:messaging/Scheduler"
+
     "Sencilla.Component.I18n:components/I18n"
     "Sencilla.Component.Users:components/Users"
     "Sencilla.Component.Config:components/Config"
@@ -30,6 +36,7 @@ declare -a packagesInfo=(
     "Sencilla.Component.FilesTus:components/FilesTus"
     "Sencilla.Component.Security:components/Security"
     "Sencilla.Component.Geography:components/Geography"
+    
     "Microsoft.EntityFrameworkCore.Extension:extensions/EntityFrameworkCore"
 )
 

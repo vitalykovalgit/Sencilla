@@ -14,4 +14,8 @@
     <Folder Include="Entity/" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="TickerQ" />
+  </ItemGroup>
+
 </Project>
