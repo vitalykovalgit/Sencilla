@@ -1,5 +1,6 @@
 
 #Tasks 
+
  - Add Multiple configs 
  - Think about combining option with scheduled task 
  - Add Logging

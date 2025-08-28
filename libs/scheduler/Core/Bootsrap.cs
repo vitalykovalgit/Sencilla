@@ -42,8 +42,7 @@ public static class Bootstrap
     {
         return services.AddSencillaScheduler(options =>
         {
-            if (assembly != null)
-                options.LoadTasksFromAssembly(assembly);
+            options.LoadTasksFromAssembly(assembly);
         });
     }
 
