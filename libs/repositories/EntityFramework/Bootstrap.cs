@@ -8,23 +8,30 @@ global using System.Reflection;
 global using System.Diagnostics.CodeAnalysis;
 global using System.ComponentModel.DataAnnotations.Schema;
 
-global using Sencilla.Core;
-global using Sencilla.Repository.EntityFramework;
+global using Microsoft.Extensions.Hosting;
+
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
+global using Sencilla.Core;
+global using Sencilla.Repository.EntityFramework;
+
 [assembly: AutoDiscovery]
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection;
+
+public static class Bootstrap
 {
-    public static class Bootstrap
+    public static IHostApplicationBuilder AddSencillaRepositoryForEF(this IHostApplicationBuilder builder, Action<DbContextOptionsBuilder> configure)
     {
-        public static IServiceCollection AddSencillaRepositoryForEF(this IServiceCollection builder, Action<DbContextOptionsBuilder> action)
-        {
-            //builder.AddTransient<RepositoryDependency>();
-            builder.AddDbContext<DynamicDbContext>(action);
-            builder.AddEntityFrameworkCoreExtensions();
-            return builder;
-        }
+        return builder.AddSencillaRepositoryForEF(configure);
+    }
+
+    public static IServiceCollection AddSencillaRepositoryForEF(this IServiceCollection builder, Action<DbContextOptionsBuilder> configure)
+    {
+        //builder.AddTransient<RepositoryDependency>();
+        builder.AddDbContext<DynamicDbContext>(configure);
+        builder.AddEntityFrameworkCoreExtensions();
+        return builder;
     }
 }

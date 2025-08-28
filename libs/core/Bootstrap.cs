@@ -11,6 +11,7 @@ global using Microsoft.AspNetCore.Builder;
 global using Microsoft.Extensions.Configuration;
 
 global using System.Linq.Expressions;
+global using Microsoft.Extensions.Hosting;
 
 [assembly: AutoDiscovery]
 
@@ -26,6 +27,16 @@ public static class Bootstrap
     /// </summary>
     public static IServiceCollection AddSencillaComponents(this IServiceCollection builder, params Type[] components)
     {
+        return builder;
+    }
+
+    /// <summary>
+    /// Add Sencilla to the application.
+    /// </summary>ı
+    /// <param name="builder"></param>
+    public static IHostApplicationBuilder AddSencilla(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddSencilla(builder.Configuration);
         return builder;
     }
 
@@ -49,9 +60,9 @@ public static class Bootstrap
         // 1. first find all type registrators in app 
         var registrators = new List<ITypeRegistrator>();
         var typeRegistrator = typeof(ITypeRegistrator);
-        foreach (var type in types) 
+        foreach (var type in types)
         {
-            if (typeRegistrator.IsAssignableFrom(type) && type.IsClass && !type.IsAbstract) 
+            if (typeRegistrator.IsAssignableFrom(type) && type.IsClass && !type.IsAbstract)
             {
                 // create this registrator 
                 var registrator = Activator.CreateInstance(type) as ITypeRegistrator;

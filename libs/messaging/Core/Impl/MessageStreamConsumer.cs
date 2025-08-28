@@ -4,7 +4,8 @@ public class MessageStreamConsumer(
     ILogger<MessageStreamConsumer>? logger,
     IMessageStreamProvider provider,
     ConsumerConfig consumerConfig,
-    StreamConfig streamConfig)
+    StreamConfig streamConfig, 
+    string? tag = null)
 {
     /// <summary>
     /// 
@@ -13,7 +14,7 @@ public class MessageStreamConsumer(
     /// <returns></returns>
     public async Task Execute(CancellationToken stoppingToken)
     {
-        logger?.LogInformation($"ConsumerService::ExecuteAsync is called at utc time: {DateTimeOffset.UtcNow}, stream: {consumerConfig.StreamName}");
+        logger?.LogInformation($"TAG: {tag}: ConsumerService::ExecuteAsync is called at utc time: {DateTimeOffset.UtcNow}, stream: {consumerConfig.StreamName}");
 
         var reader = provider.GetOrCreateStream(streamConfig);
         while (!stoppingToken.IsCancellationRequested)
@@ -22,7 +23,9 @@ public class MessageStreamConsumer(
             var @event = await reader.Read(stoppingToken);
             if (@event is null) continue;
 
-            Console.WriteLine($"Message received from stream {consumerConfig.StreamName}: {@event}");
+            Console.WriteLine($"TAG: {tag} Message received from stream {consumerConfig.StreamName}: {@event}");
+
+            //await Task.Delay(2000);
             //System.Text.Json.
             // var message = JsonSerializer.Deserialize<Message>(@event);
 

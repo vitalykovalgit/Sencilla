@@ -28,6 +28,10 @@ public class MessageStreamsConsumer<TProvider, TConfig>(
 
             var consumer = new MessageStreamConsumer(null, provider, consumerConfig, streamConfig);
             tasks.Add(consumer.Execute(stoppingToken));
+
+            //var consumer2 = new MessageStreamConsumer(null, provider, consumerConfig, streamConfig, "Consumer2");
+            //tasks.Add(consumer2.Execute(stoppingToken));
+
         });
 
         await Task.WhenAll(tasks);

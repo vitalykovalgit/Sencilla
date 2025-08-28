@@ -1,5 +1,6 @@
 namespace Sencilla.Messaging;
 
+[DisableInjection]
 public class ProviderConfig
 {
     /// <summary>

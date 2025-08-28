@@ -1,6 +1,9 @@
 namespace Sencilla.Scheduler;
 
-public enum SchedulerTaskStatus
+/// <summary>
+/// Represents the status of a scheduled task.
+/// </summary>
+public enum ScheduledTaskStatus
 {
     Idle,
     Queued,

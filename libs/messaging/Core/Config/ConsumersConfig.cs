@@ -1,5 +1,6 @@
 namespace Sencilla.Messaging;
 
+[DisableInjection]
 public class ConsumersConfig
 {
     private ConsumerConfig DefaultConsumerConfig = new ConsumerConfig();
@@ -40,7 +41,7 @@ public class ConsumersConfig
             o.StreamName = name;
         });
     }
-    
+
     public ConsumersConfig ForTopic(string name, string subscription, Action<ConsumerConfig>? config = null)
     {
         return ForStream(name, o =>
