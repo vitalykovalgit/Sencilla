@@ -4,7 +4,7 @@ namespace Sencilla.Scheduler;
 /// Holds and manage all scheduled tasks.
 /// </summary>
 /// <typeparam name="IScheduledTasksProvider"></typeparam>
-public class ScheduledTasksScheduler(string name, IServiceProvider provider, IEnumerable<ScheduledTask> tasks): IScheduledTasksScheduler
+public class ScheduledTasksScheduler(string name, IServiceProvider provider, SchedulerOptions options, IEnumerable<ScheduledTask> tasks): IScheduledTasksScheduler
 {
     /// <summary>
     /// The list of scheduled tasks.
@@ -98,7 +98,8 @@ public class ScheduledTasksScheduler(string name, IServiceProvider provider, IEn
                 continue;
 
             var task = TasksRunner.ExecuteTasks(DueTasks, cancellationToken);
-            await task;
+            if (options.WaitForTasksCompletion)
+                await task;
         }
 
         return;

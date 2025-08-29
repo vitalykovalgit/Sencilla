@@ -31,6 +31,13 @@ public class SchedulerOptions : ScheduledBatchOptions
     public bool ThreadPerScheduler { get; set; }
 
     /// <summary>
+    /// Indicates whether to wait for all tasks to complete before scheduling the next one.
+    /// Default is true.
+    /// </summary>
+    /// <value></value>
+    public bool WaitForTasksCompletion { get; set; } = true;
+
+    /// <summary>
     /// Loads the assembly containing the specified type.
     /// </summary>
     /// <param name="assembly"></param>

@@ -17,7 +17,7 @@ public class ScheduledTasksManager(SchedulerOptions options, IServiceProvider pr
         // Load all tasks 
         var tasks = await tasksProvider.GetTasks(cancellationToken);
 
-        DefaultScheduler = new ScheduledTasksScheduler("_sencilla_default_scheduler_", provider, tasks.Values);
+        DefaultScheduler = new ScheduledTasksScheduler("_sencilla_default_scheduler_", provider, options, tasks.Values);
         schedulers.Add(DefaultScheduler);
 
         // Analyze tasks and create schedulers
