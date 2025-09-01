@@ -33,7 +33,9 @@ public static class Bootstrap
 
         // Register the messaging configuration
         if (existingConfig == null)
+        {
             services.AddSingleton(options);
+        }
 
         return services;
     }

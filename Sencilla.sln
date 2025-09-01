@@ -71,7 +71,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "messaging", "messaging", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Messaging", "libs\messaging\Core\Sencilla.Messaging.csproj", "{216337C6-87E7-4994-9789-8C5385CE8E81}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Messaging.MediatR", "libs\messaging\MediatR\Sencilla.Messaging.MediatR.csproj", "{3E79CF0C-74BC-4E43-B1AF-A2F97D668FC4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Messaging.Mediator", "libs\messaging\Mediator\Sencilla.Messaging.Mediator.csproj", "{3E79CF0C-74BC-4E43-B1AF-A2F97D668FC4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Messaging.InMemoryQueue", "libs\messaging\InMemoryQueue\Sencilla.Messaging.InMemoryQueue.csproj", "{61390C80-5789-4A08-AA18-B51D4E3E9249}"
 EndProject

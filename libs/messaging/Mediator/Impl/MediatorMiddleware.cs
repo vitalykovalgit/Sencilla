@@ -5,12 +5,12 @@ namespace Sencilla.Messaging.Mediator;
 /// Process commands in memory 
 /// Inject resolvable as TEvent generic param is used in ProcessAsync 
 /// </summary>
-public class MediatorMiddleware(IResolver resolver/*, MediatrConfig config*/) : Resolveable(resolver), IMessageMiddleware
+public class MediatorMiddleware(IServiceProvider provider/*, MediatrConfig config*/) : IMessageMiddleware
 {
     public async Task ProcessAsync<T>(Message<T>? message, CancellationToken cancellationToken = default)
     {
         // process all handlers for the message first 
-        var handlers = All<IMessageHandler<Message<T>>>();
+        var handlers = provider.GetServices<IMessageHandler<Message<T>>>();
         foreach (var handler in handlers)
         {
             if (handler is not null)
@@ -20,7 +20,7 @@ public class MediatorMiddleware(IResolver resolver/*, MediatrConfig config*/) : 
         }
 
         // process all handlers for the message type
-        var typeHandlers = All<IMessageHandler<T>>();
+        var typeHandlers = provider.GetServices<IMessageHandler<T>>();
         foreach (var typeHandler in typeHandlers)
         {
             if (typeHandler is null) continue;

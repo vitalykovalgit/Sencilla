@@ -20,6 +20,7 @@ public static class Boostrap
         // Register Mediator services
         builder.AddProviderConfigOnce<MediatorConfig>(config);
         builder.AddMiddlewareOnce<MediatorMiddleware>();
+
         return builder;
     }
 }

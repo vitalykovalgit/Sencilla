@@ -22,7 +22,7 @@ declare -a packagesInfo=(
     "Sencilla.Scheduler.SourceGenerator:scheduler/SourceGenerator"
     
     "Sencilla.Messaging:messaging/Core"
-    "Sencilla.Messaging.MediatR:messaging/MediatR"
+    "Sencilla.Messaging.Mediator:messaging/Mediator"
     "Sencilla.Messaging.Kafka:messaging/Kafka"
     "Sencilla.Messaging.RabbitMQ:messaging/RabbitMQ"
     "Sencilla.Messaging.ServiceBus:messaging/ServiceBus"
