@@ -14,11 +14,11 @@ public class MessageDispatcherExtensionGenerator : ISourceGenerator
             return;
 
         // Look for the attribute type
-        var attributeSymbol = context.Compilation.GetTypeByMetadataName(typeof(ExtendDispatcherAttribute).FullName!);
+        var attributeSymbol = context.Compilation.GetTypeByMetadataName("Sencilla.Messaging.ExtendDispatcherAttribute");
         if (attributeSymbol == null)
             return;
 
-        var iMessageDispatcherSymbol = context.Compilation.GetTypeByMetadataName(typeof(IMessageDispatcher).FullName!);
+        var iMessageDispatcherSymbol = context.Compilation.GetTypeByMetadataName("Sencilla.Messaging.IMessageDispatcher");
         if (iMessageDispatcherSymbol == null)
             return;
 
@@ -107,7 +107,7 @@ public class MessageDispatcherExtensionGenerator : ISourceGenerator
             ClassName = classSymbol.Name,
             FullTypeName = classSymbol.ToDisplayString(),
             Namespace = classSymbol.ContainingNamespace.ToDisplayString(),
-            MethodName = methodName,
+            MethodName = methodName ?? classSymbol.Name,
             Properties = properties
         };
     }

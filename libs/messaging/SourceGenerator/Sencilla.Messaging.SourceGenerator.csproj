@@ -1,24 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- <TargetFramework>netstandard2.0</TargetFramework> -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    
+    <!-- Source Generator specific properties -->
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
-    <!-- <IncludeBuildOutput>false</IncludeBuildOutput> -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeSymbols>false</IncludeSymbols>
+    
+    <!-- Package metadata -->
+    <Title>Sencilla Messaging Source Generator</Title>
+    <Description>Source generator that creates extension methods for IMessageDispatcher based on command classes marked with the ExtendDispatcher attribute.</Description>
+    <PackageTags>sourcegenerator;roslyn;messaging;dispatcher;csharp</PackageTags>
+    
+    <!-- Development dependency - this package won't be transitively included -->
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <PrivateAssets>all</PrivateAssets>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" /> -->
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Core\Sencilla.Messaging.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
-    <Analyzer Include="$(OutputPath)\Sencilla.Messaging.SourceGenerator.dll" />
+    <!-- Include the source generator assembly in the package -->
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers\dotnet\cs\$(AssemblyName).dll" Visible="false" />    
   </ItemGroup>
 
 </Project>
