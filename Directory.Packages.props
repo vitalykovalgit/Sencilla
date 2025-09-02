@@ -14,6 +14,7 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.Extensions" Version="9.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.1" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.1" />
+    <!-- <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Extensions" Version="9.0.1" /> -->
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.1" />
@@ -49,8 +50,14 @@
     <!-- Cloud Services -->
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.23.0" />
     <PackageVersion Include="Google.Cloud.Translate.V3" Version="3.9.0" />
+    
     <!-- Other Common Packages -->
     <PackageVersion Include="System.Linq.Dynamic.Core" Version="1.6.0.1" />
     <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    
+    <!-- Source Generator Libraries -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" />
+
   </ItemGroup>
 </Project>

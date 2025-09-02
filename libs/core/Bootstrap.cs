@@ -3,12 +3,15 @@ global using System.Text;
 global using System.Text.Json;
 global using System.Text.Json.Serialization;
 global using System.Reflection;
+global using System.Diagnostics;
+
 global using Sencilla.Core;
 global using Sencilla.Core.Impl;
 
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Builder;
 global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection.Extensions;
 
 global using System.Linq.Expressions;
 global using Microsoft.Extensions.Hosting;
