@@ -21,7 +21,7 @@ $packagesInfo = @(
     @{ Name = "Sencilla.Scheduler.SourceGenerator"; Path = "scheduler\SourceGenerator" },
     
     @{ Name = "Sencilla.Messaging"; Path = "messaging\Core" },
-    @{ Name = "Sencilla.Messaging.MediatR"; Path = "messaging\MediatR" },
+    @{ Name = "Sencilla.Messaging.Mediator"; Path = "messaging\Mediator" },
     @{ Name = "Sencilla.Messaging.Kafka"; Path = "messaging\Kafka" },
     @{ Name = "Sencilla.Messaging.RabbitMQ"; Path = "messaging\RabbitMQ" },
     @{ Name = "Sencilla.Messaging.ServiceBus"; Path = "messaging\ServiceBus" },
