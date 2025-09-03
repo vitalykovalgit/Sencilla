@@ -24,7 +24,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
     public async Task<TEntity?> GetById(TKey id, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
     {
-        var query = await Query(null);
+        var query = await Query(null, token);
 
         if (with is not null)
             foreach (var prop in with)
@@ -36,7 +36,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
 
     public async Task<IEnumerable<TEntity>> GetByIds(IEnumerable<TKey> ids, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
     {
-        var query = await Query(null);
+        var query = await Query(null, token);
 
         if (with is not null)
             foreach (var prop in with)
@@ -47,7 +47,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
 
     public async Task<IEnumerable<TEntity>> GetAll(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
     {
-        var query = await Query(filter);
+        var query = await Query(filter, token);
 
         if (with is not null)
             foreach (var prop in with)
@@ -64,18 +64,18 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
 
     public async Task<int> GetCount(IFilter? filter = null, CancellationToken token = default)
     {
-        var query = await Query(filter);
+        var query = await Query(filter, token);
         return await query.CountAsync(token);
     }
 
-    protected async Task<IQueryable<TEntity>> Query(IFilter? filter)
+    protected async Task<IQueryable<TEntity>> Query(IFilter? filter, CancellationToken token)
     {
         var e = new EntityReadingEvent<TEntity> 
         { 
             Filter = filter,
             Entities = DbContext.Query<TEntity>()
         };
-        await D.Events.PublishAsync(e).ConfigureAwait(false);
+        await D.Events.PublishAsync(e, token).ConfigureAwait(false);
         return e.Entities;
     }
 }

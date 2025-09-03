@@ -2,12 +2,8 @@
 namespace Sencilla.Component.Users;
 
 [Route("api/v1/users")]
-public class UsersController : CrudApiController<User>
+public class UsersController(IResolver resolver) : CrudApiController<User>(resolver)
 {
-    public UsersController(IResolver resolver): base(resolver)
-    {
-    }
-
     [HttpGet, Route("current")]
     public virtual async Task<IActionResult> GetCurrentUser(
         [FromServices] ICurrentUserProvider userProvider,

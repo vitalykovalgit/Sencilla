@@ -11,6 +11,7 @@ global using Sencilla.Core.Impl;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Builder;
 global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
 
 global using System.Linq.Expressions;

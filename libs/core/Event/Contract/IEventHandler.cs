@@ -1,4 +1,3 @@
-
 namespace Sencilla.Core;
 
 /// <summary>
@@ -15,5 +14,5 @@ public interface IEventHandlerBase<in TEvent> where TEvent : class, IEvent
 /// <typeparam name="TEvent"></typeparam>
 public interface IEventHandler<in TEvent>: IEventHandlerBase<TEvent> where TEvent : class, IEvent
 {
-    Task HandleAsync(TEvent @event);
+    Task HandleAsync(TEvent @event, CancellationToken token);
 }

@@ -5,6 +5,6 @@ namespace Sencilla.Core;
 /// </summary>
 public interface IEventDispatcher
 {
-    Task PublishAsync<T>(T @event) where T : class, IEvent;
+    Task PublishAsync<T>(T @event, CancellationToken token) where T : class, IEvent;
 }
 

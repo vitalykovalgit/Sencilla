@@ -4,7 +4,7 @@ namespace Sencilla.Core;
 /// <summary>
 /// Dispatch command 
 /// </summary>
-public class CommandDispatcher(IResolver resolver) : Resolveable(resolver), ICommandDispatcher
+public class CommandDispatcher(IServiceProvider provider): ICommandDispatcher
 {
 
     /// <summary>
@@ -13,11 +13,11 @@ public class CommandDispatcher(IResolver resolver) : Resolveable(resolver), ICom
     /// <inheritdoc/>
     /// <param name="command"></param>
     /// <returns></returns>
-    public async Task SendAsync(ICommand command, CancellationToken cancellationToken = default)
+    public Task SendAsync(ICommand command, CancellationToken token = default)
     {
         // get method and inject parameters but skip first parameter 
-        //var handler = R(typeof(ICommandHandlerBase<>).MakeGenericType(command.GetType()));
-        //await (handler?.CallWithInjectAsync(nameof(ICommandHandler<ICommand>.HandleAsync), command) ?? Task.CompletedTask);
+        var handler = provider.GetService(typeof(ICommandHandlerBase<>).MakeGenericType(command.GetType()));
+        return provider.InvokeMethod(handler, nameof(ICommandHandler<ICommand>.HandleAsync), command, token) ?? Task.CompletedTask;
     }
 
     /// <summary>
@@ -29,13 +29,13 @@ public class CommandDispatcher(IResolver resolver) : Resolveable(resolver), ICom
     /// <param name="command"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public async Task<TResponse?> SendAsync<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default)
+    public async Task<TResponse?> SendAsync<TResponse>(ICommand<TResponse> command, CancellationToken token = default)
     {
-        // var handler = R(typeof(ICommandHandlerBase<,>).MakeGenericType(command.GetType(), typeof(TResponse)));
-        // if (handler == null)
+        var handler = provider.GetService(typeof(ICommandHandlerBase<,>).MakeGenericType(command.GetType(), typeof(TResponse)));
+        if (handler == null)
              return default;
-// 
-        // var response = await handler.CallWithInjectAsync<TResponse>(nameof(ICommandHandler<ICommand>.HandleAsync), command);
-        // return response;
+
+        var response = await provider.InvokeMethod<TResponse>(handler, nameof(ICommandHandler<ICommand>.HandleAsync), command, token);
+        return response;
     }
 }

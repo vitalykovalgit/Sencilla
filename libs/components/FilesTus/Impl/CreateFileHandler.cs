@@ -23,7 +23,7 @@ internal class CreateFileHandler : ITusRequestHandler
         _fileUploadRepository = fileUploadRepository;
     }
 
-    public async Task Handle(HttpContext context)
+    public async Task Handle(HttpContext context, CancellationToken token)
     {
         // TODO: headers validation
         var uploadMetadataExists = context.Request.Headers.ContainsKey(TusHeaders.UploadMetadata);
@@ -91,7 +91,7 @@ internal class CreateFileHandler : ITusRequestHandler
         await _fileRepository.UpdateFile(file);
 
         if (file.Origin == FileOrigin.User && file.ParentId == null)
-            await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata });
+            await _events.PublishAsync(new FileCreatedEvent { File = file, Metadata = metadata }, token);
         
         // TODO: test cancellation token on middleware
         //       and test writing empty array to file

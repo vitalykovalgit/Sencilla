@@ -10,7 +10,7 @@ public class UploadFileHandler(
 {
     public const string Method = "PATCH";
 
-    public async Task Handle(HttpContext context)
+    public async Task Handle(HttpContext context, CancellationToken token)
     {
         if (!context.Request.Headers.ContainsKey(TusHeaders.UploadOffset))
         {
@@ -44,7 +44,7 @@ public class UploadFileHandler(
         if (fileUpload.UploadCompleted)
         {
             if(file.ParentId == null)
-                await events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload });
+                await events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload }, token);
             await fileUploadRepository.DeleteFileUpload(fileId);
         }
 

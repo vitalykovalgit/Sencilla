@@ -22,7 +22,7 @@ public class TusResumableUploadMiddleware
 
         // TODO: Make it allocation free
         var handler = container.GetKeyedService<ITusRequestHandler>(ITusRequestHandler.ServiceKey(context.Request.Method)) ?? throw new NotImplementedException();
-        await handler.Handle(context);
+        await handler.Handle(context, context.RequestAborted);
 
         //await TusRequestRouter.Handle(container, new TusContext { HttpContext = context, Configuration = _options });
     }

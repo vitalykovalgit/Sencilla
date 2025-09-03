@@ -5,7 +5,7 @@ namespace Sencilla.Repository.EntityFramework;
 public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent<TEntity>>
     where TEntity : class
 {
-    public async Task HandleAsync(EntityReadingEvent<TEntity> @event)
+    public async Task HandleAsync(EntityReadingEvent<TEntity> @event, CancellationToken token)
     {
         if (@event == null)
             return;

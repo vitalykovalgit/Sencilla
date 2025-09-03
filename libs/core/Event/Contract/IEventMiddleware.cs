@@ -6,5 +6,5 @@ namespace Sencilla.Core;
 /// </summary>
 public interface IEventMiddleware
 {
-    Task ProcessAsync<TEvent>(TEvent command) where TEvent : class, IEvent;
+    Task ProcessAsync<TEvent>(TEvent command, CancellationToken token) where TEvent : class, IEvent;
 }

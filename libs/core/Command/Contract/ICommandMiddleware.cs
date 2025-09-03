@@ -10,7 +10,7 @@ namespace Sencilla.Core
         /// 
         /// </summary>
         /// <param name="command"></param>
-        void Process(ICommand command);
+        Task Process(ICommand command, CancellationToken token);
 
     }
 }

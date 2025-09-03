@@ -15,7 +15,7 @@ public interface ICommandHandler<in TCommand>: ICommandHandlerBase<TCommand> whe
     /// Handle command 
     /// </summary>
     /// <param name="cmd"></param>
-    Task HandleAsync(TCommand cmd);
+    Task HandleAsync(TCommand cmd, CancellationToken token);
 }
 
 public interface ICommandHandlerBase<in TCommand, TResponse> where TCommand : class, ICommand<TResponse>
@@ -29,5 +29,5 @@ public interface ICommandHandlerBase<in TCommand, TResponse> where TCommand : cl
 /// <typeparam name="TResponse"></typeparam>
 public interface ICommandHandler<in TCommand, TResponse>: ICommandHandlerBase<TCommand> where TCommand : class, ICommand<TResponse>
 {
-    Task<TResponse> HandleAsync(TCommand command);
+    Task<TResponse> HandleAsync(TCommand command, CancellationToken token);
 }

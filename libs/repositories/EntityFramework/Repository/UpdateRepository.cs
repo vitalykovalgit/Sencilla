@@ -37,7 +37,7 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
         // Notify before updating 
         var query = entities.AsQueryable();
         var eventUpdating = new EntityUpdatingEvent<TEntity> { Entities = query };
-        await D.Events.PublishAsync(eventUpdating);
+        await D.Events.PublishAsync(eventUpdating, token);
 
         // TODO: Move to trackable 
         foreach (var e in query)
@@ -51,7 +51,7 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
 
         // Notify that entity updated
         var eventUpdated = new EntityUpdatedEvent<TEntity> { Entities = query };
-        await D.Events.PublishAsync(eventUpdated);
+        await D.Events.PublishAsync(eventUpdated, token);
 
         return query;
     }

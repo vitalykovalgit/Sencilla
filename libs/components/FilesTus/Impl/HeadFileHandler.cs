@@ -12,7 +12,7 @@ internal class HeadFileHandler : ITusRequestHandler
         _fileUploadRepository = fileUploadRepository;
     }
 
-    public async Task Handle(HttpContext context)
+    public async Task Handle(HttpContext context, CancellationToken token)
     {
         if (!context.Request.Headers.ContainsKey(TusHeaders.TusResumable))
         {

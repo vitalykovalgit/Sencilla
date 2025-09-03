@@ -40,7 +40,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
     {
         // Check constraints 
         var eventCreating = new EntityCreatingEvent<TEntity> { Entities = entities.AsQueryable() };
-        await D.Events.PublishAsync(eventCreating);
+        await D.Events.PublishAsync(eventCreating, token);
 
         // update creation date 
         // TODO: Move to event handler 
@@ -56,7 +56,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
 
         // Notify about 
         var eventCreated = new EntityCreatedEvent<TEntity> { Entities = entities.AsQueryable() };
-        await D.Events.PublishAsync(eventCreated);
+        await D.Events.PublishAsync(eventCreated, token);
 
         return entities;
     }
@@ -85,7 +85,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
     {
         // Check constraints 
         var eventCreating = new EntityCreatingEvent<TEntity> { Entities = entities.AsQueryable() };
-        await D.Events.PublishAsync(eventCreating);
+        await D.Events.PublishAsync(eventCreating, token);
 
         // update creation date
         // TODO: Move to event handler 
@@ -99,7 +99,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
 
         // Notify about 
         var eventCreated = new EntityCreatedEvent<TEntity> { Entities = entities.AsQueryable() };
-        await D.Events.PublishAsync(eventCreated);
+        await D.Events.PublishAsync(eventCreated, token);
 
         // TODO: Think about returning values
         return entities;
@@ -129,7 +129,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
     {
         // TODO: replace creating by merging
         var eventCreating = new EntityCreatingEvent<TEntity> { Entities = entities.AsQueryable() };
-        await D.Events.PublishAsync(eventCreating);
+        await D.Events.PublishAsync(eventCreating, token);
 
         // update creation date
         // TODO: Move to event handler
@@ -142,7 +142,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
 
         // TODO: replace created by merged
         var eventCreated = new EntityCreatedEvent<TEntity> { Entities = entities.AsQueryable() };
-        await D.Events.PublishAsync(eventCreated);
+        await D.Events.PublishAsync(eventCreated, token);
 
         // TODO: Think about returning values
         return entities;
