@@ -13,8 +13,8 @@ public class MediatorMiddleware(IServiceProvider provider/*, MediatrConfig confi
         var handlers = provider.GetServices<IMessageHandler<Message<T>>>();
         foreach (var handler in handlers)
         {
-            if (handler is not null)
-                await handler.HandleAsync(message);
+            if (handler is not null && message is not null)
+                await handler.HandleAsync(message, cancellationToken);
 
             DoneMessage(message);
         }
@@ -25,8 +25,9 @@ public class MediatorMiddleware(IServiceProvider provider/*, MediatrConfig confi
         {
             if (typeHandler is null) continue;
             if (message is null) continue;
+            if (message.Payload is null) continue;
 
-            await typeHandler.HandleAsync(message.Payload);
+            await typeHandler.HandleAsync(message.Payload, cancellationToken);
 
             DoneMessage(message);
         }

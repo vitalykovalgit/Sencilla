@@ -12,5 +12,5 @@ public interface IMessageHandler<in TMessage>
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
-    Task HandleAsync(TMessage message);
+    Task HandleAsync(TMessage message, CancellationToken token);
 }
