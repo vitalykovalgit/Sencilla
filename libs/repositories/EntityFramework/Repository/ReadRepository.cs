@@ -56,9 +56,15 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
         return await query.ToListAsync(token).ConfigureAwait(false);
     }
 
-    public Task<TEntity?> FirstOrDefault(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
+    public async Task<TEntity?> FirstOrDefault(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
     {
-        return GetAll(filter, token, with).ContinueWith(t => t.Result.FirstOrDefault(), token);
+        var query = await Query(filter, token);
+
+        if (with is not null)
+            foreach (var prop in with)
+                query = query.Include(prop);
+
+        return await query.FirstOrDefaultAsync().ConfigureAwait(false);
     }
 
 

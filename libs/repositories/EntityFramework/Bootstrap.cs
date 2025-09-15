@@ -15,6 +15,7 @@ global using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 global using Sencilla.Core;
 global using Sencilla.Repository.EntityFramework;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 [assembly: AutoDiscovery]
 
@@ -29,7 +30,7 @@ public static class Bootstrap
 
     public static IServiceCollection AddSencillaRepositoryForEF(this IServiceCollection builder, Action<DbContextOptionsBuilder> configure)
     {
-        //builder.AddTransient<RepositoryDependency>();
+        builder.TryAddScoped<RepositoryDependency>();
         builder.AddDbContext<DynamicDbContext>(configure);
         builder.AddEntityFrameworkCoreExtensions();
         return builder;

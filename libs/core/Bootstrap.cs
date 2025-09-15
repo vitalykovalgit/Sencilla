@@ -89,6 +89,10 @@ public static class Bootstrap
         var componentRegistrator = registrators.FirstOrDefault(r => r is ComponentRegistrator) as ComponentRegistrator;
         componentRegistrator?.InitComponents(container);
 
+        // 4. Add sencilla app as singleton 
+        builder.TryAddSingleton<SencillaApp>();
+        builder.TryAddSingleton<ISencillaApp>(sp => sp.GetRequiredService<SencillaApp>());
+
         return builder;
     }
 
