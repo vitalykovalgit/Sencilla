@@ -29,11 +29,16 @@ $packagesInfo = @(
     @{ Name = "Sencilla.Messaging.Scheduler"; Path = "messaging\Scheduler" },
     @{ Name = "Sencilla.Messaging.SourceGenerator"; Path = "messaging\SourceGenerator" },
 
+    @{ Name = "Sencilla.Component.Files"; Path = "files\Core" },
+    @{ Name = "Sencilla.Component.Files.LocalDrive"; Path = "files\LocalDrive" },
+    @{ Name = "Sencilla.Component.Files.AzureStorage"; Path = "files\AzureStorage" },
+    @{ Name = "Sencilla.Component.Files.GoogleStorage"; Path = "files\GoogleStorage" },
+    @{ Name = "Sencilla.Component.Files.AmazonS3"; Path = "files\AmazonS3" },
+    @{ Name = "Sencilla.Component.Files.Database"; Path = "files\Database" },
+
     @{ Name = "Sencilla.Component.I18n"; Path = "components\I18n" },
     @{ Name = "Sencilla.Component.Users"; Path = "components\Users" },
-    @{ Name = "Sencilla.Component.Config"; Path = "components\Config" },
-    @{ Name = "Sencilla.Component.Files"; Path = "components\Files" },
-    @{ Name = "Sencilla.Component.FilesTus"; Path = "components\FilesTus" },    
+    @{ Name = "Sencilla.Component.Config"; Path = "components\Config" },   
     @{ Name = "Sencilla.Component.Security"; Path = "components\Security" },
     @{ Name = "Sencilla.Component.Geography"; Path = "components\Geography" },
     

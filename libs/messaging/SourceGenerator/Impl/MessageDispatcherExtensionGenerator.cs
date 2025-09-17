@@ -164,10 +164,10 @@ public class MessageDispatcherExtensionGenerator : ISourceGenerator
             sb.AppendLine($"    /// <param name=\"{prop.ParameterName}\">The {prop.Name} value.</param>");
         }
         sb.AppendLine($"    /// <param name=\"cancellationToken\">The cancellation token.</param>");
-        sb.AppendLine($"    /// <returns>A task representing the asynchronous operation.</returns>");
+    sb.AppendLine($"    /// <returns>A task that returns the created {commandInfo.ClassName} command.</returns>");
         
         // Generate method signature
-        sb.Append($"    public static Task {commandInfo.MethodName}(this IMessageDispatcher dispatcher");
+    sb.Append($"    public static async Task<{commandInfo.ClassName}> {commandInfo.MethodName}(this IMessageDispatcher dispatcher");
         
         // Add required parameters first
         foreach (var prop in requiredProperties)
@@ -193,11 +193,11 @@ public class MessageDispatcherExtensionGenerator : ISourceGenerator
         
         sb.AppendLine(", CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
-        
-        // Generate method body
-        sb.AppendLine($"        return dispatcher.Send(new {commandInfo.ClassName}");
+
+        // Generate method body: create command variable, send it and return it
+        sb.AppendLine($"        var cmd = new {commandInfo.ClassName}");
         sb.AppendLine("        {");
-        
+
         foreach (var prop in commandInfo.Properties)
         {
             if (prop.HasDefaultValue && !prop.IsRequired && !IsValidOrStringEmptyDefault(prop.DefaultValue!, prop.Type))
@@ -215,8 +215,12 @@ public class MessageDispatcherExtensionGenerator : ISourceGenerator
                 sb.AppendLine($"            {prop.Name} = {prop.ParameterName},");
             }
         }
-        
-        sb.AppendLine("        }, cancellationToken);");
+
+        sb.AppendLine("        }; ");
+        sb.AppendLine();
+        sb.AppendLine("        await dispatcher.Send(cmd, cancellationToken);");
+        sb.AppendLine();
+        sb.AppendLine("        return cmd;");
         sb.AppendLine("    }");
         sb.AppendLine();
     }

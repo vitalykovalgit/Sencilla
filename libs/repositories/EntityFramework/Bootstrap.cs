@@ -9,13 +9,13 @@ global using System.Diagnostics.CodeAnalysis;
 global using System.ComponentModel.DataAnnotations.Schema;
 
 global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.DependencyInjection.Extensions;
 
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 global using Sencilla.Core;
 global using Sencilla.Repository.EntityFramework;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 [assembly: AutoDiscovery]
 

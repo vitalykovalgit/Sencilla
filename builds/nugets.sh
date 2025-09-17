@@ -29,12 +29,17 @@ declare -a packagesInfo=(
     "Sencilla.Messaging.InMemoryQueue:messaging/InMemoryQueue"
     "Sencilla.Messaging.Scheduler:messaging/Scheduler"
     "Sencilla.Messaging.SourceGenerator:messaging/SourceGenerator"
+    
+    "Sencilla.Component.Files:files/Core",
+    "Sencilla.Component.Files.LocalDrive:files/LocalDrive",
+    "Sencilla.Component.Files.AzureStorage:files/AzureStorage",
+    "Sencilla.Component.Files.GoogleStorage:files/GoogleStorage",
+    "Sencilla.Component.Files.AmazonS3:files/AmazonS3",
+    "Sencilla.Component.Files.Database:files/Database",
 
     "Sencilla.Component.I18n:components/I18n"
     "Sencilla.Component.Users:components/Users"
     "Sencilla.Component.Config:components/Config"
-    "Sencilla.Component.Files:components/Files"
-    "Sencilla.Component.FilesTus:components/FilesTus"
     "Sencilla.Component.Security:components/Security"
     "Sencilla.Component.Geography:components/Geography"
     
