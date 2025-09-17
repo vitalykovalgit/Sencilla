@@ -47,7 +47,6 @@ public class ApiController : ControllerBase
 
     #endregion
 
-    #region Handling Requests
 
     protected IActionResult ExceptionToResponse(Exception ex)
     {
@@ -76,10 +75,9 @@ public class ApiController : ControllerBase
         }
         catch (Exception ex)
         {
-            Resolver.Resolve<Sencilla.Core.ILogger>()?.Error(ex);
+            Resolver.Resolve<ILogger>()?.LogError(ex, "AjaxAction error");
             return ExceptionToResponse(ex);
         }
     }
 
-    #endregion
 }
