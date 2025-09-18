@@ -7,7 +7,7 @@
 //{
 //    public static class ResolverEx
 //    {
-//        public static void AddHttpClientRepositoriesFor<TEntity, TKey, TContext>(this IResolver builder)
+//        public static void AddHttpClientRepositoriesFor<TEntity, TKey, TContext>(this IServiceProvider builder)
 //        {
 //            var context = typeof(TContext);
 //            var entity = typeof(TEntity);

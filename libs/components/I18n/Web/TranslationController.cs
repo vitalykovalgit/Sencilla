@@ -3,7 +3,7 @@
 //[Route("api/v1/i18n/translation")]
 //public class TranslationController : CrudApiController<Translation>
 //{
-//    public TranslationController(IResolver resolver) : base(resolver) { }
+//    public TranslationController(IServiceProvider resolver) : base(resolver) { }
 
 //    public override async Task<IActionResult> UpdateMany([FromBody] IEnumerable<Translation> entities, CancellationToken token)
 //    {

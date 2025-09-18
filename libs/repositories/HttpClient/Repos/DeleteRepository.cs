@@ -12,7 +12,7 @@
 //        where TEntity : class, IEntity<TKey>, new()
 //        where TContext : WebContext
 //    {
-//        public DeleteRepository(IResolver resolver) : base(resolver)
+//        public DeleteRepository(IServiceProvider resolver) : base(resolver)
 //        {
 //        }
 

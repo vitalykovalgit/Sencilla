@@ -14,7 +14,7 @@
 //        where TContext : DbContext
 //    {
 
-//        public HideRepository(IResolver resolver) : base(resolver)
+//        public HideRepository(IServiceProvider resolver) : base(resolver)
 //        {
 //        }
 

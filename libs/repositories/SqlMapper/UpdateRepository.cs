@@ -15,7 +15,7 @@
 //        where TEntity : class, IEntityUpdateable<TKey>, new()
 //        where TContext : DbContext
 //    {
-//        public UpdateRepository(IResolver resolver) : base(resolver)
+//        public UpdateRepository(IServiceProvider resolver) : base(resolver)
 //        {
 //        }
 

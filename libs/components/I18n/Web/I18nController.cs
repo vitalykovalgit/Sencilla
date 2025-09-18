@@ -4,23 +4,16 @@
 /// TODO: Move to base controller 
 /// </summary>
 [Route("api/v1/i18n")]
-public class I18nController : ApiController
+public class I18nController(IServiceProvider resolver, ILocalizationProvider localizationProvider) : ApiController(resolver)
 {
-    private readonly ILocalizationProvider _localizationProvider;
-
-    public I18nController(IResolver resolver, ILocalizationProvider localizationProvider) : base(resolver)
-    {
-        _localizationProvider = localizationProvider;
-    }
-
     [HttpGet]
     [Route("{locale}.json")]
     [Route("{ns}/{locale}.json")]
     public async Task<IActionResult> GetJson(string locale, string ns)
     {
         var translations = string.IsNullOrEmpty(ns)
-            ? (await _localizationProvider.GetStrings(locale)).AsEnumerable()
-            : (await _localizationProvider.GetStringsByGroup(ns, locale)).AsEnumerable();
+            ? (await localizationProvider.GetStrings(locale)).AsEnumerable()
+            : (await localizationProvider.GetStringsByGroup(ns, locale)).AsEnumerable();
 
         var translationDictionary = translations.ToDictionary(t => t.Key, t => t.Value);
         return Ok(translationDictionary);

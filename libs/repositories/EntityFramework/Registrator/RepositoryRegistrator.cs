@@ -8,7 +8,7 @@ public class RepositoryRegistrator : ITypeRegistrator
 {
     public List<Type> Entities { get; } = new List<Type>();
 
-    public void Register(IContainer container, Type type)
+    public void Register(IServiceCollection container, Type type)
     {
         // 
         var typeEntity = typeof(IBaseEntity);
@@ -33,90 +33,90 @@ public class RepositoryRegistrator : ITypeRegistrator
         }
     }
 
-    private void RegisterReadRepo(IContainer container, Type type, Type context, Type key)
+    private void RegisterReadRepo(IServiceCollection container, Type type, Type context, Type key)
     {
         // register read repo 
         if (typeof(IEntity<>).MakeGenericType(key).IsAssignableFrom(type))
         {
-            container.RegisterType(
+            container.TryAddTransient(
                 typeof(IReadRepository<,>).MakeGenericType(type, key),
                 typeof(ReadRepository<,,>).MakeGenericType(type, context, key));
 
             if (key == typeof(int))
             {
-                container.RegisterType(
+                container.TryAddTransient(
                     typeof(IReadRepository<>).MakeGenericType(type),
                     typeof(ReadRepository<,>).MakeGenericType(type, context));
             }
         }
     }
 
-    private void RegisterCreateRepo(IContainer container, Type type, Type context, Type key)
+    private void RegisterCreateRepo(IServiceCollection container, Type type, Type context, Type key)
     {
         // register create repo 
         if (typeof(IEntityCreateable).IsAssignableFrom(type))
         {
-            container.RegisterType(
+            container.TryAddTransient(
                 typeof(ICreateRepository<,>).MakeGenericType(type, key),
                 typeof(CreateRepository<,,>).MakeGenericType(type, context, key));
 
             if (key == typeof(int))
             {
-                container.RegisterType(
+                container.TryAddTransient(
                     typeof(ICreateRepository<>).MakeGenericType(type),
                     typeof(CreateRepository<,>).MakeGenericType(type, context));
             }
         }
     }
 
-    private void RegisterUpdateRepo(IContainer container, Type type, Type context, Type key)
+    private void RegisterUpdateRepo(IServiceCollection container, Type type, Type context, Type key)
     {
         // register update repo 
         if (typeof(IEntityUpdateable).IsAssignableFrom(type))
         {
-            container.RegisterType(
+            container.TryAddTransient(
                 typeof(IUpdateRepository<,>).MakeGenericType(type, key),
                 typeof(UpdateRepository<,,>).MakeGenericType(type, context, key));
 
             if (key == typeof(int))
             {
-                container.RegisterType(
+                container.TryAddTransient(
                     typeof(IUpdateRepository<>).MakeGenericType(type),
                     typeof(UpdateRepository<,>).MakeGenericType(type, context));
             }
         }
     }
 
-    private void RegisterRemoveRepo(IContainer container, Type type, Type context, Type key)
+    private void RegisterRemoveRepo(IServiceCollection container, Type type, Type context, Type key)
     {
         // register remvoe repo 
         if (typeof(IEntityRemoveable).IsAssignableFrom(type))
         {
-            container.RegisterType(
+            container.TryAddTransient(
                 typeof(IRemoveRepository<,>).MakeGenericType(type, key),
                 typeof(RemoveRepository<,,>).MakeGenericType(type, context, key));
 
             if (key == typeof(int))
             {
-                container.RegisterType(
+                container.TryAddTransient(
                     typeof(IRemoveRepository<>).MakeGenericType(type),
                     typeof(RemoveRepository<,>).MakeGenericType(type, context));
             }
         }
     }
 
-    private void RegisterDeleteRepo(IContainer container, Type type, Type context, Type key)
+    private void RegisterDeleteRepo(IServiceCollection container, Type type, Type context, Type key)
     {
         // register delete repo 
         if (typeof(IEntityDeleteable).IsAssignableFrom(type))
         {
-            container.RegisterType(
+            container.TryAddTransient(
                 typeof(IDeleteRepository<,>).MakeGenericType(type, key),
                 typeof(DeleteRepository<,,>).MakeGenericType(type, context, key));
 
             if (key == typeof(int))
             {
-                container.RegisterType(
+                container.TryAddTransient(
                     typeof(IDeleteRepository<>).MakeGenericType(type),
                     typeof(DeleteRepository<,>).MakeGenericType(type, context));
             }

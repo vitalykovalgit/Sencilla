@@ -11,13 +11,13 @@ public class InjectionTests
     public void InterfaceAutoImplementTests()
     {
         var srv = new ServiceCollection();
-        var con = new ServiceCollectionRegistrator(srv);
+        //var con = new ServiceCollectionRegistrator(srv);
         var reg = new AutoDiscoveryRegistrator();
 
-        reg.Register(con, typeof(EntityBase));
-        reg.Register(con, typeof(EntitySingle));
-        reg.Register(con, typeof(EntityMulti));
-        reg.Register(con, typeof(EntityMultiInherits));
+        reg.Register(srv, typeof(EntityBase));
+        reg.Register(srv, typeof(EntitySingle));
+        reg.Register(srv, typeof(EntityMulti));
+        reg.Register(srv, typeof(EntityMultiInherits));
 
         Assert.Pass();
     }

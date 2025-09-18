@@ -1,21 +1,13 @@
 ﻿
 namespace Sencilla.Core;
 
-public static class StarterKit
+/// <summary>
+/// TODO: Think about this class if it is needed 
+/// </summary>
+// ReSharper disable once InconsistentNaming
+public class Resolveable(IServiceProvider resolver)
 {
-    public static void Run(Action<IHostApplicationBuilder> buidler, Action<IHost>? pipeline = null)
-    {
-        Run([], buidler, pipeline);
-    }
-
-    public static void Run(string[] args, Action<IHostApplicationBuilder> builder, Action<IHost>? pipeline = null)
-    {
-        var appBuilder = Host.CreateApplicationBuilder(args);
-        builder(appBuilder);
-
-        var appPipeline = appBuilder.Build();
-        pipeline?.Invoke(appPipeline);
-
-        appPipeline.Run();
-    }
+    protected T?      R<T>() => resolver.GetService<T>();
+    protected object? R(Type type) => resolver.GetService(type);
+    protected IEnumerable<T> All<T>() => resolver.GetServices<T>();
 }

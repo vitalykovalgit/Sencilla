@@ -25,17 +25,6 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class Bootstrap
 {
     /// <summary>
-    /// Add components to Sencilla.
-    /// This is empty method just to reference 
-    /// component's assambly so it will be loaded 
-    /// and Sencilla will register everything 
-    /// </summary>
-    public static IServiceCollection AddSencillaComponents(this IServiceCollection builder, params Type[] components)
-    {
-        return builder;
-    }
-
-    /// <summary>
     /// Add Sencilla to the application.
     /// </summary>ı
     /// <param name="builder"></param>
@@ -50,10 +39,8 @@ public static class Bootstrap
     /// ISencillaBuilder must be resolved in configure method to configure sencilla
     /// </summary>
     /// <param name="services"> Service collection </param>
-    public static IServiceCollection AddSencilla(this IServiceCollection builder, IConfiguration configuration)
+    public static IServiceCollection AddSencilla(this IServiceCollection services, IConfiguration configuration)
     {
-        // create service collection container 
-        var container = new ServiceCollectionRegistrator(builder);
 
         // 0. load all types from app
         var assemblies = AppDomain.CurrentDomain
@@ -74,7 +61,8 @@ public static class Bootstrap
                 if (registrator != null)
                 {
                     registrators.Add(registrator);
-                    container.RegisterInstance(type, registrator);
+                    //services.TryAddSingleton(registrator);
+                    services.AddSingleton(type, registrator);
                 }
             }
         }
@@ -83,14 +71,14 @@ public static class Bootstrap
         foreach (var type in types)
         {
             foreach (var r in registrators)
-                r.Register(container, type);
+                r.Register(services, type);
         }
 
         // 3. Add sencilla app as singleton 
-        builder.TryAddSingleton<SencillaApp>();
-        builder.TryAddSingleton<ISencillaApp>(sp => sp.GetRequiredService<SencillaApp>());
+        services.TryAddSingleton<SencillaApp>();
+        services.TryAddSingleton<ISencillaApp>(sp => sp.GetRequiredService<SencillaApp>());
 
-        return builder;
+        return services;
     }
 
     /// <summary>

@@ -15,7 +15,7 @@
 //    {
 //        //protected IDeleteObserver<TEntity, TKey>[] observers;
 
-//        public DeleteRepository(IResolver resolver /*IDeleteObserver<TEntity, TKey>[] observers*/) : base(resolver)
+//        public DeleteRepository(IServiceProvider resolver /*IDeleteObserver<TEntity, TKey>[] observers*/) : base(resolver)
 //        {
 //            //this.observers = observers;
 //        }

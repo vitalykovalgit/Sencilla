@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Sencilla.Core;
 using Sencilla.Core.Repo;
@@ -15,19 +15,11 @@ namespace Sencilla.Impl.Repository.HttpClient
     /// <summary>
     /// Base repository for mobile requests 
     /// </summary>
-    public abstract class BaseRepository
+    public abstract class BaseRepository(IServiceProvider resolver)
     {
-        
-        public BaseRepository(IResolver resolver)
-        {
-            Resolver = resolver;
-        }
-
-        protected IResolver Resolver { get; set; }
-
         protected TType R<TType>()
         {
-            return Resolver.Resolve<TType>();
+            return resolver.GetService<TType>();
         }
 
         /// <summary>

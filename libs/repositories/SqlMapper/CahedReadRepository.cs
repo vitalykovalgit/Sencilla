@@ -44,7 +44,7 @@
 //            return mReadRepo ?? (mReadRepo = Resolve<ReadRepository<TEntity, TContext, TKey>>());
 //        }
 
-//        public CachedReadRepository(IResolver resolver, CachePolicy cachePoplicy) : base(resolver)
+//        public CachedReadRepository(IServiceProvider resolver, CachePolicy cachePoplicy) : base(resolver)
 //        {
 //            mCachePoplicy = cachePoplicy;
 //        }

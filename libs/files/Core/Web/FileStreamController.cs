@@ -4,7 +4,7 @@ namespace Sencilla.Component.Files;
 
 [DisableInjection]
 [Route("api/v1/files/stream")]
-public class FileStreamController(IResolver resolver, IServiceProvider provider, IReadRepository<File, Guid> fileRepo) : ApiController(resolver)
+public class FileStreamController(IServiceProvider provider, IReadRepository<File, Guid> fileRepo) : ApiController(provider)
 {
     [HttpGet, Route("{fileId}")]
     public async Task<IActionResult> GetFileStream(Guid fileId, int? dim, CancellationToken token)

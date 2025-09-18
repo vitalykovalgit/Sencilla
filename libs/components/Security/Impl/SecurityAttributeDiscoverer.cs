@@ -16,7 +16,7 @@ public class SecurityAttributeDiscoverer: ITypeRegistrator
     /// </summary>
     /// <param name="container"></param>
     /// <param name="type"></param>
-    public void Register(IContainer container, Type type)
+    public void Register(IServiceCollection container, Type type)
     {
         if (typeof(IBaseEntity).IsAssignableFrom(type) && type.IsClass && !type.IsAbstract)
         {

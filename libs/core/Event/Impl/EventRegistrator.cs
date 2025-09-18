@@ -7,14 +7,14 @@ public class EventRegistrator : ITypeRegistrator
     /// </summary>
     /// <param name="container"></param>
     /// <param name="type"></param>
-    public void Register(IContainer container, Type type)
+    public void Register(IServiceCollection container, Type type)
     {
         if (type is not { IsClass: true, IsAbstract: false, IsGenericType: false }) return;
         
         var eventHandlerInterfaces = type.GetInterfaces().Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEventHandlerBase<>));
         foreach (var handlerInterface in eventHandlerInterfaces)
         {
-            container.RegisterType(handlerInterface, type);
+            container.AddTransient(handlerInterface, type);
         }
     }
 }

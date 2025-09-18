@@ -1,23 +1,16 @@
 ﻿
+using Microsoft.Extensions.DependencyInjection;
 using Sencilla.Core;
 using Sencilla.Infrastructure.SqlMapper.Impl;
 using System.Threading;
 using System.Threading.Tasks;
 
+
 namespace Sencilla.Impl.Repository.SqlMapper
 {
-    public class BaseRepository<TContext> : IBaseRepository
+    public class BaseRepository<TContext>(IServiceProvider resolver) : IBaseRepository
            where TContext : DbContext
     {
-        public BaseRepository(IResolver resolver)
-        {
-            Resolver = resolver;
-        }
-
-        /// <summary>
-        /// Container to resolve context, please use resolve instead 
-        /// </summary>
-        protected IResolver Resolver { get; set; }
 
         /// <summary>
         /// Context implementation
@@ -40,7 +33,7 @@ namespace Sencilla.Impl.Repository.SqlMapper
         /// <returns></returns>
         public T Resolve<T>()
         {
-            return Resolver.Resolve<T>();
+            return resolver.GetService<T>();
         }
     }
 }

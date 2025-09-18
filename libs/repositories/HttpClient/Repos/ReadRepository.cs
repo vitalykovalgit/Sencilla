@@ -11,7 +11,7 @@
 //        where TEntity : class, IEntity<TKey>, new()
 //        where TContext: WebContext
 //    {
-//        public ReadRepository(IResolver resolver) : base(resolver)
+//        public ReadRepository(IServiceProvider resolver) : base(resolver)
 //        {
 //        }
 

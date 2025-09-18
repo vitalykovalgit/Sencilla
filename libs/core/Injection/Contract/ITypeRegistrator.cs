@@ -9,5 +9,5 @@ namespace Sencilla.Core;
 /// </summary>
 public interface ITypeRegistrator
 {
-    void Register(IContainer container, Type type);
+    void Register(IServiceCollection container, Type type);
 }

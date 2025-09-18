@@ -15,7 +15,7 @@
 //           where TEntity : class, IEntity<TKey>, new()
 //           where TContext : DbContext
 //    {
-//        public ReadRepository(IResolver resolver) : base(resolver)
+//        public ReadRepository(IServiceProvider resolver) : base(resolver)
 //        {
 //        }
 
@@ -74,7 +74,7 @@
 //                return context.Set<TEntity, TKey>().GetMany(ids, includes);
 //            }
 //        }
-        
+
 //        public int GetCount()
 //        {
 //            using (var context = Resolve<TContext>())

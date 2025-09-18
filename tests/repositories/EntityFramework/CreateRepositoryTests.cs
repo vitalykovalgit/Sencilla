@@ -6,7 +6,7 @@ namespace Sencilla.Repository.EntityFramework.Tests
     {
         User CurrentUser = new User { Id = 1, Roles = new List<UserRole> { new UserRole { Id = 1, Role = "user" } } };
 
-        Mock<IResolver> Resolver = new ();
+        Mock<IServiceProvider> Resolver = new ();
         Mock<ICurrentUserProvider> CurrentUserProvider = new ();
 
         DbContextOptions<DynamicDbContext> DbOptions;
@@ -48,7 +48,7 @@ namespace Sencilla.Repository.EntityFramework.Tests
             matrix.Setup(m => m.GetAll(null, CancellationToken.None).Result).Returns(new List<Matrix> {
                 new Matrix { Role = "owner" /**/, Action = (int)Component.Security.Action.Create, Resource = nameof(Entity), Constraint = "" }
             });
-            Resolver.Setup(r => r.Resolve<IReadRepository<Matrix>>()).Returns(matrix.Object);
+            Resolver.Setup(r => r.GetService<IReadRepository<Matrix>>()).Returns(matrix.Object);
 
             // setup security constarint 
             //var secureConstraint = new SecurityConstraint(CurrentUserProvider.Object, Resolver.Object);

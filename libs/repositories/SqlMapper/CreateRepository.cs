@@ -14,7 +14,7 @@
 //        where TEntity : class, IEntityCreateable<TKey>, new()
 //        where TContext : DbContext
 //    {
-//        public CreateRepository(IResolver resolver) : base(resolver)
+//        public CreateRepository(IServiceProvider resolver) : base(resolver)
 //        {
 //        }
 

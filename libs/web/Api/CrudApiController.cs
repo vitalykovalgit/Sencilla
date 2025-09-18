@@ -6,7 +6,7 @@
 /// <typeparam name="TEntity"></typeparam>
 public class CrudApiController<TEntity> : CrudApiController<TEntity, int> where TEntity : class, IEntity<int>, new()
 {
-    public CrudApiController(IResolver resolver) : base(resolver)
+    public CrudApiController(IServiceProvider resolver) : base(resolver)
     {
     }
 }
@@ -18,7 +18,7 @@ public class CrudApiController<TEntity> : CrudApiController<TEntity, int> where 
 /// <typeparam name="TKey"></typeparam>
 public class CrudApiController<TEntity, TKey> : ApiController where TEntity : class, IEntity<TKey>, new()
 {
-    public CrudApiController(IResolver resolver) : base(resolver)
+    public CrudApiController(IServiceProvider resolver) : base(resolver)
     {
     }
 

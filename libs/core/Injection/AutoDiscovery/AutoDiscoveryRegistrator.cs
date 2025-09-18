@@ -3,7 +3,7 @@ namespace Sencilla.Core;
 
 public class AutoDiscoveryRegistrator : ITypeRegistrator
 {
-    public void Register(IContainer container, Type type)
+    public void Register(IServiceCollection container, Type type)
     {
         if (type.IsClass && !type.IsAbstract && !type.IsGenericType && !type.IsAssignableTo(typeof(Attribute)))
         {
@@ -40,15 +40,26 @@ public class AutoDiscoveryRegistrator : ITypeRegistrator
         }
     }
 
-    IContainer RegisterType(IContainer c, bool isSingleton, bool isPerRequest, Type service, Type? impl = null)
+    IServiceCollection RegisterType(IServiceCollection c, bool isSingleton, bool isPerRequest, Type service, Type? impl = null)
     {
         if (isSingleton)
-            return impl == null ? c.RegisterTypeSingleton(service) : c.RegisterTypeSingleton(service, impl);
+        {
+            if (impl is null) c.AddSingleton(service); else c.AddSingleton(service, impl);
+            return c;
+        }
 
         if (isPerRequest)
-            return impl == null ? c.RegisterTypePerRequest(service) : c.RegisterTypePerRequest(service, impl);
+        {
+            if (impl is null) c.AddScoped(service); else c.AddScoped(service, impl);
+            return c;
+        }
 
-        return impl == null ? c.RegisterType(service) : c.RegisterType(service, impl);
+        if (impl is null)
+            c.AddTransient(service);
+        else
+            c.AddTransient(service, impl);
+
+        return c;
     }
 }
 

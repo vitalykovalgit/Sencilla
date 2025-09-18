@@ -1,22 +1,13 @@
-﻿
-
-namespace Sencilla.Repository.EntityFramework;
+﻿namespace Sencilla.Repository.EntityFramework;
 
 [DisableInjection]
-public class DynamicDbContext : DbContext
+public class DynamicDbContext(
+    [NotNull] DbContextOptions options,
+    RepositoryRegistrator registrator) : DbContext(options)
 {
-    RepositoryRegistrator Registrator;
-
-    public DynamicDbContext(
-        [NotNull] DbContextOptions options,
-        RepositoryRegistrator registrator) : base(options)
-    {
-        Registrator = registrator;
-    }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        foreach (var e in Registrator.Entities)
+        foreach (var e in registrator.Entities)
         {
             modelBuilder.Entity(e, (c) =>
             {

@@ -14,7 +14,7 @@
 //        where TContext : DbContext
 //    {
 
-//        public RemoveRepository(IResolver resolver) : base(resolver)
+//        public RemoveRepository(IServiceProvider resolver) : base(resolver)
 //        {
 //        }
 

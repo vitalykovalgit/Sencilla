@@ -4,7 +4,7 @@
 //public class ResourceController : ApiController
 //{
 //    private readonly IReadRepository<ResourceView, string> _resourceReadRepo;
-//    public ResourceController(IResolver resolver,IReadRepository<ResourceView, string> resourceReadRepo) : base(resolver)
+//    public ResourceController(IServiceProvider resolver,IReadRepository<ResourceView, string> resourceReadRepo) : base(resolver)
 //    {
 //        _resourceReadRepo = resourceReadRepo;
 //    }

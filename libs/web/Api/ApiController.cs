@@ -1,20 +1,10 @@
 namespace Microsoft.AspNetCore.Mvc;
 
-public class ApiController : ControllerBase
+public class ApiController(IServiceProvider provider) : ControllerBase
 {
-    //protected ILogger? Logger { get; set; }
-
-    protected IResolver Resolver { get; set; }
-
-    public ApiController(IResolver resolver) 
-    {
-        Resolver = resolver;
-        //Logger = resolver.Resolve<ILogger>();
-    }
-
     protected TService? R<TService>()
     {
-        return Resolver.Resolve<TService>();
+        return provider.GetService<TService>();
     }
 
     #region Custom Statuses
@@ -66,7 +56,7 @@ public class ApiController : ControllerBase
     {
         try
         {
-            var service = Resolver.Resolve<TService>();
+            var service = provider.GetService<TService>();
             if (service == null)
                 return NotImplemented();
 
@@ -75,7 +65,7 @@ public class ApiController : ControllerBase
         }
         catch (Exception ex)
         {
-            Resolver.Resolve<ILogger>()?.LogError(ex, "AjaxAction error");
+            provider.GetService<ILogger>()?.LogError(ex, "AjaxAction error");
             return ExceptionToResponse(ex);
         }
     }

@@ -13,7 +13,7 @@
 //        where TEntity : class, IEntity<TKey>, new()
 //        where TContext : WebContext
 //    {
-//        public UpdateRepository(IResolver resolver) : base(resolver)
+//        public UpdateRepository(IServiceProvider resolver) : base(resolver)
 //        {
 //        }
 

@@ -6,7 +6,7 @@
 //{
 //    public static class ResolverEx
 //    {
-//        public static void AddRepositoriesFor<TEntity, TKey, TContext>(this IResolver builder)
+//        public static void AddRepositoriesFor<TEntity, TKey, TContext>(this IServiceProvider builder)
 //        {
 //            var context = typeof(TContext);
 //            var entity = typeof(TEntity);
