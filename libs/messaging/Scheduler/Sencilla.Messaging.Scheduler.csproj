@@ -1,20 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="../Core/Sencilla.Messaging.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Entity/" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="TickerQ" />
   </ItemGroup>
 
 </Project>
