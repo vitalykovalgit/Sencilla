@@ -50,6 +50,7 @@
     <!-- Cloud Services -->
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.23.0" />
     <PackageVersion Include="Google.Cloud.Translate.V3" Version="3.9.0" />
+    <PackageVersion Include="AWSSDK.S3" Version="3.7.0" />
     
     <!-- Other Common Packages -->
     <PackageVersion Include="System.Linq.Dynamic.Core" Version="1.6.0.1" />
