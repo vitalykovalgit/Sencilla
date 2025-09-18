@@ -113,6 +113,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Component.Files.Da
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Component.Files.GoogleStorage", "libs\files\GoogleStorage\Sencilla.Component.Files.GoogleStorage.csproj", "{79E299E4-E5C5-4C2E-A227-49F9259057EF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Messaging.SignalR", "libs\messaging\SignalR\Sencilla.Messaging.SignalR.csproj", "{5CF27B5C-AE8A-438F-B01F-31A043759805}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -603,6 +605,18 @@ Global
 		{79E299E4-E5C5-4C2E-A227-49F9259057EF}.Release|x64.Build.0 = Release|Any CPU
 		{79E299E4-E5C5-4C2E-A227-49F9259057EF}.Release|x86.ActiveCfg = Release|Any CPU
 		{79E299E4-E5C5-4C2E-A227-49F9259057EF}.Release|x86.Build.0 = Release|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Debug|x64.Build.0 = Debug|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Debug|x86.Build.0 = Debug|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Release|x64.ActiveCfg = Release|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Release|x64.Build.0 = Release|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Release|x86.ActiveCfg = Release|Any CPU
+		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -657,6 +671,7 @@ Global
 		{974960F1-FC57-447D-AE9D-CA8ED92DDC34} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{50EB5FA3-13DF-465E-9857-F8AD9E083B5E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{79E299E4-E5C5-4C2E-A227-49F9259057EF} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{5CF27B5C-AE8A-438F-B01F-31A043759805} = {E8166BE3-7AA5-4664-8EC4-B0567659727B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5EE15D7B-0AF6-4664-9D0B-7140B5B5961F}
