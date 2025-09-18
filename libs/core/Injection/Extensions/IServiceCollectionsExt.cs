@@ -6,7 +6,8 @@ public static class SencillaAutodiscoveryServiceCollectionExtensions
     public static IServiceCollection AddSencillaAutoDiscovery(this IServiceCollection services, Action<AutoDiscoveryOptions> configure)
     {
         // calling asseambly
-        var assembly = new StackFrame(2).GetMethod()?.DeclaringType?.Assembly;
+        //var assembly = new StackFrame(2).GetMethod()?.DeclaringType?.Assembly;
+        var assembly = new StackFrame(1).GetMethod()?.DeclaringType?.Assembly;
 
         var options = new AutoDiscoveryOptions { CallingAssembly = assembly! };
         configure(options);
