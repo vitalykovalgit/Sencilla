@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using System.IO;
-
-namespace Sencilla.Component.Files;
+﻿namespace Sencilla.Component.Files.AzureStorage;
 
 public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
 {

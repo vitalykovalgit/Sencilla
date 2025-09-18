@@ -1,10 +1,13 @@
 ﻿global using Azure.Storage.Blobs;
 global using Azure.Storage.Blobs.Specialized;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
 
-namespace Sencilla.Component.Files.AzureStorage;
+global using Sencilla.Component.Files;
+global using Sencilla.Component.Files.AzureStorage;
+
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class Bootstrap
 {

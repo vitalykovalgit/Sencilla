@@ -1,4 +1,4 @@
-﻿namespace Sencilla.Component.Files;
+﻿namespace Sencilla.Component.Files.AzureStorage;
 
 public class AzureBlobStorageOptions: BaseFilesOptions
 {

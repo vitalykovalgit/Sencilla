@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
+        <PackageReference Include="AWSSDK.S3" />
         <ProjectReference Include="..\Core\Sencilla.Component.Files.csproj" />
     </ItemGroup>
 
