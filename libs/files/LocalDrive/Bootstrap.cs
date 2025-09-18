@@ -17,6 +17,18 @@ public static class Bootstrap
         return AddLocalDrive(root, options, null);
     }
 
+    public static SencillaFilesOptions UseLocalDrive(this SencillaFilesOptions root, IConfigurationSection section)
+    {
+        var options = new LocalDriveStorageOptions { RootPath = "" };
+        section.GetSection($"{root.Section}:{options.Section}").Bind(options);
+
+        // Read dirs from root path 
+        var optionsDirs = new LocalDriveStorageOptions { RootPath = "" };
+        section.GetSection($"{root.Section}:Dirs").Bind(optionsDirs.Dirs);
+
+        return AddLocalDrive(root, options, optionsDirs);
+    }
+
     public static SencillaFilesOptions UseLocalDrive(this SencillaFilesOptions root, IConfiguration configuration, string? section = null)
     {
         var options = new LocalDriveStorageOptions { RootPath = "" };
@@ -27,6 +39,7 @@ public static class Bootstrap
         configuration.GetSection($"{root.Section}:Dirs").Bind(optionsDirs.Dirs);
 
         return AddLocalDrive(root, options, optionsDirs);
+        //return root.UseLocalDrive(configuration.GetSection(string.Empty));
     }
 
     private static SencillaFilesOptions AddLocalDrive(SencillaFilesOptions root, LocalDriveStorageOptions options, BaseFilesOptions? dirs)

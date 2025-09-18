@@ -14,6 +14,13 @@ public static class Bootstrap
         return AddAzureStorage(root, options);
     }
 
+    public static SencillaFilesOptions UseAzureStorage(this SencillaFilesOptions root, IConfigurationSection section)
+    {
+        var options = new AzureBlobStorageOptions { ConnectionString = "" };
+        section.GetSection($"{root.Section}:{options.Section}").Bind(options);
+        return AddAzureStorage(root, options);
+    }
+
     public static SencillaFilesOptions UseAzureStorage(this SencillaFilesOptions root, IConfiguration configuration, string? section = null)
     {
         var options = new AzureBlobStorageOptions { ConnectionString = "" };

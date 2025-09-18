@@ -23,6 +23,18 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         return fs;
     }
 
+    public Stream OpenFileStream(string path, long offset = 0, CancellationToken? token = null)
+    {
+        path = Path.Combine(options.RootPath, path);
+        CreateFileDirectory(path);
+
+        var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        fs.Seek(offset, SeekOrigin.Begin);
+
+        return fs;
+    }
+
+
     public Task<Stream?> ReadFileAsync(File file, CancellationToken? token = null) => Task.FromResult(ReadFile(file, token));
 
     public Stream? ReadFile(File file, CancellationToken? token = null)

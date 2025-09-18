@@ -20,6 +20,15 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
         return client.OpenWrite(true);
     }
 
+    public Stream OpenFileStream(string path, long offset = 0, CancellationToken? token = null)
+    {
+        var (containerName, blobName) = GetContainerAndFileName(path);
+        var blobContainerClient = GetContainerClient(containerName, blobName);
+
+        var client = blobContainerClient.GetBlobClient(blobName);
+        return client.OpenWrite(true);
+    }
+
     public async Task<Stream?> ReadFileAsync(File file, CancellationToken? token = null)
     {
         var (containerName, blobName) = GetContainerAndFileName(file);
@@ -138,7 +147,12 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
     /// <returns></returns>
     private static (string container, string fname) GetContainerAndFileName(File file)
     {
-        var parts = file.Path?.Split(Path.DirectorySeparatorChar, 2);
+        return GetContainerAndFileName(file.Path);
+    }
+
+    private static (string container, string fname) GetContainerAndFileName(string? path)
+    {
+        var parts = path?.Split(Path.DirectorySeparatorChar, 2);
         return parts?.Length > 1 ? (parts[0], parts[1]) : (string.Empty, string.Empty);
     }
 }
