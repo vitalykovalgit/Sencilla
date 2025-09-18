@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using System.IO;
 
 namespace Sencilla.Component.Files;
 
@@ -116,13 +117,34 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
 
     public Task<bool> CopyToFileAsync(File srcFile, string dstPath)
     {
-        return CopyToFileAsync("", dstPath);
+        return CopyToFileAsync(srcFile.Path, dstPath);
     }
 
-    public Task<bool> CopyToFileAsync(string srcPath, string dstPath)
-    { 
-        throw new NotImplementedException();
+    public async Task<bool> CopyToFileAsync(string? srcPath, string dstPath)
+    {
+        if (srcPath == null)
+            return false;
+
+        var directory = Path.GetDirectoryName(dstPath);
+        if (directory?.Length > 0 && !Directory.Exists(directory))
+            Directory.CreateDirectory(directory);
+
+        using var srcStream = await ReadFileStreamAsync(srcPath);
+        using var dstStream = System.IO.File.OpenWrite(dstPath); 
+        srcStream.CopyTo(dstStream);
+
+        return true;
     }
+
+    public async Task<Stream> ReadFileStreamAsync(string path, long offset = 0, CancellationToken? token = null)
+    {
+        var (containerName, blobName) = GetContainerAndFileName(path);
+        var blobContainerClient = GetContainerClient(containerName, blobName);
+
+        var client = blobContainerClient.GetBlobClient(blobName);
+        return await client.OpenReadAsync();
+    }
+
 
 
     /// <summary>
