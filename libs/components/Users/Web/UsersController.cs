@@ -10,11 +10,12 @@ public class UsersController(IServiceProvider resolver) : CrudApiController<User
         [FromServices] IReadRepository<User> userReader, CancellationToken token)
     {
         // TODO: if user provider will load it from DB then no need to load it from here 
-        string email = userProvider?.CurrentUser?.Email;
-        var user = (await userReader.GetAll(ByEmail(email), token)).FirstOrDefault();
+        string? email = userProvider?.CurrentUser?.Email;
+        if (email is null)
+            return NotFound();
 
+        var user = await userReader.FirstOrDefault(ByEmail(email), token, with=>with.Roles!);
         return Ok(user);
     }
-
 }
 

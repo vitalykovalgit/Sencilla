@@ -31,8 +31,7 @@ public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEnt
     public DateTime UpdatedDate { get; set; }
     public DateTime? DeletedDate { get; set; }
 
-    //[ForeignKey(nameof(UserRole.UserId))]
-    [NotMapped]
+    [ForeignKey(nameof(UserRole.UserId))]
     public ICollection<UserRole>? Roles { get; set; }
 
     //[ForeignKey(nameof(UserAttribute.UserId))]

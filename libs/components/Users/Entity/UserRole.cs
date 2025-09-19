@@ -6,8 +6,7 @@
 [Table(nameof(UserRole), Schema = "sec")]
 public class UserRole 
     : IEntity
-    //, IEntityCreateableTrack
-    //, IEntityUpdateableTrack
+    , IEntityCreateable
     , IEntityDeleteable
 {
     public int Id { get; set; }
