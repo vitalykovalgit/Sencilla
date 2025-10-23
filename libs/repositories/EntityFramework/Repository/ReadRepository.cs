@@ -89,7 +89,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
     public async Task<object> GetMin(IFilter? filter = null, CancellationToken token = default)
     {
         var query = await Query(filter, token);
-        return query.Max(filter?.Aggregate!);
+        return query.Min(filter?.Aggregate!);
     }
 
     public async Task<double> GetAvarage(IFilter? filter = null, CancellationToken token = default)
