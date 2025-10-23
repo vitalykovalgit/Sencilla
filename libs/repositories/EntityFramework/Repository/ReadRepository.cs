@@ -74,6 +74,31 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
         return await query.CountAsync(token);
     }
 
+    public async Task<object> GetSum(IFilter? filter = null, CancellationToken token = default)
+    {
+        var query = await Query(filter, token);
+        return query.Sum(filter?.Aggregate!);
+    }
+
+    public async Task<object> GetMax(IFilter? filter = null, CancellationToken token = default)
+    {
+        var query = await Query(filter, token);
+        return query.Max(filter?.Aggregate!);
+    }
+
+    public async Task<object> GetMin(IFilter? filter = null, CancellationToken token = default)
+    {
+        var query = await Query(filter, token);
+        return query.Max(filter?.Aggregate!);
+    }
+
+    public async Task<double> GetAvarage(IFilter? filter = null, CancellationToken token = default)
+    {
+        var query = await Query(filter, token);
+        return query.Average(filter?.Aggregate!);
+    }
+
+
     protected async Task<IQueryable<TEntity>> Query(IFilter? filter, CancellationToken token)
     {
         var e = new EntityReadingEvent<TEntity> 

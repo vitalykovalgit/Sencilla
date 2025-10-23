@@ -22,6 +22,8 @@ public class Filter : IFilter
     public string[]? OrderBy { get; set; }
     public bool? Descending { get; set; }
 
+    public string? Aggregate { get; set; }
+
     public string[]? With { get; set; }
 
     public IDictionary<string, FilterProperty>? Properties { get; set; }

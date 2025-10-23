@@ -4,11 +4,8 @@
 /// 
 /// </summary>
 /// <typeparam name="TEntity"></typeparam>
-public class CrudApiController<TEntity> : CrudApiController<TEntity, int> where TEntity : class, IEntity<int>, new()
+public class CrudApiController<TEntity>(IServiceProvider resolver) : CrudApiController<TEntity, int>(resolver) where TEntity : class, IEntity<int>, new()
 {
-    public CrudApiController(IServiceProvider resolver) : base(resolver)
-    {
-    }
 }
 
 /// <summary>
@@ -16,12 +13,8 @@ public class CrudApiController<TEntity> : CrudApiController<TEntity, int> where 
 /// </summary>
 /// <typeparam name="TEntity"></typeparam>
 /// <typeparam name="TKey"></typeparam>
-public class CrudApiController<TEntity, TKey> : ApiController where TEntity : class, IEntity<TKey>, new()
+public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiController(resolver) where TEntity : class, IEntity<TKey>, new()
 {
-    public CrudApiController(IServiceProvider resolver) : base(resolver)
-    {
-    }
-
     [HttpGet, Route("")]
     public virtual async Task<IActionResult> GetAll(Filter<TEntity> filter, CancellationToken token)
     {
@@ -38,6 +31,30 @@ public class CrudApiController<TEntity, TKey> : ApiController where TEntity : cl
     public virtual async Task<IActionResult> GetCount(Filter<TEntity> filter, CancellationToken token)
     {
         return await AjaxAction((IReadRepository<TEntity, TKey> repo) => repo.GetCount(filter, token));
+    }
+
+    [HttpGet, Route("sum")]
+    public virtual async Task<IActionResult> GetSum(Filter<TEntity> filter, CancellationToken token)
+    {
+        return await AjaxAction((IReadRepository<TEntity, TKey> repo) => repo.GetSum(filter, token));
+    }
+
+    [HttpGet, Route("max")]
+    public virtual async Task<IActionResult> GetMax(Filter<TEntity> filter, CancellationToken token)
+    {
+        return await AjaxAction((IReadRepository<TEntity, TKey> repo) => repo.GetMax(filter, token));
+    }
+
+    [HttpGet, Route("min")]
+    public virtual async Task<IActionResult> GetMin(Filter<TEntity> filter, CancellationToken token)
+    {
+        return await AjaxAction((IReadRepository<TEntity, TKey> repo) => repo.GetMin(filter, token));
+    }
+
+    [HttpGet, Route("avarage")]
+    public virtual async Task<IActionResult> GetAvarage(Filter<TEntity> filter, CancellationToken token)
+    {
+        return await AjaxAction((IReadRepository<TEntity, TKey> repo) => repo.GetAvarage(filter, token));
     }
 
     [HttpPut, Route("{id}")]

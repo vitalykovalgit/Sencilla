@@ -27,6 +27,13 @@ public interface IFilter
     bool? Descending { get; set; }
 
     /// <summary>
+    /// Column which need to be aggregated 
+    /// used with next aggragated method 
+    /// MAX, SUM, MIN, AVARAGE
+    /// </summary>
+    string? Aggregate { get; set; }
+
+    /// <summary>
     /// Retrieve entity with navigation property
     /// </summary>
     public string[]? With { get; set; }

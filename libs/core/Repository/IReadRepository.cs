@@ -58,4 +58,10 @@ public interface IReadRepository<TEntity, TKey> : IBaseRepository
     /// <param name="token"></param>
     Task<int> GetCount(IFilter? filter = null, CancellationToken token = default);
 
+
+    Task<object> GetSum(IFilter? filter = null, CancellationToken token = default);
+    Task<object> GetMax(IFilter? filter = null, CancellationToken token = default);
+    Task<object> GetMin(IFilter? filter = null, CancellationToken token = default);
+    Task<double> GetAvarage(IFilter? filter = null, CancellationToken token = default);
+
 }
