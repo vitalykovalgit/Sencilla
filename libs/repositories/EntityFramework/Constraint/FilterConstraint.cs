@@ -20,9 +20,7 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
             return;
 
         if (filter.OrderBy?.Length > 0)
-            query = (filter.Descending ?? false)
-                  ? query.OrderByDescending(e => EF.Property<object>(e, filter.OrderBy.First()))
-                  : query.OrderBy(e => EF.Property<object>(e, filter.OrderBy.First()));
+            query = query.OrderBy(filter.OrderBy.Join(", ").Replace("|", " "));
 
         if (filter.Properties?.Count > 0)
             foreach (var kvp in filter.Properties)
