@@ -1,4 +1,6 @@
-﻿namespace Sencilla.Repository.EntityFramework.Extension;
+﻿using Microsoft.EntityFrameworkCore.Extension.Entity.Attributes;
+
+namespace Sencilla.Repository.EntityFramework.Extension;
 
 public class UpsertQueryBuilder<TEntity>
 {
@@ -87,7 +89,7 @@ public class UpsertQueryBuilder<TEntity>
         var props = entities.First().GetType().GetProperties().ToList();
 
         bool canMap(PropertyInfo p) =>
-            p.GetCustomAttribute<NotMappedAttribute>() is null && !p.PropertyType.IsAssignableTo(typeof(IBaseEntity));
+            p.GetCustomAttribute<NotMappedAttribute>() is null && p.GetCustomAttribute<SkipUpsertAttribute>() is null && !p.PropertyType.IsAssignableTo(typeof(IBaseEntity));
 
         using (var eIterator = entities.GetEnumerator())
         {
