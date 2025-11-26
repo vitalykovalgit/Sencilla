@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
+    <ProjectReference Include="..\..\extensions\EntityFrameworkCore\Microsoft.EntityFrameworkCore.Extension.csproj" />
     <ProjectReference Include="..\..\web\Sencilla.Web.csproj" />
   </ItemGroup>
 

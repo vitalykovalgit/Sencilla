@@ -19,7 +19,7 @@ public class UserRole
     public int RoleId { get; set; }
 
     [NotMapped]
-    public string? Role => Enum.GetName(typeof(RoleType), RoleId);
+    public string? Role => Enum.GetName(typeof(RoleType), RoleId);  
 
     //public DateTime CreatedDate { get; set; }
     //public DateTime UpdatedDate { get; set; }
