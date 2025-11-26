@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using System.IO;
-
-namespace Sencilla.Component.Files.LocalDrive;
+﻿namespace Sencilla.Component.Files.LocalDrive;
 
 public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
 {
@@ -68,6 +65,7 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
 
         await stream.CopyToAsync(fs, token ?? CancellationToken.None);
 
+        // for debug reason 
         long newOffset = fs.Position;
         return newOffset;
     }

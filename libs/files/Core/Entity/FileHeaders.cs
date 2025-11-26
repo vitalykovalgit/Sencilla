@@ -1,7 +1,7 @@
 ﻿namespace Sencilla.Component.Files;
 
 [DisableInjection]
-static class TusHeaders
+static class FileHeaders
 {
     public const string TusResumable = "Tus-Resumable";
     public const string TusVersion = "Tus-Version";

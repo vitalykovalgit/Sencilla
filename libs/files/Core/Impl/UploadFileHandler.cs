@@ -2,51 +2,43 @@
 
 [DisableInjection]
 public class UploadFileHandler(
-    IFileRepository fileRepository,
-    IFileUploadRepository fileUploadRepository,
+    IEventDispatcher events,
     IFileStorage fileStorage,
-    IEventDispatcher events) : ITusRequestHandler
+    IReadRepository<File, Guid> fileRepository,
+    IUpdateRepository<FileUpload, Guid> fileUploadRepository) : IFileRequestHandler
 {
     public const string Method = "PATCH";
 
     public async Task Handle(HttpContext context, CancellationToken token)
     {
-        if (!context.Request.Headers.ContainsKey(TusHeaders.UploadOffset))
+        // Check upload offset 
+        long offset = context.Request.Headers.GetLong(FileHeaders.UploadOffset, -1);
+        if (offset < 0)
         {
-            await context.WriteBadRequest($"{TusHeaders.UploadOffset} header is missing.");
+            await context.WriteBadRequest($"{FileHeaders.UploadOffset} header is missing or invalid value.");
             return;
         }
 
-        long offset = 0;
-        if (context.Request.Headers.TryGetValue(TusHeaders.UploadOffset, out var offsetHeader) &&
-            !long.TryParse(offsetHeader, out offset))
+        // Get file Id 
+        var fileId = context.Request.Path.GetFileId();
+        var file = await fileRepository.GetById(fileId);
+        if (file == null) 
         {
-            await context.WriteBadRequest($"Invalid {TusHeaders.UploadOffset} header.");
+            await context.WriteBadRequest($"File with id {fileId} does not exist");
             return;
         }
 
-        var segments = context.Request.Path.Value!.Split('/');
-        var fileId = Guid.Parse(segments[segments.Length - 1]);
+        // Write file to the storage 
         var chunk = context.Request.Body;
-        var length = (long)context.Request.ContentLength!;
-
-        // create if not exists 
-        var file = await fileRepository.GetFile(fileId) ?? await fileRepository.CreateFile(new() { Id = fileId, Origin = FileOrigin.User, Storage = fileStorage.Type });
-        
-        var newOffset = await fileStorage.WriteFileAsync(file, chunk, offset, length, CancellationToken.None);
+        var length = (long)context.Request.ContentLength!;        
+        var newOffset = await fileStorage.WriteFileAsync(file, chunk, offset, length, token);
 
         // Update file upload status and notify the system 
-        var fileUpload = await fileUploadRepository.GetFileUpload(fileId) ?? await fileUploadRepository.CreateFileUpload(new() { Id = fileId });
-        fileUpload.Position = newOffset;
-        fileUpload.UploadCompleted = fileUpload.Size == fileUpload.Position;
-        fileUpload = await fileUploadRepository.UpdateFileUpload(fileUpload);
-        if (fileUpload.UploadCompleted)
-        {
-            if(file.ParentId == null)
-                await events.PublishAsync(new FileUploadedEvent { File = file, FileUpload = fileUpload }, token);
-            await fileUploadRepository.DeleteFileUpload(fileId);
-        }
+        var fileUpload = await fileUploadRepository.Update(new FileUpload { Id = file.Id, Uploaded = newOffset });
+        if (fileUpload!.Uploaded == file.Size)
+            await events.PublishAsync(new FileUploadedEvent { File = file }, token);
 
+        // Send response 
         context.WriteNoContentWithOffset(newOffset);
     }
 }

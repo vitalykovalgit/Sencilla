@@ -1,18 +1,17 @@
 ﻿
-global using System.Text;
-global using System.Net.Mime;
-global using System.Collections.Immutable;
-global using System.ComponentModel.DataAnnotations;
-global using System.ComponentModel.DataAnnotations.Schema;
-
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
-
+global using Sencilla.Component.Files;
 global using Sencilla.Core;
 global using Sencilla.Web;
-global using Sencilla.Component.Files;
+global using System.Collections.Immutable;
+global using System.ComponentModel.DataAnnotations;
+global using System.ComponentModel.DataAnnotations.Schema;
+global using System.Net.Mime;
+global using System.Text;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 
 [assembly: AutoDiscovery]
@@ -29,13 +28,11 @@ public static class Bootstrap
 
         services.TryAddSingleton(options);
 
-        services.TryAddKeyedTransient<ITusRequestHandler, CreateFileHandler>(ITusRequestHandler.ServiceKey(CreateFileHandler.Method));
-        services.TryAddKeyedTransient<ITusRequestHandler, UploadFileHandler>(ITusRequestHandler.ServiceKey(UploadFileHandler.Method));
-        services.TryAddKeyedTransient<ITusRequestHandler, HeadFileHandler>(ITusRequestHandler.ServiceKey(HeadFileHandler.Method));
+        services.TryAddKeyedTransient<IFileRequestHandler, CreateFileHandler>(IFileRequestHandler.ServiceKey(CreateFileHandler.Method));
+        services.TryAddKeyedTransient<IFileRequestHandler, UploadFileHandler>(IFileRequestHandler.ServiceKey(UploadFileHandler.Method));
+        services.TryAddKeyedTransient<IFileRequestHandler, HeadFileHandler>(IFileRequestHandler.ServiceKey(HeadFileHandler.Method));
 
-        services.TryAddTransient<IFileRepository, DbFileRepository>();
-        services.TryAddTransient<IFileUploadRepository, DbFileUploadRepository>();
-
+        services.TryAddTransient<IFilePathResolver, FilePathResolver>();
         return services;
     }
 
@@ -75,5 +72,17 @@ public static class Bootstrap
             root.Services.TryAddTransient<IFileStorage, TStorage>();
 
         return root;
+    }
+
+    public static IApplicationBuilder UseTusResumableUpload(this IApplicationBuilder builder, Action<FileUploadOptions> configure)
+    {
+        var options = new FileUploadOptions { Route = string.Empty };
+        configure(options);
+        return builder.UseMiddleware<UploadFileMiddleware>(options);
+    }
+
+    public static IApplicationBuilder UseTusResumableUpload(this IApplicationBuilder builder, string route)
+    {
+        return builder.UseTusResumableUpload(o => o.Route = route);
     }
 }

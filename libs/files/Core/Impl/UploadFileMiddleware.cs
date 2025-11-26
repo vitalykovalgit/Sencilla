@@ -1,7 +1,7 @@
 ﻿namespace Sencilla.Component.Files;
 
 [DisableInjection]
-public class TusResumableUploadMiddleware(RequestDelegate next, TusResumableUploadOptions options)
+public class UploadFileMiddleware(RequestDelegate next, FileUploadOptions options)
 {
     public async Task InvokeAsync(HttpContext context, IServiceProvider container)
     {
@@ -12,9 +12,7 @@ public class TusResumableUploadMiddleware(RequestDelegate next, TusResumableUplo
         }
 
         // TODO: Make it allocation free
-        var handler = container.GetKeyedService<ITusRequestHandler>(ITusRequestHandler.ServiceKey(context.Request.Method)) ?? throw new NotImplementedException();
+        var handler = container.GetKeyedService<IFileRequestHandler>(IFileRequestHandler.ServiceKey(context.Request.Method)) ?? throw new NotImplementedException();
         await handler.Handle(context, context.RequestAborted);
-
-        //await TusRequestRouter.Handle(container, new TusContext { HttpContext = context, Configuration = _options });
     }
 }

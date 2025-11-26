@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.Files;
 
-public interface ITusRequestHandler
+public interface IFileRequestHandler
 {
     /// <summary>
     /// 
@@ -13,5 +13,5 @@ public interface ITusRequestHandler
     /// <summary>
     /// 
     /// </summary>
-    static string ServiceKey(string method) => $"{nameof(ITusRequestHandler)}.{method}";
+    static string ServiceKey(string method) => $"{nameof(IFileRequestHandler)}.{method}";
 }

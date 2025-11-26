@@ -1,22 +1,21 @@
 ﻿namespace Sencilla.Component.Files;
 
 [DisableInjection]
-internal class HeadFileHandler(IFileUploadRepository fileUploadRepository) : ITusRequestHandler
+internal class HeadFileHandler(IReadRepository<File, Guid> fileRepo) : IFileRequestHandler
 {
     public const string Method = "HEAD";
 
     public async Task Handle(HttpContext context, CancellationToken token)
     {
-        if (!context.Request.Headers.ContainsKey(TusHeaders.TusResumable))
+        if (!context.Request.Headers.ContainsKey(FileHeaders.TusResumable))
         {
-            await context.WriteBadRequest($"{TusHeaders.TusResumable} header is missing.");
+            await context.WriteBadRequest($"{FileHeaders.TusResumable} header is missing.");
             return;
         }
 
-        var segments = context.Request.Path.Value!.Split('/');
-        var fileId = Guid.Parse(segments[segments.Length - 1]);
+        var fileId = context.Request.Path.GetFileId();
+        var file = await fileRepo.GetById(fileId);
 
-        var file = await fileUploadRepository.GetFileUpload(fileId) ?? await fileUploadRepository.CreateFileUpload(new() { Id = fileId });
-        context.WriteOkWithOffset(file?.Position ?? 0);
+        context.WriteOkWithOffset(file?.Uploaded ?? 0);
     }
 }

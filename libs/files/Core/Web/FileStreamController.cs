@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Text.RegularExpressions;
 
 namespace Sencilla.Component.Files;
 
@@ -32,7 +32,11 @@ public class FileStreamController(IServiceProvider provider, IReadRepository<Fil
         if (stream == null) return NotFound();
 
         // Response...
-        Response.Headers.Append("Content-Disposition", $"inline; filename=\"{file.Name}\"");
+        // With file name we have issue 
+        // Invalid non-ASCII or control character in header: 0x03C3
+        // So for now just replace with '_'
+        var fileName = Regex.Replace(file.Name ?? "", @"[^\u0000-\u007F]+", "_");
+        Response.Headers.Append("Content-Disposition", $"inline; filename=\"{fileName}\"");
         Response.Headers.Append("X-Content-Type-Options", "nosniff");
         Response.Headers.Append("Accept-Ranges", "bytes");
         return new FileStreamResult(stream, file.MimeType ?? "")

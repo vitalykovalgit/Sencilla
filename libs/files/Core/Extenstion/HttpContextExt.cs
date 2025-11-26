@@ -18,13 +18,13 @@ internal static class HttpContextExt
 
     public static void WriteNoContentWithOffset(this HttpContext context, long offset)
     {
-        context.Response.Headers.Append(TusHeaders.UploadOffset, offset.ToString());
+        context.Response.Headers.Append(FileHeaders.UploadOffset, offset.ToString());
         context.Response.StatusCode = StatusCodes.Status204NoContent;
     }
 
     public static void WriteOkWithOffset(this HttpContext context, long offset)
     {
-        context.Response.Headers.Append(TusHeaders.UploadOffset, offset.ToString());
+        context.Response.Headers.Append(FileHeaders.UploadOffset, offset.ToString());
         context.Response.StatusCode = StatusCodes.Status200OK;
     }
 }

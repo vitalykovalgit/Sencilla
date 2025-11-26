@@ -75,7 +75,8 @@ public class File
     /// <summary>
     /// 
     /// </summary>
-    public string? Attrs { get; set; }
+    [JsonObject]
+    public IDictionary<string, string>? Attrs { get; set; }
 
     public DateTime CreatedDate { get; set; }
 
