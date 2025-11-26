@@ -1,4 +1,6 @@
-﻿namespace Sencilla.Component.Users;
+﻿using Microsoft.EntityFrameworkCore.Extension.Entity.Attributes;
+
+namespace Sencilla.Component.Users;
 
 [Table(nameof(User), Schema = "sec")]
 public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityRemoveable
@@ -31,10 +33,9 @@ public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEnt
     public DateTime UpdatedDate { get; set; }
     public DateTime? DeletedDate { get; set; }
 
-    [ForeignKey(nameof(UserRole.UserId))]
+    [SkipUpsert]
     public ICollection<UserRole>? Roles { get; set; }
 
-    //[ForeignKey(nameof(UserAttribute.UserId))]
     [NotMapped]
     public ICollection<UserClaim>? Claims { get; set; }
 
