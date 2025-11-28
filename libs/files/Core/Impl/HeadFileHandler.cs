@@ -16,6 +16,6 @@ internal class HeadFileHandler(IReadRepository<File, Guid> fileRepo) : IFileRequ
         var fileId = context.Request.Path.GetFileId();
         var file = await fileRepo.GetById(fileId);
 
-        context.WriteOkWithOffset(file?.Uploaded ?? 0);
+        context.WriteOkWithOffset(file?.Size ?? 0, file?.Uploaded ?? 0);
     }
 }

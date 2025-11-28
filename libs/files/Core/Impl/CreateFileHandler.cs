@@ -11,48 +11,58 @@ internal class CreateFileHandler(
 
     public async Task Handle(HttpContext context, CancellationToken token)
     {
-        var headers = context.Request.Headers;
+        //try
+        //{
+            var headers = context.Request.Headers;
 
-        var uploadLength = headers.GetLong(FileHeaders.UploadLength, -1);
-        if (uploadLength < 0) {
-            await context.WriteBadRequest($"{FileHeaders.UploadLength} should be specified or more then 0.");
-            return;
-        }
+            var uploadLength = headers.GetLong(FileHeaders.UploadLength, -1);
+            if (uploadLength < 0)
+            {
+                await context.WriteBadRequest($"{FileHeaders.UploadLength} should be specified or more then 0.");
+                return;
+            }
 
-        var uploadDeferLength = headers.GetLong(FileHeaders.UploadDeferLength, 1);
-        if (uploadDeferLength != 1)
-        {
-            await context.WriteBadRequest($"{FileHeaders.UploadDeferLength} should be specified or has invalid value.");
-            return;
-        }
+            var uploadDeferLength = headers.GetLong(FileHeaders.UploadDeferLength, 1);
+            if (uploadDeferLength != 1)
+            {
+                await context.WriteBadRequest($"{FileHeaders.UploadDeferLength} should be specified or has invalid value.");
+                return;
+            }
 
-        var metadata = headers.GetMetadata();
-        if (metadata == null)
-        {
-            await context.WriteBadRequest($"{FileHeaders.UploadMetadata} header is missing.");
-            return;
-        }
+            var metadata = headers.GetMetadata();
+            if (metadata == null)
+            {
+                await context.WriteBadRequest($"{FileHeaders.UploadMetadata} header is missing.");
+                return;
+            }
 
-        var file = ToFile(metadata, uploadLength, out var missingHeaders);
-        if (file == null) 
-        {
-            await context.WriteBadRequest($"{missingHeaders.Join(",")} keys are missing in metadata.");
-            return;
-        }
+            var file = ToFile(metadata, uploadLength, out var missingHeaders);
+            if (file == null)
+            {
+                await context.WriteBadRequest($"{missingHeaders.Join(",")} keys are missing in metadata.");
+                return;
+            }
 
-        // check if file exists use it otherways create it
-        var dbFile = await fileRepo.GetById(file.Id);
-        if (dbFile == null) 
-        {
-            dbFile = await fileRepo.Create(file);
-            await events.PublishAsync(new FileCreatedEvent { File = dbFile }, token);
-            // TODO: test cancellation token on middleware and test writing empty array to file
-            await storage.WriteFileAsync(dbFile!, []);
-        }
+            // check if file exists use it otherways create it
+            var dbFile = await fileRepo.GetById(file.Id);
+            if (dbFile == null)
+            {
+                dbFile = await fileRepo.Create(file);
+                await events.PublishAsync(new FileCreatedEvent { File = dbFile }, token);
+                // TODO: test cancellation token on middleware and test writing empty array to file
+                await storage.WriteFileAsync(dbFile!, []);
+            }
 
-        // think about location for uploading, probably can be S3/CloudFare directly
-        var location = $"{context.Request.Path.Value}/{dbFile!.Id}";
-        context.WriteCreated(location);
+            // think about location for uploading, probably can be S3/CloudFare directly
+            var location = $"{context.Request.Path.Value}/{dbFile!.Id}";
+            context.WriteCreated(location);
+        //}
+        //catch (Exception)
+        //{
+        //    // For debug purpose
+        //    //Console.WriteLine(ex);
+        //    throw;
+        //}
     }
 
     private File? ToFile(IDictionary<string, string> metadata, long fileSize, out List<string> missingHeaders) 

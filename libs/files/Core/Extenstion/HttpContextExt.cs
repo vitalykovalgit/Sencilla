@@ -22,8 +22,9 @@ internal static class HttpContextExt
         context.Response.StatusCode = StatusCodes.Status204NoContent;
     }
 
-    public static void WriteOkWithOffset(this HttpContext context, long offset)
+    public static void WriteOkWithOffset(this HttpContext context, long length, long offset)
     {
+        context.Response.Headers.Append(FileHeaders.UploadLength, length.ToString());
         context.Response.Headers.Append(FileHeaders.UploadOffset, offset.ToString());
         context.Response.StatusCode = StatusCodes.Status200OK;
     }
