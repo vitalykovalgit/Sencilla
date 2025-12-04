@@ -3,13 +3,13 @@ namespace Sencilla.Messaging.RabbitMQ;
 /// <summary>
 /// RabbitMQ connection factory implementation
 /// </summary>
-public class RabbitMQConnectionFactory : IRabbitMQConnectionFactory, IDisposable
+public class RabbitMQConnectionFactory : IRabbitMQConnectionFactory, IAsyncDisposable, IDisposable
 {
     readonly ConnectionFactory _connectionFactory;
     readonly ILogger<RabbitMQConnectionFactory> _logger;
     readonly RabbitMQOptions _options;
     IConnection? _connection;
-    readonly object _lockObject = new();
+    readonly SemaphoreSlim _semaphore = new(1, 1);
 
     public RabbitMQConnectionFactory(IOptions<RabbitMQOptions> options, ILogger<RabbitMQConnectionFactory> logger)
     {
@@ -24,18 +24,22 @@ public class RabbitMQConnectionFactory : IRabbitMQConnectionFactory, IDisposable
         };
     }
 
-    public IConnection CreateConnection()
+    public async Task<IConnection> CreateConnectionAsync()
     {
         if (_connection == null || !_connection.IsOpen)
         {
-            lock (_lockObject)
+            await _semaphore.WaitAsync();
+            try
             {
                 if (_connection == null || !_connection.IsOpen)
                 {
                     try
                     {
-                        _connection?.Dispose();
-                        _connection = _connectionFactory.CreateConnection();
+                        if (_connection != null)
+                        {
+                            await _connection.DisposeAsync();
+                        }
+                        _connection = await _connectionFactory.CreateConnectionAsync();
                         _logger.LogInformation("RabbitMQ connection established");
                     }
                     catch (Exception ex)
@@ -45,24 +49,38 @@ public class RabbitMQConnectionFactory : IRabbitMQConnectionFactory, IDisposable
                     }
                 }
             }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
 
         return _connection;
     }
 
-    public IModel CreateChannel()
+    public async Task<IChannel> CreateChannelAsync()
     {
-        var connection = CreateConnection();
-        var channel = connection.CreateModel();
+        var connection = await CreateConnectionAsync();
+        var channel = await connection.CreateChannelAsync();
         
         // Set basic QoS
-        channel.BasicQos(0, _options.PrefetchCount, false);
+        await channel.BasicQosAsync(0, _options.PrefetchCount, false);
         
         return channel;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_connection != null)
+        {
+            await _connection.DisposeAsync();
+        }
+        _semaphore.Dispose();
     }
 
     public void Dispose()
     {
         _connection?.Dispose();
+        _semaphore.Dispose();
     }
 }

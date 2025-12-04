@@ -69,11 +69,16 @@ public class AmazonS3Storage : IFileStorage
         // ensure bucket exists
         try
         {
-            var exist = await Client.DoesS3BucketExistAsync(bucket);
-            if (!exist)
-                await Client.PutBucketAsync(new PutBucketRequest { BucketName = bucket });
+            await Client.HeadBucketAsync(new HeadBucketRequest { BucketName = bucket }, token ?? CancellationToken.None);
         }
-        catch { }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            await Client.PutBucketAsync(new PutBucketRequest { BucketName = bucket }, token ?? CancellationToken.None);
+        }
+        catch
+        {
+            // Ignore other errors (e.g., access denied) and try to put object anyway
+        }
 
         var putReq = new PutObjectRequest
         {

@@ -18,16 +18,12 @@ public class RabbitMQHealthCheck : IHealthCheck
     {
         try
         {
-            using var channel = _connectionFactory.CreateChannel();
+            await using var channel = await _connectionFactory.CreateChannelAsync();
             
-            // Test basic operations
-            await Task.Run(() =>
-            {
-                // Test queue declare operation
-                var testQueueName = $"health-check-{Guid.NewGuid()}";
-                channel.QueueDeclare(testQueueName, false, true, true);
-                channel.QueueDelete(testQueueName);
-            }, cancellationToken);
+            // Test queue declare operation
+            var testQueueName = $"health-check-{Guid.NewGuid()}";
+            await channel.QueueDeclareAsync(testQueueName, false, true, true);
+            await channel.QueueDeleteAsync(testQueueName);
 
             _logger.LogDebug("RabbitMQ health check passed");
             return HealthCheckResult.Healthy("RabbitMQ is healthy");

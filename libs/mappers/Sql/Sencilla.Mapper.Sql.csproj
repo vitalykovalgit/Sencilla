@@ -8,6 +8,7 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" />
     <PackageReference Include="System.Data.Common" />
     <PackageReference Include="System.Data.SqlClient" />
+    <PackageReference Include="System.Text.RegularExpressions" />
   </ItemGroup>
 
 </Project>

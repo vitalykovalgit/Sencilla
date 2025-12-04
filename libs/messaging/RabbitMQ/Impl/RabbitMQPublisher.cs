@@ -24,16 +24,18 @@ public class RabbitMQPublisher(
         var messageWrapper = CreateMessageWrapper(message);
         var body = SerializeMessage(messageWrapper);
 
-        using var channel = connectionFactory.CreateChannel();
+        await using var channel = await connectionFactory.CreateChannelAsync();
         
-        var properties = channel.CreateBasicProperties();
-        properties.Persistent = true;
-        properties.MessageId = messageWrapper.Id.ToString();
-        properties.CorrelationId = messageWrapper.CorrelationId.ToString();
-        properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-        properties.ContentType = "application/json";
-        properties.ContentEncoding = "utf-8";
-        properties.Type = typeof(T).FullName;
+        var properties = new BasicProperties
+        {
+            Persistent = true,
+            MessageId = messageWrapper.Id.ToString(),
+            CorrelationId = messageWrapper.CorrelationId.ToString(),
+            Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+            ContentType = "application/json",
+            ContentEncoding = "utf-8",
+            Type = typeof(T).FullName
+        };
 
         if (Options.MessageTtlMilliseconds > 0)
         {
@@ -42,7 +44,7 @@ public class RabbitMQPublisher(
 
         try
         {
-            channel.BasicPublish(exchangeName, routing, properties, body);
+            await channel.BasicPublishAsync(exchangeName, routing, false, properties, body);
             logger.LogDebug("Published message {MessageId} to exchange {Exchange} with routing key {RoutingKey}", 
                 messageWrapper.Id, exchangeName, routing);
         }
@@ -85,7 +87,9 @@ public class RabbitMQPublisher(
             Name = typeof(T).Name,
             Namespace = typeof(T).FullName
         };
-    }    byte[] SerializeMessage<T>(Message<T> message) where T : class
+    }
+
+    byte[] SerializeMessage<T>(Message<T> message) where T : class
     {
         var json = JsonSerializer.Serialize(message);
         return Encoding.UTF8.GetBytes(json);

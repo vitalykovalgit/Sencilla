@@ -3,7 +3,7 @@ namespace Sencilla.Messaging.RabbitMQ;
 /// <summary>
 /// RabbitMQ message consumer implementation
 /// </summary>
-public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
+public class RabbitMQConsumer : IRabbitMQConsumer, IAsyncDisposable, IDisposable
 {
     readonly IRabbitMQConnectionFactory _connectionFactory;
     readonly IRabbitMQTopologyManager _topologyManager;
@@ -11,8 +11,8 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
     readonly ILogger<RabbitMQConsumer> _logger;
     readonly RabbitMQOptions _options;
     
-    IModel? _channel;
-    EventingBasicConsumer? _consumer;
+    IChannel? _channel;
+    AsyncEventingBasicConsumer? _consumer;
     string? _consumerTag;
     readonly CancellationTokenSource _cancellationTokenSource = new();
 
@@ -50,15 +50,15 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
             }
         }
 
-        _channel = _connectionFactory.CreateChannel();
-        _consumer = new EventingBasicConsumer(_channel);
+        _channel = await _connectionFactory.CreateChannelAsync();
+        _consumer = new AsyncEventingBasicConsumer(_channel);
         
-        _consumer.Received += async (sender, args) =>
+        _consumer.ReceivedAsync += async (sender, args) =>
         {
             await ProcessMessageAsync(args);
         };
 
-        _consumerTag = _channel.BasicConsume(queueName, false, _consumer);
+        _consumerTag = await _channel.BasicConsumeAsync(queueName, false, _consumer);
         _logger.LogInformation("Started consuming from queue {QueueName}", queueName);
 
         // Keep consuming until cancellation is requested
@@ -72,17 +72,15 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
         }
     }
 
-    public Task StopConsumingAsync()
+    public async Task StopConsumingAsync()
     {
         _cancellationTokenSource.Cancel();
         
         if (_channel != null && !string.IsNullOrEmpty(_consumerTag))
         {
-            _channel.BasicCancel(_consumerTag);
+            await _channel.BasicCancelAsync(_consumerTag);
             _logger.LogInformation("Stopped consuming messages");
         }
-
-        return Task.CompletedTask;
     }
 
     async Task ProcessMessageAsync(BasicDeliverEventArgs args)
@@ -101,7 +99,8 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
             if (string.IsNullOrEmpty(messageType))
             {
                 _logger.LogWarning("Message {MessageId} has no type information", messageId);
-                _channel?.BasicNack(args.DeliveryTag, false, false);
+                if (_channel != null)
+                    await _channel.BasicNackAsync(args.DeliveryTag, false, false);
                 return;
             }
 
@@ -109,16 +108,20 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
             if (type == null)
             {
                 _logger.LogWarning("Cannot resolve type {MessageType} for message {MessageId}", messageType, messageId);
-                _channel?.BasicNack(args.DeliveryTag, false, false);
+                if (_channel != null)
+                    await _channel.BasicNackAsync(args.DeliveryTag, false, false);
                 return;
-            }            // Deserialize the message wrapper
+            }
+
+            // Deserialize the message wrapper
             var messageWrapperType = typeof(Message<>).MakeGenericType(type);
             var messageWrapper = JsonSerializer.Deserialize(json, messageWrapperType);
 
             if (messageWrapper == null)
             {
                 _logger.LogWarning("Failed to deserialize message {MessageId}", messageId);
-                _channel?.BasicNack(args.DeliveryTag, false, false);
+                if (_channel != null)
+                    await _channel.BasicNackAsync(args.DeliveryTag, false, false);
                 return;
             }
 
@@ -129,14 +132,16 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
             if (payload == null)
             {
                 _logger.LogWarning("Message {MessageId} has null payload", messageId);
-                _channel?.BasicNack(args.DeliveryTag, false, false);
+                if (_channel != null)
+                    await _channel.BasicNackAsync(args.DeliveryTag, false, false);
                 return;
             }
 
             // Find and execute handlers
             await ExecuteHandlersAsync(payload, type);
 
-            _channel?.BasicAck(args.DeliveryTag, false);
+            if (_channel != null)
+                await _channel.BasicAckAsync(args.DeliveryTag, false);
             _logger.LogDebug("Successfully processed message {MessageId}", messageId);
         }
         catch (Exception ex)
@@ -152,7 +157,8 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
             else
             {
                 _logger.LogError("Maximum retry attempts reached for message {MessageId}. Sending to dead letter queue", messageId);
-                _channel?.BasicNack(args.DeliveryTag, false, false);
+                if (_channel != null)
+                    await _channel.BasicNackAsync(args.DeliveryTag, false, false);
             }
         }
     }
@@ -175,7 +181,8 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
                         await task;
                     }
                 }
-            }            catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error executing handler {HandlerType} for message type {MessageType}", 
                     handler?.GetType().Name ?? "Unknown", payloadType.Name);
@@ -193,28 +200,40 @@ public class RabbitMQConsumer : IRabbitMQConsumer, IDisposable
         await Task.Delay(_options.RetryDelayMilliseconds);
 
         // Update retry count in message properties
-        var newProperties = _channel!.CreateBasicProperties();
-        newProperties.MessageId = args.BasicProperties.MessageId;
-        newProperties.CorrelationId = args.BasicProperties.CorrelationId;
-        newProperties.Type = args.BasicProperties.Type;
-        newProperties.Persistent = true;
-        newProperties.Headers = new Dictionary<string, object>(args.BasicProperties.Headers ?? new Dictionary<string, object>())
+        var newProperties = new BasicProperties
         {
-            ["x-retry-count"] = retryCount
+            MessageId = args.BasicProperties.MessageId,
+            CorrelationId = args.BasicProperties.CorrelationId,
+            Type = args.BasicProperties.Type,
+            Persistent = true,
+            Headers = new Dictionary<string, object?>(args.BasicProperties.Headers ?? new Dictionary<string, object?>())
+            {
+                ["x-retry-count"] = retryCount
+            }
         };
 
         // Republish the message
-        _channel.BasicPublish("", args.RoutingKey, newProperties, args.Body);
-        _channel.BasicAck(args.DeliveryTag, false);
+        await _channel!.BasicPublishAsync("", args.RoutingKey, false, newProperties, args.Body);
+        await _channel.BasicAckAsync(args.DeliveryTag, false);
     }
 
-    int GetRetryCount(IBasicProperties properties)
+    int GetRetryCount(IReadOnlyBasicProperties properties)
     {
         if (properties.Headers?.TryGetValue("x-retry-count", out var retryCountObj) == true)
         {
             return Convert.ToInt32(retryCountObj);
         }
         return 0;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _cancellationTokenSource.CancelAsync();
+        if (_channel != null)
+        {
+            await _channel.DisposeAsync();
+        }
+        _cancellationTokenSource.Dispose();
     }
 
     public void Dispose()

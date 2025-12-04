@@ -9,11 +9,11 @@ public interface IRabbitMQConnectionFactory
     /// Create a new RabbitMQ connection
     /// </summary>
     /// <returns>RabbitMQ connection</returns>
-    IConnection CreateConnection();
+    Task<IConnection> CreateConnectionAsync();
 
     /// <summary>
     /// Create a new RabbitMQ channel
     /// </summary>
     /// <returns>RabbitMQ channel</returns>
-    IModel CreateChannel();
+    Task<IChannel> CreateChannelAsync();
 }

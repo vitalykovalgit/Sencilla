@@ -1,53 +1,54 @@
 namespace Sencilla.Messaging.SourceGenerator;
 
 [Generator]
-public class MessageDispatcherExtensionGenerator : ISourceGenerator
+public class MessageDispatcherExtensionGenerator : IIncrementalGenerator
 {
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterForSyntaxNotifications(() => new CommandClassReceiver());
+        // Find all class declarations with attributes
+        var classDeclarations = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (node, _) => node is ClassDeclarationSyntax cds && cds.AttributeLists.Count > 0,
+                transform: static (ctx, _) => GetCommandClassInfo(ctx))
+            .Where(static info => info != null);
+
+        // Collect all command class infos and generate source
+        var collected = classDeclarations.Collect();
+
+        context.RegisterSourceOutput(collected, static (spc, commandClasses) =>
+        {
+            var validClasses = commandClasses.Where(c => c != null).Select(c => c!).ToList();
+            if (validClasses.Any())
+            {
+                var sourceText = GenerateExtensionClass(validClasses);
+                spc.AddSource("MessageDispatcherExtensions.g.cs", SourceText.From(sourceText, Encoding.UTF8));
+            }
+        });
     }
 
-    public void Execute(GeneratorExecutionContext context)
+    private static CommandClassInfo? GetCommandClassInfo(GeneratorSyntaxContext context)
     {
-        if (context.SyntaxContextReceiver is not CommandClassReceiver receiver)
-            return;
+        var classDeclaration = (ClassDeclarationSyntax)context.Node;
+        var semanticModel = context.SemanticModel;
+
+        var classSymbol = semanticModel.GetDeclaredSymbol(classDeclaration) as INamedTypeSymbol;
+        if (classSymbol == null)
+            return null;
 
         // Look for the attribute type
-        var attributeSymbol = context.Compilation.GetTypeByMetadataName("Sencilla.Messaging.ExtendDispatcherAttribute");
+        var attributeSymbol = semanticModel.Compilation.GetTypeByMetadataName("Sencilla.Messaging.ExtendDispatcherAttribute");
         if (attributeSymbol == null)
-            return;
+            return null;
 
-        var iMessageDispatcherSymbol = context.Compilation.GetTypeByMetadataName("Sencilla.Messaging.IMessageDispatcher");
-        if (iMessageDispatcherSymbol == null)
-            return;
+        // Check if class has the attribute
+        var hasAttribute = classSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attributeSymbol));
+        if (!hasAttribute)
+            return null;
 
-        var commandClasses = new List<CommandClassInfo>();
-        foreach (var classDeclaration in receiver.CandidateClasses)
-        {
-            var semanticModel = context.Compilation.GetSemanticModel(classDeclaration.SyntaxTree);
-            var classSymbol = semanticModel.GetDeclaredSymbol(classDeclaration) as INamedTypeSymbol;
-            if (classSymbol == null)
-                continue;
-
-            // Check if class has the attribute
-            var hasAttribute = classSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attributeSymbol));
-            if (!hasAttribute)
-                continue;
-
-            var commandInfo = ExtractCommandInfo(classSymbol, classDeclaration);
-            if (commandInfo != null)
-                commandClasses.Add(commandInfo);
-        }
-
-        if (commandClasses.Any())
-        {
-            var sourceText = GenerateExtensionClass(commandClasses);
-            context.AddSource("MessageDispatcherExtensions.g.cs", SourceText.From(sourceText, Encoding.UTF8));
-        }
+        return ExtractCommandInfo(classSymbol, classDeclaration);
     }
 
-    private CommandClassInfo? ExtractCommandInfo(INamedTypeSymbol classSymbol, ClassDeclarationSyntax classDeclaration)
+    private static CommandClassInfo? ExtractCommandInfo(INamedTypeSymbol classSymbol, ClassDeclarationSyntax classDeclaration)
     {
         var properties = new List<PropertyInfo>();
 
@@ -112,7 +113,7 @@ public class MessageDispatcherExtensionGenerator : ISourceGenerator
         };
     }
 
-    private string GenerateExtensionClass(List<CommandClassInfo> commandClasses)
+    private static string GenerateExtensionClass(List<CommandClassInfo> commandClasses)
     {
         var sb = new StringBuilder();
         
@@ -148,7 +149,7 @@ public class MessageDispatcherExtensionGenerator : ISourceGenerator
         return sb.ToString();
     }
 
-    private void GenerateExtensionMethod(StringBuilder sb, CommandClassInfo commandInfo)
+    private static void GenerateExtensionMethod(StringBuilder sb, CommandClassInfo commandInfo)
     {
         sb.AppendLine($"    /// <summary>");
         sb.AppendLine($"    /// Sends a {commandInfo.ClassName} command.");

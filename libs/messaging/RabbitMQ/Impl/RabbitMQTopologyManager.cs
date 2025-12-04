@@ -10,43 +10,34 @@ public class RabbitMQTopologyManager(
 {
     readonly RabbitMQOptions Options = options.Value;
 
-    public Task DeclareExchangeAsync(string exchangeName, string exchangeType = ExchangeType.Direct, bool durable = true, bool autoDelete = false)
+    public async Task DeclareExchangeAsync(string exchangeName, string exchangeType = ExchangeType.Direct, bool durable = true, bool autoDelete = false)
     {
-        return Task.Run(() =>
-        {
-            using var channel = connectionFactory.CreateChannel();
-            channel.ExchangeDeclare(exchangeName, exchangeType, durable, autoDelete);
-            logger.LogDebug("Declared exchange: {ExchangeName} of type {ExchangeType}", exchangeName, exchangeType);
-        });
+        await using var channel = await connectionFactory.CreateChannelAsync();
+        await channel.ExchangeDeclareAsync(exchangeName, exchangeType, durable, autoDelete);
+        logger.LogDebug("Declared exchange: {ExchangeName} of type {ExchangeType}", exchangeName, exchangeType);
     }
 
-    public Task DeclareQueueAsync(string queueName, bool durable = true, bool exclusive = false, bool autoDelete = false, IDictionary<string, object>? arguments = null)
+    public async Task DeclareQueueAsync(string queueName, bool durable = true, bool exclusive = false, bool autoDelete = false, IDictionary<string, object>? arguments = null)
     {
-        return Task.Run(() =>
+        await using var channel = await connectionFactory.CreateChannelAsync();
+        var args = arguments ?? new Dictionary<string, object>();
+
+        // Add TTL if configured
+        if (Options.MessageTtlMilliseconds > 0)
         {
-            using var channel = connectionFactory.CreateChannel();
-            var args = arguments ?? new Dictionary<string, object>();
+            args["x-message-ttl"] = Options.MessageTtlMilliseconds;
+        }
 
-            // Add TTL if configured
-            if (Options.MessageTtlMilliseconds > 0)
-            {
-                args["x-message-ttl"] = Options.MessageTtlMilliseconds;
-            }
-
-            channel.QueueDeclare(queueName, durable, exclusive, autoDelete, args);
-            logger.LogDebug("Declared queue: {QueueName}", queueName);
-        });
+        await channel.QueueDeclareAsync(queueName, durable, exclusive, autoDelete, args);
+        logger.LogDebug("Declared queue: {QueueName}", queueName);
     }
 
-    public Task BindQueueAsync(string queueName, string exchangeName, string routingKey)
+    public async Task BindQueueAsync(string queueName, string exchangeName, string routingKey)
     {
-        return Task.Run(() =>
-        {
-            using var channel = connectionFactory.CreateChannel();
-            channel.QueueBind(queueName, exchangeName, routingKey);
-            logger.LogDebug("Bound queue {QueueName} to exchange {ExchangeName} with routing key {RoutingKey}", 
-                queueName, exchangeName, routingKey);
-        });
+        await using var channel = await connectionFactory.CreateChannelAsync();
+        await channel.QueueBindAsync(queueName, exchangeName, routingKey);
+        logger.LogDebug("Bound queue {QueueName} to exchange {ExchangeName} with routing key {RoutingKey}", 
+            queueName, exchangeName, routingKey);
     }
 
     public async Task SetupDeadLetterQueueAsync(string mainQueueName)
