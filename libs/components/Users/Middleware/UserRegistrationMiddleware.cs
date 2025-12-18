@@ -5,9 +5,14 @@ public class UserRegistrationMiddleware
 {
     private readonly RequestDelegate Next;
 
-    public UserRegistrationMiddleware(RequestDelegate next)
+    private readonly IMemoryCache _cache;
+    // TODO: Make this configurable
+    private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(5);
+
+    public UserRegistrationMiddleware(RequestDelegate next, IMemoryCache cache)
     {
         Next = next;
+        _cache = cache;
     }
 
     public async Task Invoke(HttpContext context)
@@ -23,15 +28,24 @@ public class UserRegistrationMiddleware
             var user = userProvider.CurrentUser;
             if (!user.IsAnonymous())
             {
-                // check if user already exists
-                var userRepo = container.GetService<ICreateRepository<User>>();
-                var dbUser = await userRepo!.FirstOrDefault(ByEmail(user.Email));
+                // check if user already exists (with caching)
+                var cacheKey = $"user_by_email_{user.Email}";
+                var dbUser = await _cache.GetOrCreateAsync(cacheKey, async entry =>
+                {
+                    var userRepo = container.GetService<ICreateRepository<User>>();
+                    entry.AbsoluteExpirationRelativeToNow = CacheExpiration;
+                    return await userRepo!.FirstOrDefault(ByEmail(user.Email), context.RequestAborted);
+                });
+
                 if (dbUser == null)
                 {
                     // create if not exists 
-                    dbUser = await UpsertUserAsync(container, userRepo, user, userProvider.CurrentPrincipal?.Identity?.AuthenticationType);
+                    var userRepo = container.GetService<ICreateRepository<User>>();
+                    dbUser = await UpsertUserAsync(container, userRepo!, user, userProvider.CurrentPrincipal?.Identity?.AuthenticationType);
+                    // Update cache with newly created user
+                    _cache.Set(cacheKey, dbUser, CacheExpiration);
                 }
-                
+
                 user = dbUser;
             }
 

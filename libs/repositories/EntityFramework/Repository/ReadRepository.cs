@@ -64,7 +64,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
             foreach (var prop in with)
                 query = query.Include(prop);
 
-        return await query.FirstOrDefaultAsync().ConfigureAwait(false);
+        return await query.FirstOrDefaultAsync(token).ConfigureAwait(false);
     }
 
 

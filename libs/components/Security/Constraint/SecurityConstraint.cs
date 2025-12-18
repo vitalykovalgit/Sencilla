@@ -7,17 +7,17 @@ public class SecurityConstraintHandler<TEntity>
     , IEventHandlerBase<EntityUpdatingEvent<TEntity>>
     , IEventHandlerBase<EntityDeletingEvent<TEntity>>
 {
-    public async Task HandleAsync(EntityReadingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider)
+    public async Task HandleAsync(EntityReadingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, CancellationToken token)
     {
         if (@event != null)
-            @event.Entities = await ApplyConstraint(@event.Entities, Action.Read, sysVars, provider);
+            @event.Entities = await ApplyConstraint(@event.Entities, Action.Read, sysVars, provider, token);
     }
 
-    public async Task HandleAsync(EntityCreatingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider)
+    public async Task HandleAsync(EntityCreatingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, CancellationToken token)
     {
         if (@event?.Entities != null)
         {
-            var safeEntities = await ApplyConstraint(@event.Entities, Action.Create, sysVars, provider);
+            var safeEntities = await ApplyConstraint(@event.Entities, Action.Create, sysVars, provider, token);
             var countBefore = @event.Entities.Count();
             var countAfter = safeEntities.Count();
             if (countBefore != countAfter)
@@ -30,11 +30,11 @@ public class SecurityConstraintHandler<TEntity>
         }
     }
 
-    public async Task HandleAsync(EntityUpdatingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider)
+    public async Task HandleAsync(EntityUpdatingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, CancellationToken token)
     {
         if (@event?.Entities != null)
         {
-            var safeEntities = await ApplyConstraint(@event.Entities, Action.Update, sysVars, provider);
+            var safeEntities = await ApplyConstraint(@event.Entities, Action.Update, sysVars, provider, token);
             var countBefore = @event.Entities.Count();
             var countAfter = safeEntities.Count();
             if (countBefore != countAfter)
@@ -47,13 +47,13 @@ public class SecurityConstraintHandler<TEntity>
         }
     }
 
-    public async Task HandleAsync(EntityDeletingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider)
+    public async Task HandleAsync(EntityDeletingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, CancellationToken token)
     {
         if (@event != null)
-            @event.Entities = await ApplyConstraint(@event.Entities, Action.Delete, sysVars, provider);
+            @event.Entities = await ApplyConstraint(@event.Entities, Action.Delete, sysVars, provider, token);
     }
 
-    protected async Task<IQueryable<TEntity>> ApplyConstraint(IQueryable<TEntity> query, Action action, ISystemVariable sysVars, ISecurityProvider provider)
+    protected async Task<IQueryable<TEntity>> ApplyConstraint(IQueryable<TEntity> query, Action action, ISystemVariable sysVars, ISecurityProvider provider, CancellationToken token)
     {
         if (query == null)
             return query;
@@ -90,7 +90,7 @@ public class SecurityConstraintHandler<TEntity>
 
             // retrieve permissions and current user
             var user = sysVars.GetCurrentUser();
-            var permissions = provider.Permissions<TEntity>(action); // DB, Attrs, FluenApi
+            var permissions = await provider.Permissions<TEntity>(token, action); // DB, Attrs, FluenApi
 
             // if operation is not allowed throw forbid exception 
             if (!permissions.Any())

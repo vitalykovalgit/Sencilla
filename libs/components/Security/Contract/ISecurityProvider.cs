@@ -6,7 +6,7 @@ namespace Sencilla.Component.Security;
 /// </summary>
 public interface ISecurityProvider
 {
-    IEnumerable<Matrix> Permissions<TEntity>(Action? action = null);
+    Task<IEnumerable<Matrix>> Permissions<TEntity>(CancellationToken token, Action? action = null);
 }
 
 

@@ -8,10 +8,10 @@ public abstract class SecurityDeclaration: ISecurityDeclaration
 {
     protected List<Matrix> permissions = new();
 
-    public IEnumerable<Matrix> Permissions()
+    public Task<IEnumerable<Matrix>> Permissions(CancellationToken token)
     {
         DeclarePermissions();
-        return permissions;
+        return Task.FromResult((IEnumerable<Matrix>)permissions);
     }
 
     public void Add(Matrix matrix) => permissions.Add(matrix);

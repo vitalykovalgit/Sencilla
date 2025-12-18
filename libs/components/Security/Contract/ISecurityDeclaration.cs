@@ -10,7 +10,7 @@ public interface ISecurityDeclaration
     /// 
     /// </summary>
     /// <returns></returns>
-    IEnumerable<Matrix> Permissions();
+    Task<IEnumerable<Matrix>> Permissions(CancellationToken token);
 }
 
 

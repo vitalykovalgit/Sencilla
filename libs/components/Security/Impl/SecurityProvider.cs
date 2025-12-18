@@ -1,31 +1,36 @@
-﻿
-namespace Sencilla.Component.Security;
+﻿namespace Sencilla.Component.Security;
 
 /// <summary>
 /// 
 /// </summary>
-public class SecurityProvider: ISecurityProvider
+public class SecurityProvider(IServiceProvider provider, IMemoryCache cache) : ISecurityProvider
 {
-    IQueryable<Matrix>? allPermissions;
-    IEnumerable<ISecurityDeclaration> SecurityProviders;
+    private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(180);
+    private const string AllPermissionsCacheKey = "security_all_permissions";
 
-    public SecurityProvider(IEnumerable<ISecurityDeclaration> securityProviders)
+    public async Task<IQueryable<Matrix>> GetAllPermissions(CancellationToken token) 
     {
-        SecurityProviders = securityProviders;
+        var allPermissions = await cache.GetOrCreateAsync(AllPermissionsCacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheExpiration;
+            var securityProviders = provider.GetRequiredService<IEnumerable<ISecurityDeclaration>>();
+            var tasks = securityProviders.Select(p => p.Permissions(token));
+            var results = await Task.WhenAll(tasks);
+            return results.SelectMany(r => r).AsQueryable();
+        });
+
+        return allPermissions!;
     }
-
-    public IQueryable<Matrix> AllPermissions => allPermissions ??= SecurityProviders.SelectMany(p => p.Permissions()).AsQueryable();
-
-    public IEnumerable<Matrix> Permissions<TEntity>(Action? action = null)
+    public Task<IEnumerable<Matrix>> Permissions<TEntity>(CancellationToken token, Action? action = null)
     {
         var resource = ResourceName<TEntity>();
-        return Permissions(resource, action);
+        return Permissions(token, resource, action);
     }
 
-    public IEnumerable<Matrix> Permissions(string resource, Action? action = null)
+    public async Task<IEnumerable<Matrix>> Permissions(CancellationToken token, string resource, Action? action = null)
     {
         // get permission for resource
-        var q = AllPermissions.Where(p => p.Resource.Equals(resource, StringComparison.OrdinalIgnoreCase));
+        var q = (await GetAllPermissions(token)).Where(p => p.Resource.Equals(resource, StringComparison.OrdinalIgnoreCase));
 
         // action 
         if (action != null)

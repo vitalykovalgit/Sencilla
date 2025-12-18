@@ -9,12 +9,24 @@ public class FileStreamController(IServiceProvider provider, IReadRepository<Fil
     [HttpGet, Route("{fileId}")]
     public async Task<IActionResult> GetFileStream(Guid fileId, int? dim, CancellationToken token)
     {
-        var file = await fileRepo.FirstOrDefault(new FileFilter().ByParentId(fileId).ByDimmension(dim));
+        var file = await fileRepo.FirstOrDefault(new FileFilter().ByParentId(fileId).ByDimmension(dim), token);
+        //var file = await fileRepo.GetById(Guid.Parse("E770032C-7478-4C74-AEFE-0003A646B894"));
+        //var file = new File {
+        //    Id = Guid.Parse("E770032C-7478-4C74-AEFE-0003A646B894"),
+        //    Name = "DSC01494.jpg",
+        //    MimeType = "image/jpeg",
+        //    Path = "user1\\project31\\editors\\e770032c-7478-4c74-aefe-0003a646b894_1000px.jpg",
+        //    Size = 147398,
+        //    Uploaded = 147398,
+        //    Origin = FileOrigin.User,
+        //    Storage = 2,
+        //    UserId = 1,
+        //    Dim = 100,
+        //};
         return await RetriveFileStream(file, token);
     }
 
     [HttpGet, Route("{fileId}/stream")]
-    //public async Task<FileStreamResult> GetStream(Guid fileId, CancellationToken token)
     public async Task<IActionResult> GetStream(Guid fileId, CancellationToken token)
     {
         var file = await fileRepo.GetById(fileId);

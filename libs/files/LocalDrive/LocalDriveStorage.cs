@@ -8,7 +8,7 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
 
     public string GetRootDirectory() => options.RootPath;
 
-    public Stream OpenFileStream(File file, long offset = 0, CancellationToken? token = null)
+    public Stream OpenFileStream(File file, long offset = 0, CancellationToken token = default)
     {
         var path = GetFilePath(file);
 
@@ -20,7 +20,7 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         return fs;
     }
 
-    public Stream OpenFileStream(string path, long offset = 0, CancellationToken? token = null)
+    public Stream OpenFileStream(string path, long offset = 0, CancellationToken token = default)
     {
         path = Path.Combine(options.RootPath, path);
         CreateFileDirectory(path);
@@ -32,9 +32,9 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
     }
 
 
-    public Task<Stream?> ReadFileAsync(File file, CancellationToken? token = null) => Task.FromResult(ReadFile(file, token));
+    public Task<Stream?> ReadFileAsync(File file, CancellationToken token = default) => Task.FromResult(ReadFile(file, token));
 
-    public Stream? ReadFile(File file, CancellationToken? token = null)
+    public Stream? ReadFile(File file, CancellationToken token = default)
     {
         var path = GetFilePath(file);
 
@@ -45,7 +45,7 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         return stream;
     }
 
-    public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken? token = null)
+    public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken token = default)
     {
         var path = GetFilePath(file);
 
@@ -55,7 +55,7 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         return new FileInfo(path).Length;
     }
 
-    public async Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken? token = null)
+    public async Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken token = default)
     {
         var path = GetFilePath(file);
         CreateFileDirectory(path);
@@ -63,14 +63,14 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         using var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
         fs.Seek(offset, SeekOrigin.Begin);
 
-        await stream.CopyToAsync(fs, token ?? CancellationToken.None);
+        await stream.CopyToAsync(fs, token);
 
         // for debug reason 
         long newOffset = fs.Position;
         return newOffset;
     }
 
-    public Task<File?> DeleteFileAsync(File? file, CancellationToken? token = null)
+    public Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
     {
         if (file != null)
         {

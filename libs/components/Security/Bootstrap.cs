@@ -5,6 +5,7 @@ global using System.ComponentModel.DataAnnotations.Schema;
 
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Caching.Memory;
 
 global using Sencilla.Core;
 global using Sencilla.Component.Users;

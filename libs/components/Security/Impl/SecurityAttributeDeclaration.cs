@@ -10,7 +10,7 @@ public class SecurityAttributeDeclaration : ISecurityDeclaration
         Discoverer = discoverer;
     }
 
-    public IEnumerable<Matrix> Permissions() => Discoverer.Permissions;
+    public Task<IEnumerable<Matrix>> Permissions(CancellationToken token) => Task.FromResult((IEnumerable<Matrix>)Discoverer.Permissions);
 }
 
 

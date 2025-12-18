@@ -9,55 +9,55 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
     public string GetDirectory(string type, params object[] @params) => options.GetDirectory(type, @params);
     public string GetRootDirectory() => "/";
 
-    public Stream OpenFileStream(File file, long offset = 0, CancellationToken? token = null)
+    public Stream OpenFileStream(File file, long offset = 0, CancellationToken token = default)
     {
         var (containerName, blobName) = GetContainerAndFileName(file);
         var blobContainerClient = GetContainerClient(containerName, blobName);
 
         var client = blobContainerClient.GetBlobClient(blobName);
-        return client.OpenWrite(true);
+        return client.OpenWrite(true, null, token);
     }
 
-    public Stream OpenFileStream(string path, long offset = 0, CancellationToken? token = null)
+    public Stream OpenFileStream(string path, long offset = 0, CancellationToken token = default)
     {
         var (containerName, blobName) = GetContainerAndFileName(path);
         var blobContainerClient = GetContainerClient(containerName, blobName);
 
         var client = blobContainerClient.GetBlobClient(blobName);
-        return client.OpenWrite(true);
+        return client.OpenWrite(true, null, token);
     }
 
-    public async Task<Stream?> ReadFileAsync(File file, CancellationToken? token = null)
+    public async Task<Stream?> ReadFileAsync(File file, CancellationToken token = default)
     {
         var (containerName, blobName) = GetContainerAndFileName(file);
 
         var blobContainerClient = GetContainerClient(containerName, blobName);
         var blobClient = blobContainerClient.GetBlobClient(blobName);
 
-        var downloadResponse = await blobClient.DownloadStreamingAsync();
+        var downloadResponse = await blobClient.DownloadStreamingAsync(null, token);
 
         // System.NotSupportedException: Specified method is not supported.
         //  at Azure.Core.Pipeline.RetriableStream.RetriableStreamImpl.get_Length()
         //  at OpenCvSharp.Mat.FromStream(Stream stream, ImreadModes mode)
         //return downloadResponse.Value.Content;
 
-        var ms = new MemoryStream();
-        await downloadResponse.Value.Content.CopyToAsync(ms);
-        ms.Position = 0;
-
-        return ms;
+        //var ms = new MemoryStream();
+        //await downloadResponse.Value.Content.CopyToAsync(ms);
+        //ms.Position = 0;
+        //return ms;
+        return downloadResponse.Value.Content;
     }
 
-    public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken? token = null)
+    public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken token = default)
     {
         using var ms = new MemoryStream(content);
         return await WriteStreamToBlobAsync(file, ms, offset, -1, token);
     }
 
-    public Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken? token = null) =>
+    public Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken token = default) =>
         WriteStreamToBlobAsync(file, stream, offset, length, token);
 
-    public Task<File?> DeleteFileAsync(File? file, CancellationToken? token = null)
+    public Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
     {
         throw new NotImplementedException();
     }

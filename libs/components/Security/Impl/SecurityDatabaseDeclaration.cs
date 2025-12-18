@@ -10,7 +10,7 @@ public class SecurityDatabaseDeclaration: ISecurityDeclaration
         MatrixRepo = matrixRepo;
     }
 
-    public IEnumerable<Matrix> Permissions() => AsyncHelper.RunSync(() => MatrixRepo.GetAll());
+    public Task<IEnumerable<Matrix>> Permissions(CancellationToken token) => MatrixRepo.GetAll(null, token);
 }
 
 
