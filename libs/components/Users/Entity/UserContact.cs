@@ -9,7 +9,7 @@ public class UserContact: IEntity<byte>, IEntityCreateable, IEntityUpdateable, I
     public int UserId { get; set; }
     
     public byte Type { get; set; }
-    public required string Phone { get; set; }
+    public required string Contact { get; set; }
     public byte Order { get; set; }
 
     public DateTime CreatedDate { get; set; }

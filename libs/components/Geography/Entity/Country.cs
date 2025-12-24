@@ -10,4 +10,5 @@ public class Country : IEntity
     public required string Iso3 { get; set; }
     public required string Code { get; set; }
     public required string PhoneCode { get; set; }
+    public required string UsaName { get; set; }
 }
