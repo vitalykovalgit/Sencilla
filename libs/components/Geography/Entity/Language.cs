@@ -1,5 +1,6 @@
 ﻿namespace Sencilla.Component.Geography;
 
+[UseCaching(60)]
 [CrudApi("api/v1/languages")]
 [Table(nameof(Language), Schema = "geo")]
 public class Language : IEntity

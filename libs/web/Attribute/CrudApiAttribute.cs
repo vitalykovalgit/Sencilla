@@ -11,10 +11,12 @@ public class CrudApiAttribute : Attribute
     /// 
     /// </summary>
     /// <param name="route"></param>
-    public CrudApiAttribute(string? route = null)
+    public CrudApiAttribute(string? route = null, bool cache = false)
     {
         Route = route;
+        Cache = cache;
     }
 
     public string? Route { get; }
+    public bool Cache { get; }
 }

@@ -1,5 +1,6 @@
 ﻿namespace Sencilla.Component.Users;
 
+[UseCaching(60)]
 [CrudApi("api/v1/users/addresstypes")]
 [Table(nameof(UserAddressType), Schema = "sec")]
 public class UserAddressType: IEntity<byte>

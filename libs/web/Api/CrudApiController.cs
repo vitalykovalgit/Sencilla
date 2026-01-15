@@ -1,4 +1,6 @@
-﻿namespace Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.Extensions.Caching.Memory;
+
+namespace Microsoft.AspNetCore.Mvc;
 
 /// <summary>
 /// 
@@ -15,9 +17,27 @@ public class CrudApiController<TEntity>(IServiceProvider resolver) : CrudApiCont
 /// <typeparam name="TKey"></typeparam>
 public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiController(resolver) where TEntity : class, IEntity<TKey>, new()
 {
+    private static readonly UseCachingAttribute? CachingAttribute = typeof(TEntity).GetCustomAttribute<UseCachingAttribute>();
+
     [HttpGet, Route("")]
     public virtual async Task<IActionResult> GetAll(Filter<TEntity> filter, CancellationToken token)
     {
+        if (CachingAttribute != null)
+        {
+            var cache = resolver.GetService<IMemoryCache>();
+            if (cache != null)
+            {
+                var cacheKey = $"crud_getall_{typeof(TEntity).Name}_{filter.GetHashCode()}";
+                var result = await cache.GetOrCreateAsync(cacheKey, async entry =>
+                {
+                    entry.AbsoluteExpirationRelativeToNow = CachingAttribute.Expiration;
+                    var repo = resolver.GetService<IReadRepository<TEntity, TKey>>();
+                    return await repo!.GetAll(filter, token);
+                });
+                return Ok(result);
+            }
+        }
+
         return await AjaxAction((IReadRepository<TEntity, TKey> repo) => repo.GetAll(filter, token));
     }
 

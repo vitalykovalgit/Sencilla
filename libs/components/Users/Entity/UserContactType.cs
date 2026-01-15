@@ -1,5 +1,6 @@
 ﻿namespace Sencilla.Component.Users;
 
+[UseCaching(60)]
 [CrudApi("api/v1/users/contacttypes")]
 [Table(nameof(UserContactType), Schema = "sec")]
 public class UserContactType: IEntity<byte>, IEntityOrderable<byte>, IEntityHideable 

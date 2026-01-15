@@ -6,7 +6,9 @@ namespace Sencilla.Component.Files;
 [Route("api/v1/files/stream")]
 public class FileStreamController(IServiceProvider provider, IReadRepository<File, Guid> fileRepo) : ApiController(provider)
 {
+    // TODO: Move to config cache duration
     [HttpGet, Route("{fileId}")]
+    [ResponseCache(Duration = 172000, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetFileStream(Guid fileId, int? dim, CancellationToken token)
     {
         var file = await fileRepo.FirstOrDefault(new FileFilter().ByParentId(fileId).ByDimmension(dim), token);
