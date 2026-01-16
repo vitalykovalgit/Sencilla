@@ -7,6 +7,8 @@ public class DynamicDbContext(
 {
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.UseCollation("Latin1_General_BIN2");
+
         foreach (var e in registrator.Entities)
         {
             modelBuilder.Entity(e, (c) =>
