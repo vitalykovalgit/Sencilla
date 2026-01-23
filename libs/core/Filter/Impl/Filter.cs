@@ -38,6 +38,13 @@ public class Filter : IFilter
         Properties[name].AddValues(values);
     }
 
+    public void AddQuery(string query)
+    {
+        Properties ??= new Dictionary<string, FilterProperty>();
+        if (!Properties.ContainsKey(query))
+            Properties[query] = new FilterProperty { Query = query };
+    }
+
     /// <summary>
     /// 
     /// </summary>

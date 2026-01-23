@@ -31,10 +31,7 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         return fs;
     }
 
-
-    public Task<Stream?> ReadFileAsync(File file, CancellationToken token = default) => Task.FromResult(ReadFile(file, token));
-
-    public Stream? ReadFile(File file, CancellationToken token = default)
+    public Task<Stream?> ReadFileAsync(File file, CancellationToken token = default)
     {
         var path = GetFilePath(file);
 
@@ -42,7 +39,18 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         if (System.IO.File.Exists(path))
             stream = System.IO.File.OpenRead(path);
 
-        return stream;
+        return Task.FromResult(stream);
+    }
+
+    public Task<Stream?> ReadFileAsync(string file, CancellationToken token = default)
+    {
+        var path = GetFullPath(file);
+
+        Stream? stream = null;
+        if (System.IO.File.Exists(path))
+            stream = System.IO.File.OpenRead(path);
+
+        return Task.FromResult(stream);
     }
 
     public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken token = default)
@@ -68,6 +76,11 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         // for debug reason 
         long newOffset = fs.Position;
         return newOffset;
+    }
+
+    public Task ZipFolderAsync(string folderToArchive, string destinationFile, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
     }
 
     public Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
@@ -129,6 +142,11 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         var directory = Path.GetDirectoryName(file.Path) ?? string.Empty;
         var fileNameWithExt = Path.GetFileName(file.Path) ?? $"{file.Id}{Path.GetExtension(file.Name)}";
         return Path.Combine(options.RootPath, directory, fileNameWithExt);
+    }
+
+    private string GetFullPath(string relativeFilePath)
+    {
+        return Path.Combine(options.RootPath, relativeFilePath);
     }
 
     private void CreateFileDirectory(string path)

@@ -48,6 +48,17 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
         return downloadResponse.Value.Content;
     }
 
+    public async Task<Stream?> ReadFileAsync(string file, CancellationToken token = default)
+    {
+        var (containerName, blobName) = GetContainerAndFileName(file);
+
+        var blobContainerClient = GetContainerClient(containerName, blobName);
+        var blobClient = blobContainerClient.GetBlobClient(blobName);
+
+        var downloadResponse = await blobClient.DownloadStreamingAsync(null, token);
+        return downloadResponse.Value.Content;
+    }
+
     public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken token = default)
     {
         using var ms = new MemoryStream(content);
@@ -56,6 +67,12 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
 
     public Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken token = default) =>
         WriteStreamToBlobAsync(file, stream, offset, length, token);
+
+
+    public Task ZipFolderAsync(string folderToArchive, string destinationFile, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
 
     public Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
     {

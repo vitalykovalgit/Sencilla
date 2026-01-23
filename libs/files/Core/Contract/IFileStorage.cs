@@ -26,10 +26,12 @@ public interface IFileStorage
     Stream OpenFileStream(string path, long offset = 0, CancellationToken token = default);
 
     Task<Stream?> ReadFileAsync(File file, CancellationToken token = default);
+    Task<Stream?> ReadFileAsync(string file, CancellationToken token = default);
 
     Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken token = default);
     Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken token = default);
 
+    Task ZipFolderAsync(string folderToArchive, string destinationFile, CancellationToken token = default);
 
     Task<File?> DeleteFileAsync(File? file, CancellationToken token = default);
 

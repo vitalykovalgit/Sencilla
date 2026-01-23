@@ -44,6 +44,12 @@ public class AmazonS3Storage : IFileStorage
         return ms;
     }
 
+    public async Task<Stream?> ReadFileAsync(string file, CancellationToken token = default)
+    {
+        throw new NotImplementedException("Reading by path is not implemented for S3 client in this simplified implementation");
+    }
+
+
     public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken token = default)
     {
         using var ms = new MemoryStream(content);
@@ -89,6 +95,11 @@ public class AmazonS3Storage : IFileStorage
 
         var resp = await Client.PutObjectAsync(putReq, token);
         return stream.CanSeek ? stream.Length : 0;
+    }
+
+    public Task ZipFolderAsync(string folderToArchive, string destinationFile, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<bool> SaveFile(string file, Stream stream)
