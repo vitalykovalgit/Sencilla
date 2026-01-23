@@ -22,6 +22,8 @@ public interface IFileStorage
     string GetRootDirectory();
     string GetUserDirectory<T>(T userId) => GetDirectory("User", userId!);
 
+    Task<string[]> GetDirectoryEntriesAsync(string folder, CancellationToken token = default);
+
     Stream OpenFileStream(File file, long offset = 0, CancellationToken token = default);
     Stream OpenFileStream(string path, long offset = 0, CancellationToken token = default);
 

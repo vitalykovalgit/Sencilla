@@ -24,6 +24,11 @@ public class AmazonS3Storage : IFileStorage
 
     public string GetRootDirectory() => "/";
 
+    public Task<string[]> GetDirectoryEntriesAsync(string folder, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public Stream OpenFileStream(File file, long offset = 0, CancellationToken token = default)
     {
         throw new NotImplementedException("Streaming write is not implemented for S3 client in this simplified implementation");
