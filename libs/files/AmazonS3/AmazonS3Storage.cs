@@ -102,6 +102,11 @@ public class AmazonS3Storage : IFileStorage
         throw new NotImplementedException();
     }
 
+    public Task AddFilesToZipAsync(string zipFilePath, IEnumerable<string> filesToAdd, string prefixToStrip = "/published", CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<bool> SaveFile(string file, Stream stream)
     {
         var f = new File { Path = file };

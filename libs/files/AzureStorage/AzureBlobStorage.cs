@@ -69,9 +69,92 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
         WriteStreamToBlobAsync(file, stream, offset, length, token);
 
 
-    public Task ZipFolderAsync(string folderToArchive, string destinationFile, CancellationToken token = default)
+    public async Task ZipFolderAsync(string folderToArchive, string destinationFile, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var (srcContainer, srcPrefix) = GetContainerAndFileName(folderToArchive);
+        var (dstContainer, dstBlob) = GetContainerAndFileName(destinationFile);
+
+        if (!srcPrefix.EndsWith('/'))
+            srcPrefix += '/';
+
+        var srcContainerClient = GetContainerClient(srcContainer, srcPrefix);
+        var dstContainerClient = GetContainerClient(dstContainer, dstBlob);
+        await dstContainerClient.CreateIfNotExistsAsync(cancellationToken: token);
+
+        var tempZipPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip");
+        
+        try
+        {
+            using (var fileStream = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous))
+            using (var archive = new System.IO.Compression.ZipArchive(fileStream, System.IO.Compression.ZipArchiveMode.Create))
+            {
+                await foreach (var blob in srcContainerClient.GetBlobsAsync(prefix: srcPrefix, cancellationToken: token))
+                {
+                    var blobClient = srcContainerClient.GetBlobClient(blob.Name);
+                    var entryName = blob.Name.Substring(srcPrefix.Length);
+                    
+                    if (string.IsNullOrEmpty(entryName))
+                        continue;
+                    
+                    var entry = archive.CreateEntry(entryName, System.IO.Compression.CompressionLevel.Optimal);
+                    using var entryStream = entry.Open();
+                    await blobClient.DownloadToAsync(entryStream, token);
+                }
+            }
+
+            using var uploadStream = new FileStream(tempZipPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            var dstBlobClient = dstContainerClient.GetBlobClient(dstBlob);
+            await dstBlobClient.UploadAsync(uploadStream, overwrite: true, cancellationToken: token);
+        }
+        finally
+        {
+            if (System.IO.File.Exists(tempZipPath))
+                System.IO.File.Delete(tempZipPath);
+        }
+    }
+
+    public async Task AddFilesToZipAsync(string zipFilePath, IEnumerable<string> filesToAdd, string prefixToStrip = "/published", CancellationToken token = default)
+    {
+        var (zipContainer, zipBlob) = GetContainerAndFileName(zipFilePath);
+        var zipContainerClient = GetContainerClient(zipContainer, zipBlob);
+        var zipBlobClient = zipContainerClient.GetBlobClient(zipBlob);
+
+        var tempZipPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip");
+
+        try
+        {
+            await zipBlobClient.DownloadToAsync(tempZipPath, token);
+
+            using (var fileStream = new FileStream(tempZipPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None, 81920, FileOptions.Asynchronous))
+            using (var archive = new System.IO.Compression.ZipArchive(fileStream, System.IO.Compression.ZipArchiveMode.Update))
+            {
+                foreach (var filePath in filesToAdd)
+                {
+                    var (fileContainer, fileBlob) = GetContainerAndFileName(filePath);
+                    var fileContainerClient = GetContainerClient(fileContainer, fileBlob);
+                    var fileBlobClient = fileContainerClient.GetBlobClient(fileBlob);
+
+                    var entryName = filePath;
+                    if (!string.IsNullOrEmpty(prefixToStrip) && entryName.StartsWith(prefixToStrip, StringComparison.OrdinalIgnoreCase))
+                        entryName = entryName.Substring(prefixToStrip.Length).TrimStart('/');
+
+                    var existingEntry = archive.GetEntry(entryName);
+                    existingEntry?.Delete();
+
+                    var entry = archive.CreateEntry(entryName, System.IO.Compression.CompressionLevel.Optimal);
+                    using var entryStream = entry.Open();
+                    await fileBlobClient.DownloadToAsync(entryStream, token);
+                }
+            }
+
+            using var uploadStream = new FileStream(tempZipPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            await zipBlobClient.UploadAsync(uploadStream, overwrite: true, cancellationToken: token);
+        }
+        finally
+        {
+            if (System.IO.File.Exists(tempZipPath))
+                System.IO.File.Delete(tempZipPath);
+        }
     }
 
     public Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)

@@ -32,6 +32,7 @@ public interface IFileStorage
     Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken token = default);
 
     Task ZipFolderAsync(string folderToArchive, string destinationFile, CancellationToken token = default);
+    Task AddFilesToZipAsync(string zipFilePath, IEnumerable<string> filesToAdd, string prefixToStrip = "/published", CancellationToken token = default);
 
     Task<File?> DeleteFileAsync(File? file, CancellationToken token = default);
 

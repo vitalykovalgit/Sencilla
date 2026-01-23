@@ -95,6 +95,37 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         return Task.CompletedTask;
     }
 
+    public Task AddFilesToZipAsync(string zipFilePath, IEnumerable<string> filesToAdd, string prefixToStrip = "/published", CancellationToken token = default)
+    {
+        var zipPath = GetFullPath(zipFilePath);
+
+        if (!System.IO.File.Exists(zipPath))
+            throw new FileNotFoundException($"Zip file not found: {zipPath}");
+
+        using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Update);
+        
+        foreach (var filePath in filesToAdd)
+        {
+            var fullPath = GetFullPath(filePath);
+            
+            if (!System.IO.File.Exists(fullPath))
+                continue;
+
+            var entryName = filePath;
+            if (!string.IsNullOrEmpty(prefixToStrip) && entryName.StartsWith(prefixToStrip, StringComparison.OrdinalIgnoreCase))
+                entryName = entryName.Substring(prefixToStrip.Length).TrimStart('/', '\\');
+
+            entryName = entryName.Replace('\\', '/');
+
+            var existingEntry = archive.GetEntry(entryName);
+            existingEntry?.Delete();
+
+            archive.CreateEntryFromFile(fullPath, entryName, CompressionLevel.Optimal);
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
     {
         if (file != null)
