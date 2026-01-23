@@ -1,0 +1,6 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Folder Include="Contract\" />
+    <Folder Include="Impl\" />
+  </ItemGroup>
+</Project>

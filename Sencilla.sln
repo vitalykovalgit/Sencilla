@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.2.32602.215
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11415.281 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Core", "libs\core\Sencilla.Core.csproj", "{3C5B8832-AFD4-44FA-938D-09DD43BEE6A2}"
 EndProject
@@ -114,6 +114,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Component.Files.GoogleStorage", "libs\files\GoogleStorage\Sencilla.Component.Files.GoogleStorage.csproj", "{79E299E4-E5C5-4C2E-A227-49F9259057EF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Messaging.SignalR", "libs\messaging\SignalR\Sencilla.Messaging.SignalR.csproj", "{5CF27B5C-AE8A-438F-B01F-31A043759805}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "webapi", "webapi", "{A4A8651C-F370-4392-B01E-ACCC1A3B9578}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Web.MinimalApi", "libs\webapi\MinimalApi\Sencilla.Web.MinimalApi.csproj", "{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -617,11 +621,24 @@ Global
 		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Release|x64.Build.0 = Release|Any CPU
 		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Release|x86.ActiveCfg = Release|Any CPU
 		{5CF27B5C-AE8A-438F-B01F-31A043759805}.Release|x86.Build.0 = Release|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Debug|x64.Build.0 = Debug|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Debug|x86.Build.0 = Debug|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Release|x64.ActiveCfg = Release|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Release|x64.Build.0 = Release|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Release|x86.ActiveCfg = Release|Any CPU
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{B1BF51F0-DFA3-4DD3-B672-9FDE91EF51C3} = {A4A8651C-F370-4392-B01E-ACCC1A3B9578}
 		{1E20ABEB-943D-4651-8C7D-B2DFF3662747} = {6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}
 		{F150A5AF-23BC-420A-B782-B4C6F88F9512} = {1E20ABEB-943D-4651-8C7D-B2DFF3662747}
 		{D83ACE0F-B833-44E8-B34F-DCFAF36131FA} = {6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}
@@ -672,6 +689,8 @@ Global
 		{50EB5FA3-13DF-465E-9857-F8AD9E083B5E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{79E299E4-E5C5-4C2E-A227-49F9259057EF} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{5CF27B5C-AE8A-438F-B01F-31A043759805} = {E8166BE3-7AA5-4664-8EC4-B0567659727B}
+		{A4A8651C-F370-4392-B01E-ACCC1A3B9578} = {6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}
+		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185} = {A4A8651C-F370-4392-B01E-ACCC1A3B9578}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5EE15D7B-0AF6-4664-9D0B-7140B5B5961F}
