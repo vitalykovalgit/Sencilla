@@ -80,7 +80,19 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
 
     public Task ZipFolderAsync(string folderToArchive, string destinationFile, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var sourcePath = GetFullPath(folderToArchive);
+        var destPath = GetFullPath(destinationFile);
+
+        if (!Directory.Exists(sourcePath))
+            throw new DirectoryNotFoundException($"Source folder not found: {sourcePath}");
+
+        CreateFileDirectory(destPath);
+
+        if (System.IO.File.Exists(destPath))
+            System.IO.File.Delete(destPath);
+
+        ZipFile.CreateFromDirectory(sourcePath, destPath, CompressionLevel.Optimal, false);
+        return Task.CompletedTask;
     }
 
     public Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
