@@ -24,7 +24,7 @@ public class AmazonS3Storage : IFileStorage
 
     public string GetRootDirectory() => "/";
 
-    public Task<string[]> GetDirectoryEntriesAsync(string folder, CancellationToken token = default)
+    public Task<File[]> GetDirectoryEntriesAsync(string folder, CancellationToken token = default)
     {
         throw new NotImplementedException();
     }

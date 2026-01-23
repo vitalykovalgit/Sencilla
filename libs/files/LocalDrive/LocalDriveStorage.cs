@@ -8,18 +8,27 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
 
     public string GetRootDirectory() => options.RootPath;
 
-    public Task<string[]> GetDirectoryEntriesAsync(string folder, CancellationToken token = default)
+    public Task<File[]> GetDirectoryEntriesAsync(string folder, CancellationToken token = default)
     {
         var fullPath = GetFullPath(folder);
 
         if (!Directory.Exists(fullPath))
-            return Task.FromResult(Array.Empty<string>());
+            return Task.FromResult(Array.Empty<File>());
 
         var files = Directory.GetFiles(fullPath, "*", SearchOption.AllDirectories);
         var entries = files.Select(f =>
         {
+            var fileInfo = new FileInfo(f);
             var relativePath = Path.GetRelativePath(fullPath, f);
-            return "/" + relativePath.Replace('\\', '/');
+            var pathWithSlash = "/" + relativePath.Replace('\\', '/');
+            
+            return new File
+            {
+                Id = Guid.Empty,
+                Size = fileInfo.Length,
+                Path = pathWithSlash,
+                Name = fileInfo.Name
+            };
         }).ToArray();
 
         return Task.FromResult(entries);
@@ -66,7 +75,8 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
 
         Stream? stream = null;
         if (System.IO.File.Exists(path))
-            stream = System.IO.File.OpenRead(path);
+            //stream = System.IO.File.OpenRead(path);
+            stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous);
 
         return Task.FromResult(stream);
     }
@@ -196,7 +206,6 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         System.IO.File.Copy(srcPath, dstPath, true);
         return Task.FromResult(true);
     }
-
 
     private string GetFilePath(File file)
     {

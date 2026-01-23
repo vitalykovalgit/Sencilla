@@ -9,7 +9,7 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
     public string GetDirectory(string type, params object[] @params) => options.GetDirectory(type, @params);
     public string GetRootDirectory() => "/";
 
-    public async Task<string[]> GetDirectoryEntriesAsync(string folder, CancellationToken token = default)
+    public async Task<File[]> GetDirectoryEntriesAsync(string folder, CancellationToken token = default)
     {
         var (containerName, prefix) = GetContainerAndFileName(folder);
         var containerClient = GetContainerClient(containerName, prefix);
@@ -17,12 +17,20 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
         if (!prefix.EndsWith('/'))
             prefix += '/';
 
-        var entries = new List<string>();
+        var entries = new List<File>();
 
         await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix, cancellationToken: token))
         {
             var relativePath = "/" + blob.Name.Substring(prefix.Length);
-            entries.Add(relativePath);
+            var fileName = Path.GetFileName(blob.Name);
+            
+            entries.Add(new File
+            {
+                Id = Guid.Empty,
+                Size = blob.Properties.ContentLength ?? 0,
+                Path = relativePath,
+                Name = fileName
+            });
         }
 
         return entries.ToArray();
