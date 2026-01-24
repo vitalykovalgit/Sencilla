@@ -1,9 +1,9 @@
-﻿namespace Sencilla.Web.MinimalApi;
+﻿//namespace Sencilla.Web.MinimalApi;
 
-public class Put : IEndpoint
-{
-    public void MapEndpoint(IEndpointRouteBuilder app)
-    {
-        app.MapPut("put", () => "Put endpoint");
-    }
-}
+//public class Put : IEndpoint
+//{
+//    public void MapEndpoint(IEndpointRouteBuilder app)
+//    {
+//        app.MapPut("put", () => "Put endpoint");
+//    }
+//}

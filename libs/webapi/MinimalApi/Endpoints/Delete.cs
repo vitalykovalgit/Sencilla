@@ -1,9 +1,9 @@
-﻿namespace Sencilla.Web.MinimalApi;
+﻿//namespace Sencilla.Web.MinimalApi;
 
-public class Delete : IEndpoint
-{
-    public void MapEndpoint(IEndpointRouteBuilder app)
-    {
-        app.MapDelete("delete", () => "Delete endpoint");
-    }
-}
+//public class Delete : IEndpoint
+//{
+//    public void MapEndpoint(IEndpointRouteBuilder app)
+//    {
+//        app.MapDelete("delete", () => "Delete endpoint");
+//    }
+//}

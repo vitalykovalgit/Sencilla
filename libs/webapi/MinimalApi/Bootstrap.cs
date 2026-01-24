@@ -14,7 +14,7 @@ namespace Sencilla.Web.MinimalApi;
 
 public static class Bootstrap
 {
-    public static IServiceCollection AddEndpoints(this IServiceCollection services, Assembly assembly)
+    public static IServiceCollection AddSencillaEndpoints(this IServiceCollection services, Assembly assembly)
     {
         ServiceDescriptor[] serviceDescriptors = assembly
             .DefinedTypes
@@ -28,17 +28,28 @@ public static class Bootstrap
         return services;
     }
 
-    public static IApplicationBuilder MapEndpoints(this WebApplication app, RouteGroupBuilder? routeGroupBuilder = null)
-    {
-        var endpoints = app.Services.GetRequiredService<IEnumerable<IEndpoint>>();
-        IEndpointRouteBuilder builder = routeGroupBuilder is null ? app : routeGroupBuilder;
+    //public static IApplicationBuilder MapSencillaEndpoints(this IApplicationBuilder app, RouteGroupBuilder? routeGroupBuilder = null)
+    //{
+    //    var endpoints = app.ApplicationServices.GetRequiredService<IEnumerable<IEndpoint>>();
+    //    IEndpointRouteBuilder builder = routeGroupBuilder is null ? app : routeGroupBuilder;
 
+    //    foreach (var endpoint in endpoints)
+    //    {
+    //        endpoint.MapEndpoint(builder);
+    //    }
+
+    //    return app;
+    //}
+
+    public static IEndpointRouteBuilder MapSencillaEndpoints(this IEndpointRouteBuilder builder, RouteGroupBuilder? routeGroupBuilder = null)
+    {
+        var endpoints = builder.ServiceProvider.GetRequiredService<IEnumerable<IEndpoint>>();
         foreach (var endpoint in endpoints)
         {
             endpoint.MapEndpoint(builder);
         }
 
-        return app;
+        return builder;
     }
 
 }
