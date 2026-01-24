@@ -21,10 +21,12 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
     where TEntity : class, IEntity<TKey>, new()
     where TContext : DbContext
 {
+    public IQueryable<TEntity> Query => DbContext.Query<TEntity>();
+
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
     public async Task<TEntity?> GetById(TKey id, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
     {
-        var query = await Query(null, token);
+        var query = await QueryInternal(null, token);
 
         if (with is not null)
             foreach (var prop in with)
@@ -36,7 +38,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
 
     public async Task<IEnumerable<TEntity>> GetByIds(IEnumerable<TKey> ids, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
     {
-        var query = await Query(null, token);
+        var query = await QueryInternal(null, token);
 
         if (with is not null)
             foreach (var prop in with)
@@ -47,7 +49,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
 
     public async Task<IEnumerable<TEntity>> GetAll(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
     {
-        var query = await Query(filter, token);
+        var query = await QueryInternal(filter, token);
 
         if (with is not null)
             foreach (var prop in with)
@@ -58,7 +60,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
 
     public async Task<TEntity?> FirstOrDefault(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
     {
-        var query = await Query(filter, token);
+        var query = await QueryInternal(filter, token);
 
         if (with is not null)
             foreach (var prop in with)
@@ -70,36 +72,36 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
 
     public async Task<int> GetCount(IFilter? filter = null, CancellationToken token = default)
     {
-        var query = await Query(filter, token);
+        var query = await QueryInternal(filter, token);
         return await query.CountAsync(token);
     }
 
     public async Task<object> GetSum(IFilter? filter = null, CancellationToken token = default)
     {
-        var query = await Query(filter, token);
+        var query = await QueryInternal(filter, token);
         return query.Sum(filter?.Aggregate!);
     }
 
     public async Task<object> GetMax(IFilter? filter = null, CancellationToken token = default)
     {
-        var query = await Query(filter, token);
+        var query = await QueryInternal(filter, token);
         return query.Max(filter?.Aggregate!);
     }
 
     public async Task<object> GetMin(IFilter? filter = null, CancellationToken token = default)
     {
-        var query = await Query(filter, token);
+        var query = await QueryInternal(filter, token);
         return query.Min(filter?.Aggregate!);
     }
 
     public async Task<double> GetAvarage(IFilter? filter = null, CancellationToken token = default)
     {
-        var query = await Query(filter, token);
+        var query = await QueryInternal(filter, token);
         return query.Average(filter?.Aggregate!);
     }
 
 
-    protected async Task<IQueryable<TEntity>> Query(IFilter? filter, CancellationToken token)
+    protected async Task<IQueryable<TEntity>> QueryInternal(IFilter? filter, CancellationToken token)
     {
         var e = new EntityReadingEvent<TEntity> 
         { 

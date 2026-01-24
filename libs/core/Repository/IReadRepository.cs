@@ -17,6 +17,8 @@ public interface IReadRepository<TEntity> : IReadRepository<TEntity, int>
 public interface IReadRepository<TEntity, TKey> : IBaseRepository
     where TEntity : IEntity<TKey>
 {
+    IQueryable<TEntity> Query { get; }
+
     /// <summary>
     /// 
     /// </summary>

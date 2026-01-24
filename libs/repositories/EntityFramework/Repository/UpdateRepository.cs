@@ -27,6 +27,13 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
         return (await Update([entity])).FirstOrDefault();
     }
 
+    //public Task<int> ExecuteUpdateAsync(Action<IQueryable<TEntity>> updator, CancellationToken token = default)
+    //{
+    //    var query = this.DbContext.Query<TEntity>();
+    //    updator(query);
+    //    return query.Where(e => e != null).ExecuteUpdateAsync(s => s.SetProperty(e => e. = ), token);
+    //}
+
     public Task<IEnumerable<TEntity>> Update(params TEntity[] entities)
     {
         return Update(entities, CancellationToken.None);
