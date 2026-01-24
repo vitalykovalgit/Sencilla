@@ -8,8 +8,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Extensions\" />
         <Folder Include="Impl\" />
+        <Folder Include="Attributes\" />
     </ItemGroup>
 
     <ItemGroup>

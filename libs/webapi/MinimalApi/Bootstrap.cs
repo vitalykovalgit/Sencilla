@@ -2,9 +2,13 @@
 
 global using Microsoft.AspNetCore.Builder;
 global using Microsoft.AspNetCore.Routing;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Http.Features;
 
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
+
+global using Sencilla.Web.MinimalApi;
 
 namespace Sencilla.Web.MinimalApi;
 
