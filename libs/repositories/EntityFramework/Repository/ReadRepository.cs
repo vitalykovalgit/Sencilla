@@ -53,7 +53,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
             foreach (var prop in with)
                 query = query.Include(prop);
 
-        return await query.ToListAsync(token).ConfigureAwait(false);
+            return await query.ToListAsync(token).ConfigureAwait(false);
     }
 
     public async Task<TEntity?> FirstOrDefault(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)

@@ -3,7 +3,7 @@
 
 [Table(nameof(File))]
 [MainEntity(typeof(File))]
-public class FileUpload: IEntity<Guid>, IEntityUpdateable
+public class FileUpload: IEntity<Guid>, IEntityUpdateable, IEntityDeleteable
 {
     /// <summary>
     /// References to File.Id

@@ -3,7 +3,7 @@
 namespace Sencilla.Component.Users;
 
 [Table(nameof(User), Schema = "sec")]
-public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityRemoveable
+public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityRemoveable, IEntityDeleteable
 {
     public int Id { get; set; }
 

@@ -28,10 +28,17 @@ public class DeleteRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
 
     public async Task<int> Delete(IEnumerable<TKey> ids, CancellationToken token = default)
     {
-        var count = await DbContext.Set<TEntity>().Where(e => ids.Contains(e.Id)).ExecuteDeleteAsync(token).ConfigureAwait(false);
-        await Save(token);
-        return count;
+        var entities = await DbContext.Set<TEntity>()?.Where(e => ids.Contains(e.Id))?.ToListAsync(token);
+
+        if (!entities.Any())
+            return 0;
+
+        DbContext.Set<TEntity>().RemoveRange(entities);
+        await DbContext.SaveChangesAsync(token);
+
+        return entities.Count;
     }
+
 
     public Task<int> Delete(TEntity entity, CancellationToken token = default)
     {

@@ -1,12 +1,22 @@
-﻿namespace Sencilla.Repository.EntityFramework;
+﻿using Microsoft.Extensions.Options;
+using Sencilla.Repository.EntityFramework.Extension;
+
+namespace Sencilla.Repository.EntityFramework;
 
 [DisableInjection]
 public class DynamicDbContext(
     [NotNull] DbContextOptions options,
-    RepositoryRegistrator registrator) : DbContext(options)
+    RepositoryRegistrator registrator,
+    IOptions<DatabaseOptions> dbOptions) : DbContext(options)
 {
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.UseCollation("Latin1_General_BIN2");
+        var collation = dbOptions.Value.DefaultCollation;
+
+        if (!string.IsNullOrWhiteSpace(collation))
+            modelBuilder.UseCollation(collation);
+
         foreach (var e in registrator.Entities)
         {
             modelBuilder.Entity(e, (c) =>

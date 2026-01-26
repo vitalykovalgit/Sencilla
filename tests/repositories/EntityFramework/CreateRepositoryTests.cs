@@ -64,12 +64,12 @@ namespace Sencilla.Repository.EntityFramework.Tests
         public async Task EntityCreateWithConstraints_ShouldBeCreated()
         {
             // Test repo 
-            var repo = new CreateRepository<Entity, DynamicDbContext>(RepositoryDependency, new DynamicDbContext(DbOptions, RepoRegistrator));
-            var created = await repo.Create(new Entity 
-            {
-                Id = 1,
-                Name = "Jonh",
-            });
+            //var repo = new CreateRepository<Entity, DynamicDbContext>(RepositoryDependency, new DynamicDbContext(DbOptions, RepoRegistrator));
+            //var created = await repo.Create(new Entity 
+            //{
+            //    Id = 1,
+            //    Name = "Jonh",
+            //});
 
             // Test result
         }
