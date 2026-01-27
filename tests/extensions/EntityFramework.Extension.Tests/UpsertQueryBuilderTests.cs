@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace Sencilla.EntityFramework.Extension.Tests;
 
 public class UpsertQueryBuilderTests
@@ -26,7 +28,7 @@ public class UpsertQueryBuilderTests
              .Options;
 
         // Mock DB context and setup it
-        _repoRegistrator.Entities.Add(typeof(TestEntity));
+        RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(TestEntity));
     }
 
     [Test]

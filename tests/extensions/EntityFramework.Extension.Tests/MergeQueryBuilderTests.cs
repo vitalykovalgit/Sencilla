@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace Sencilla.EntityFramework.Extension.Tests;
 
 public class MergeQueryBuilderTests
@@ -25,7 +27,7 @@ public class MergeQueryBuilderTests
              .UseInMemoryDatabase(databaseName: "Picassa")
              .Options;
 
-        _repoRegistrator.Entities.Add(typeof(TestEntity));
+        RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(TestEntity));
     }
 
     [Test]

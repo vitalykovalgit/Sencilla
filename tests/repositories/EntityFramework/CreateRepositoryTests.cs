@@ -25,7 +25,7 @@ namespace Sencilla.Repository.EntityFramework.Tests
                  .Options;
 
             // Mock DB context and setup it
-            RepoRegistrator.Entities.Add(typeof(Entity));
+            RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(Entity));
             // Insert seed data into the database using one instance of the context
             //using (var context = new DynamicDbContext(options, registrator))
             //{
@@ -64,7 +64,7 @@ namespace Sencilla.Repository.EntityFramework.Tests
         public async Task EntityCreateWithConstraints_ShouldBeCreated()
         {
             // Test repo 
-            var repo = new CreateRepository<Entity, DynamicDbContext>(RepositoryDependency, new DynamicDbContext(DbOptions, RepoRegistrator));
+            var repo = new CreateRepository<Entity, DynamicDbContext>(RepositoryDependency, new DynamicDbContext(DbOptions));
             var created = await repo.Create(new Entity 
             {
                 Id = 1,
