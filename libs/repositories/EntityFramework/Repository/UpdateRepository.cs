@@ -1,4 +1,6 @@
 ﻿
+using Microsoft.Identity.Client;
+
 namespace Sencilla.Repository.EntityFramework;
 
 /// <summary>
@@ -39,6 +41,21 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
         return Update(entities, CancellationToken.None);
     }
 
+    public void Detach(IEnumerable<TEntity> entities)
+    {
+        // Detach entities from context to avoid tracking issues
+        foreach (var entity in entities) 
+        {
+            if (entity != null)
+                DbContext.Entry(entity).State = EntityState.Detached;
+        }
+    }
+
+    public void ClearChangeTracker()
+    {
+        DbContext.ChangeTracker.Clear();
+    }
+
     public async Task<IEnumerable<TEntity>> Update(IEnumerable<TEntity> entities, CancellationToken token = default)
     {
         // Notify before updating 
@@ -53,8 +70,17 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
                 track.UpdatedDate = DateTime.UtcNow;
         }
 
-        DbContext.UpdateRange(query);
-        await Save(token);
+        //try
+        //{
+            DbContext.UpdateRange(query);
+            await Save(token);
+            context.ChangeTracker.Clear();
+        //}
+        //finally
+        //{
+            // Do not do like this!!!
+            // context.ChangeTracker.Clear();
+        //}
 
         // Notify that entity updated
         var eventUpdated = new EntityUpdatedEvent<TEntity> { Entities = query };

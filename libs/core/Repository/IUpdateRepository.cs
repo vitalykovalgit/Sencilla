@@ -35,4 +35,8 @@ public interface IUpdateRepository<TEntity, TKey> : IReadRepository<TEntity, TKe
     /// <param name="token"></param>
     /// <returns></returns>
     Task<IEnumerable<TEntity>> Update(IEnumerable<TEntity> entities, CancellationToken token = default);
+
+    void Detach(IEnumerable<TEntity> entities);
+    void ClearChangeTracker();
+
 }
