@@ -24,6 +24,155 @@ public class AmazonS3Storage : IFileStorage
 
     public string GetRootDirectory() => "/";
 
+    public async Task<string> RenameDirectoryAsync(string sourceDir, string destDir, CancellationToken token = default)
+    {
+        var (srcBucket, srcPrefix) = GetBucketAndKey(sourceDir);
+        var (dstBucket, dstPrefix) = GetBucketAndKey(destDir);
+
+        if (!srcPrefix.EndsWith('/'))
+            srcPrefix += '/';
+        if (!dstPrefix.EndsWith('/'))
+            dstPrefix += '/';
+
+        // List all objects with the source prefix
+        var listRequest = new ListObjectsV2Request
+        {
+            BucketName = srcBucket,
+            Prefix = srcPrefix
+        };
+
+        ListObjectsV2Response listResponse;
+        var objectsToMove = new List<string>();
+
+        do
+        {
+            listResponse = await Client.ListObjectsV2Async(listRequest, token);
+            objectsToMove.AddRange(listResponse.S3Objects.Select(o => o.Key));
+            listRequest.ContinuationToken = listResponse.NextContinuationToken;
+        } 
+        while (listResponse.IsTruncated ?? false);
+
+        // Copy and delete each object
+        foreach (var srcKey in objectsToMove)
+        {
+            var relativePath = srcKey.Substring(srcPrefix.Length);
+            var dstKey = dstPrefix + relativePath;
+
+            // Copy object
+            var copyRequest = new CopyObjectRequest
+            {
+                SourceBucket = srcBucket,
+                SourceKey = srcKey,
+                DestinationBucket = dstBucket,
+                DestinationKey = dstKey
+            };
+            await Client.CopyObjectAsync(copyRequest, token);
+
+            // Delete source object
+            var deleteRequest = new DeleteObjectRequest
+            {
+                BucketName = srcBucket,
+                Key = srcKey
+            };
+            await Client.DeleteObjectAsync(deleteRequest, token);
+        }
+
+        return destDir;
+    }
+
+    public async Task CreateDirectoryAsync(string path)
+    {
+        // S3 doesn't have real directories, but we can create a marker object
+        // or ensure the bucket exists if path is just a bucket name
+        var (bucket, key) = GetBucketAndKey(path);
+
+        if (string.IsNullOrEmpty(bucket))
+            return;
+
+        // Ensure bucket exists
+        try
+        {
+            await Client.HeadBucketAsync(new HeadBucketRequest { BucketName = bucket });
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            await Client.PutBucketAsync(new PutBucketRequest { BucketName = bucket });
+        }
+
+        // If there's a key (subdirectory), create a marker object to represent the directory
+        if (!string.IsNullOrEmpty(key))
+        {
+            var markerKey = key.TrimEnd('/') + '/';
+
+            // Check if marker already exists
+            try
+            {
+                await Client.GetObjectMetadataAsync(bucket, markerKey);
+            }
+            catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Create directory marker
+                var putRequest = new PutObjectRequest
+                {
+                    BucketName = bucket,
+                    Key = markerKey,
+                    ContentBody = string.Empty
+                };
+                await Client.PutObjectAsync(putRequest);
+            }
+        }
+    }
+
+    public async Task DeleteDirectoryAsync(string path)
+    {
+        var (bucket, prefix) = GetBucketAndKey(path);
+
+        if (string.IsNullOrEmpty(bucket))
+            return;
+
+        // If no prefix, delete the entire bucket
+        if (string.IsNullOrEmpty(prefix))
+        {
+            try
+            {
+                await Client.DeleteBucketAsync(bucket);
+            }
+            catch (AmazonS3Exception)
+            {
+                // Bucket might not exist or might not be empty, ignore
+            }
+            return;
+        }
+
+        // Delete all objects with the specified prefix
+        if (!prefix.EndsWith('/'))
+            prefix += '/';
+
+        var listRequest = new ListObjectsV2Request
+        {
+            BucketName = bucket,
+            Prefix = prefix
+        };
+
+        ListObjectsV2Response listResponse;
+        do
+        {
+            listResponse = await Client.ListObjectsV2Async(listRequest);
+
+            foreach (var obj in listResponse.S3Objects)
+            {
+                var deleteRequest = new DeleteObjectRequest
+                {
+                    BucketName = bucket,
+                    Key = obj.Key
+                };
+                await Client.DeleteObjectAsync(deleteRequest);
+            }
+
+            listRequest.ContinuationToken = listResponse.NextContinuationToken;
+        } while (listResponse.IsTruncated ?? false);
+    }
+
     public Task<File[]> GetDirectoryEntriesAsync(string folder, CancellationToken token = default)
     {
         throw new NotImplementedException();
@@ -66,11 +215,71 @@ public class AmazonS3Storage : IFileStorage
 
     public async Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
     {
-        if (file == null) return null;
-        var (bucket, key) = GetBucketAndKey(file.Path);
-        var req = new DeleteObjectRequest { BucketName = bucket, Key = key };
-        await Client.DeleteObjectAsync(req, token);
-        return file;
+        if (file == null)
+            return null;
+
+        try
+        {
+            var (bucket, key) = GetBucketAndKey(file.Path);
+
+            if (string.IsNullOrEmpty(bucket) || string.IsNullOrEmpty(key))
+                return null;
+
+            var deleteRequest = new DeleteObjectRequest 
+            { 
+                BucketName = bucket, 
+                Key = key 
+            };
+
+            var response = await Client.DeleteObjectAsync(deleteRequest, token);
+
+            // Check if deletion was successful (HTTP 204 No Content)
+            if (response.HttpStatusCode == System.Net.HttpStatusCode.NoContent)
+                return file;
+
+            return null;
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // File doesn't exist, return null
+            return null;
+        }
+        catch (AmazonS3Exception ex)
+        {
+            throw new IOException($"S3 error when deleting object: {file.Path}. Status: {ex.StatusCode}, Error: {ex.ErrorCode}", ex);
+        }
+    }
+
+    public async Task DeleteFileAsync(string filePath, CancellationToken token = default)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return;
+
+        try
+        {
+            var (bucket, key) = GetBucketAndKey(filePath);
+
+            if (string.IsNullOrEmpty(bucket) || string.IsNullOrEmpty(key))
+                return;
+
+            var deleteRequest = new DeleteObjectRequest 
+            { 
+                BucketName = bucket, 
+                Key = key 
+            };
+
+            var response = await Client.DeleteObjectAsync(deleteRequest, token);
+            return;
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // File doesn't exist, return null
+            return;
+        }
+        catch (AmazonS3Exception ex)
+        {
+            throw new IOException($"S3 error when deleting object: {filePath}. Status: {ex.StatusCode}, Error: {ex.ErrorCode}", ex);
+        }
     }
 
     private async Task<long> WriteStreamToS3Async(File file, Stream stream, CancellationToken token = default)

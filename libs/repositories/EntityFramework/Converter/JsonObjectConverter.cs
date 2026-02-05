@@ -1,5 +1,4 @@
-﻿
-namespace Sencilla.Repository.EntityFramework;
+﻿namespace Sencilla.Repository.EntityFramework;
 
 [DisableInjection]
 public class JsonObjectConverter<T> : ValueConverter<T, string>

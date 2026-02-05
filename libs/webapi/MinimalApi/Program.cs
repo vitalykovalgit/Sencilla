@@ -1,3 +1,6 @@
+//
+// TODO: Leave this as example how to use API Versioning with Minimal APIs in .NET 10.0
+//
 //using Asp.Versioning;
 //using Asp.Versioning.Builder;
 //using MinimalEndpoints.Extensions;

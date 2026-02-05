@@ -1,12 +1,4 @@
-﻿global using Microsoft.EntityFrameworkCore;
-global using Microsoft.EntityFrameworkCore.Query;
-global using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-global using Microsoft.Extensions.DependencyInjection;
-global using Microsoft.Extensions.DependencyInjection.Extensions;
-global using Microsoft.Extensions.Hosting;
-global using Sencilla.Core;
-global using Sencilla.Repository.EntityFramework;
-global using System;
+﻿global using System;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Diagnostics.CodeAnalysis;
 global using System.Linq;
@@ -15,7 +7,17 @@ global using System.Linq.Expressions;
 global using System.Reflection;
 global using System.Text;
 global using System.Text.Json;
-using System.Diagnostics;
+global using System.Diagnostics;
+
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Query;
+global using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.DependencyInjection.Extensions;
+global using Microsoft.Extensions.Hosting;
+
+global using Sencilla.Core;
+global using Sencilla.Repository.EntityFramework;
 
 [assembly: AutoDiscovery]
 
@@ -43,6 +45,8 @@ public static class RepositoryEntityFrameworkBootstrap
 
             foreach (var type in assembly.GetTypes())
             {
+                builder.RegisterEFContexts(type, configure);
+
                 builder.RegisterEFRepositoriesForType(type, out bool isAdded);
                 if (isAdded && !Entities.Contains(type))
                     Entities.Add(type);
@@ -51,6 +55,7 @@ public static class RepositoryEntityFrameworkBootstrap
 
         builder.TryAddScoped<RepositoryDependency>();
         builder.AddDbContext<DynamicDbContext>(configure);
+
         builder.AddEntityFrameworkCoreExtensions();
         return builder;
     }

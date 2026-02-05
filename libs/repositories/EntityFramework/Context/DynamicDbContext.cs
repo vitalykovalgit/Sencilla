@@ -5,9 +5,6 @@ public class DynamicDbContext([NotNull] DbContextOptions options) : DbContext(op
 {
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        //foreach (var e in registrator.Entities)
-        //    BuildModelForEntity(modelBuilder, e);
-
         foreach (var e in RepositoryEntityFrameworkBootstrap.Entities)
             BuildModelForEntity(modelBuilder, e);
 
@@ -19,6 +16,13 @@ public class DynamicDbContext([NotNull] DbContextOptions options) : DbContext(op
 
     public void BuildModelForEntity(ModelBuilder modelBuilder, Type entityType)
     {
+        // ignore if has DbContextAttribute 
+        var customDbContext = entityType.GetCustomAttribute(typeof(DbContextAttribute<>));
+        if (customDbContext != null)
+        {
+            return;
+        }
+
         modelBuilder.Entity(entityType, (c) =>
         {
             var ta = entityType.GetCustomAttribute<TableAttribute>();

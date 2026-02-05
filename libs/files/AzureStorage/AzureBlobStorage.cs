@@ -184,9 +184,159 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
         }
     }
 
-    public Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
+    public async Task<string> RenameDirectoryAsync(string sourceDir, string destDir, CancellationToken token = default)
     {
-        throw new NotImplementedException();
+        var (srcContainer, srcPrefix) = GetContainerAndFileName(sourceDir);
+        var (dstContainer, dstPrefix) = GetContainerAndFileName(destDir);
+
+        if (!srcPrefix.EndsWith('/'))
+            srcPrefix += '/';
+        if (!dstPrefix.EndsWith('/'))
+            dstPrefix += '/';
+
+        var srcContainerClient = GetContainerClient(srcContainer, srcPrefix);
+        var dstContainerClient = GetContainerClient(dstContainer, dstPrefix);
+
+        // Ensure destination container exists
+        await dstContainerClient.CreateIfNotExistsAsync(cancellationToken: token);
+
+        // List all blobs in source prefix
+        var blobsToMove = new List<string>();
+        await foreach (var blob in srcContainerClient.GetBlobsAsync(prefix: srcPrefix, cancellationToken: token))
+        {
+            blobsToMove.Add(blob.Name);
+        }
+
+        // Copy each blob to new location and delete the old one
+        foreach (var blobName in blobsToMove)
+        {
+            var srcBlobClient = srcContainerClient.GetBlobClient(blobName);
+            var relativePath = blobName.Substring(srcPrefix.Length);
+            var dstBlobName = dstPrefix + relativePath;
+            var dstBlobClient = dstContainerClient.GetBlobClient(dstBlobName);
+
+            // Copy blob
+            var copyOperation = await dstBlobClient.StartCopyFromUriAsync(srcBlobClient.Uri, cancellationToken: token);
+            await copyOperation.WaitForCompletionAsync(token);
+
+            // Delete source blob
+            await srcBlobClient.DeleteIfExistsAsync(cancellationToken: token);
+        }
+
+        return destDir;
+    }
+
+    public async Task CreateDirectoryAsync(string path)
+    {
+        // Azure Blob Storage doesn't have real directories, but we can create a marker blob
+        // or ensure the container exists if path is just a container name
+        var (containerName, prefix) = GetContainerAndFileName(path);
+
+        if (string.IsNullOrEmpty(containerName))
+            return;
+
+        var containerClient = BlobServiceClient.GetBlobContainerClient(containerName);
+        await containerClient.CreateIfNotExistsAsync();
+
+        // If there's a prefix (subdirectory), create a marker blob to represent the directory
+        if (!string.IsNullOrEmpty(prefix))
+        {
+            var markerBlobName = prefix.TrimEnd('/') + "/.directory";
+            var blobClient = containerClient.GetBlobClient(markerBlobName);
+
+            // Only create if it doesn't exist
+            if (!await blobClient.ExistsAsync())
+            {
+                using var emptyStream = new MemoryStream(Array.Empty<byte>());
+                await blobClient.UploadAsync(emptyStream, overwrite: false);
+            }
+        }
+    }
+
+    public async Task DeleteDirectoryAsync(string path)
+    {
+        var (containerName, prefix) = GetContainerAndFileName(path);
+
+        if (string.IsNullOrEmpty(containerName))
+            return;
+
+        var containerClient = BlobServiceClient.GetBlobContainerClient(containerName);
+
+        // If no prefix, delete the entire container
+        if (string.IsNullOrEmpty(prefix))
+        {
+            await containerClient.DeleteIfExistsAsync();
+            return;
+        }
+
+        // Delete all blobs with the specified prefix
+        if (!prefix.EndsWith('/'))
+            prefix += '/';
+
+        await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix))
+        {
+            var blobClient = containerClient.GetBlobClient(blob.Name);
+            await blobClient.DeleteIfExistsAsync();
+        }
+    }
+
+    public async Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
+    {
+        if (file == null)
+            return null;
+
+        try
+        {
+            var (containerName, blobName) = GetContainerAndFileName(file);
+
+            if (string.IsNullOrEmpty(containerName) || string.IsNullOrEmpty(blobName))
+                return null;
+
+            var containerClient = BlobServiceClient.GetBlobContainerClient(containerName);
+            var blobClient = containerClient.GetBlobClient(blobName);
+
+            var response = await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: token);
+
+            return response.Value ? file : null;
+        }
+        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        {
+            // File doesn't exist, return null
+            return null;
+        }
+        catch (Azure.RequestFailedException ex)
+        {
+            throw new IOException($"Azure Storage error when deleting blob: {file.Path}. Status: {ex.Status}, Error: {ex.ErrorCode}", ex);
+        }
+    }
+
+    public async Task DeleteFileAsync(string filePath, CancellationToken token = default)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return;
+
+        try
+        {
+            var (containerName, blobName) = GetContainerAndFileName(filePath);
+
+            if (string.IsNullOrEmpty(containerName) || string.IsNullOrEmpty(blobName))
+                return;
+
+            var containerClient = BlobServiceClient.GetBlobContainerClient(containerName);
+            var blobClient = containerClient.GetBlobClient(blobName);
+
+            var response = await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: token);
+            return;
+        }
+        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        {
+            // File doesn't exist, return null
+            return;
+        }
+        catch (Azure.RequestFailedException ex)
+        {
+            throw new IOException($"Azure Storage error when deleting blob: {filePath}. Status: {ex.Status}, Error: {ex.ErrorCode}", ex);
+        }
     }
 
     private async Task<long> WriteStreamToBlobAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken? token = null)

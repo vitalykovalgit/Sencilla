@@ -154,15 +154,93 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         return Task.CompletedTask;
     }
 
+    public Task<string> RenameDirectoryAsync(string sourceDir, string destDir, CancellationToken token = default)
+    {
+        var sourcePath = GetFullPath(sourceDir);
+        var destPath = GetFullPath(destDir);
+
+        if (!Directory.Exists(sourcePath))
+            throw new DirectoryNotFoundException($"Source directory not found: {sourcePath}");
+
+        if (Directory.Exists(destPath))
+            throw new IOException($"Destination directory already exists: {destPath}");
+
+        // Ensure parent directory exists for destination
+        var destParent = Path.GetDirectoryName(destPath);
+        if (!string.IsNullOrEmpty(destParent) && !Directory.Exists(destParent))
+            Directory.CreateDirectory(destParent);
+
+        Directory.Move(sourcePath, destPath);
+        return Task.FromResult(destDir);
+    }
+
+    public Task CreateDirectoryAsync(string path)
+    {
+        var fullPath = GetFullPath(path);
+
+        if (!Directory.Exists(fullPath))
+            Directory.CreateDirectory(fullPath);
+
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteDirectoryAsync(string path)
+    {
+        var fullPath = GetFullPath(path);
+
+        if (Directory.Exists(fullPath))
+            Directory.Delete(fullPath, recursive: true);
+
+        return Task.CompletedTask;
+    }
+
     public Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
     {
-        if (file != null)
+        if (file == null)
+            return Task.FromResult<File?>(null);
+
+        try
         {
             var path = GetFilePath(file);
-            System.IO.File.Delete(path);
-        }
 
-        return Task.FromResult(file);
+            if (System.IO.File.Exists(path))
+            {
+                System.IO.File.Delete(path);
+            }
+
+            return Task.FromResult<File?>(file);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new UnauthorizedAccessException($"Access denied when deleting file: {file.Path}", ex);
+        }
+        catch (IOException ex)
+        {
+            throw new IOException($"IO error occurred while deleting file: {file.Path}", ex);
+        }
+    }
+
+    public Task DeleteFileAsync(string filePath, CancellationToken token = default)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return Task.CompletedTask;
+
+        try
+        {
+            var fullPath = GetFullPath(filePath);
+            if (System.IO.File.Exists(fullPath))
+                System.IO.File.Delete(fullPath);
+
+            return Task.CompletedTask;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new UnauthorizedAccessException($"Access denied when deleting file: {filePath}", ex);
+        }
+        catch (IOException ex)
+        {
+            throw new IOException($"IO error occurred while deleting file: {filePath}", ex);
+        }
     }
 
     public async Task<bool> SaveFile(string file, Stream stream)

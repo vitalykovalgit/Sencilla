@@ -1,7 +1,4 @@
-﻿
-using Microsoft.Identity.Client;
-
-namespace Sencilla.Repository.EntityFramework;
+﻿namespace Sencilla.Repository.EntityFramework;
 
 /// <summary>
 /// 

@@ -1,10 +1,31 @@
-﻿
-using System.ComponentModel;
-
-namespace Microsoft.EntityFrameworkCore;
+﻿namespace Microsoft.EntityFrameworkCore;
 
 public static class RepoEFIServiceCollectionEx
 {
+    static Type baseDbContextType = typeof(DbContext);
+    static Type dynamicDbContextType = typeof(DynamicDbContext);
+    public static IServiceCollection RegisterEFContexts(this IServiceCollection container, Type type, Action<DbContextOptionsBuilder> configure)
+    {
+        if (type == dynamicDbContextType) return container;
+
+        if (baseDbContextType.IsAssignableFrom(type) && type.IsClass && !type.IsAbstract && !type.IsGenericType)
+        {
+            // Register DbContext dynamically using reflection
+            Type dbContextType = type;
+            var addDbContextMethod = typeof(EntityFrameworkServiceCollectionExtensions)
+                .GetMethods()
+                .First(m => m.Name == nameof(EntityFrameworkServiceCollectionExtensions.AddDbContext)
+                         && m.IsGenericMethodDefinition
+                         && m.GetParameters().Length == 4
+                         && m.GetParameters()[1].ParameterType == typeof(Action<DbContextOptionsBuilder>));
+
+            var genericMethod = addDbContextMethod.MakeGenericMethod(dbContextType);
+            genericMethod.Invoke(null, [container, configure, ServiceLifetime.Scoped, ServiceLifetime.Scoped]);
+        }
+
+        return container;
+    }
+
     public static IServiceCollection RegisterEFRepositoriesForType(this IServiceCollection container, Type type, out bool isAdded) 
     {
         // 
@@ -16,8 +37,11 @@ public static class RepoEFIServiceCollectionEx
             var entity = type.GetInterfaces()
                              .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEntity<>));
 
+            var customDbContext = type.GetCustomAttribute(typeof(DbContextAttribute<>)) as IDbContextAttribute;
             var key = entity.GetGenericArguments()[0];
-            var context = typeof(DynamicDbContext);
+            var context = dynamicDbContextType;
+            if (customDbContext != null) 
+                context = customDbContext.Type;
 
             RegisterReadRepo(container, type, context, key);
             RegisterCreateRepo(container, type, context, key);

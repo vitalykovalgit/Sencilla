@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-
-namespace Microsoft.AspNetCore.Mvc;
+﻿namespace Microsoft.AspNetCore.Mvc;
 
 /// <summary>
 /// 

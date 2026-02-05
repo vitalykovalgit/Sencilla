@@ -17,6 +17,7 @@ global using Microsoft.AspNetCore.Http.Features;
 
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Caching.Memory;
 
 global using Sencilla.Core;
 global using Sencilla.Web;
