@@ -1,5 +1,4 @@
-﻿
-namespace Sencilla.Component.Security;
+﻿namespace Sencilla.Component.Security;
 
 /// <summary>
 /// 
@@ -16,24 +15,7 @@ public class SecurityAttributeDiscoverer: ITypeRegistrator
     /// </summary>
     /// <param name="container"></param>
     /// <param name="type"></param>
-    public void Register(IServiceCollection container, Type type)
-    {
-        if (typeof(IBaseEntity).IsAssignableFrom(type) && type.IsClass && !type.IsAbstract)
-        {
-            var attributes = type.GetCustomAttributes(typeof(AllowAccessAttribute), true);
-            foreach (AllowAccessAttribute a in attributes)
-            {
-                // get resource 
-                Permissions.Add(new Matrix 
-                {
-                    Resource = SecurityProvider.ResourceName(type),
-                    Action = (int)a.Action,
-                    Constraint = a.Constraint, 
-                    Role = a.Role,
-                });   
-            }
-        }
-    }
+    public void Register(IServiceCollection container, Type type) => container.AddSencillaSecurityFromAttributes(type, Permissions);
 }
 
 

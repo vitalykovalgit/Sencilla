@@ -7,19 +7,5 @@ public class SecurityConstraintRegistrator : ITypeRegistrator
     /// </summary>
     /// <param name="container"></param>
     /// <param name="type"></param>
-    public void Register(IServiceCollection container, Type type)
-    {
-        if (type.IsAssignableTo(typeof(IBaseEntity)) && type.IsClass && !type.IsAbstract && !type.IsGenericType)
-        {
-            var constraint = typeof(SecurityConstraintHandler<>).MakeGenericType(type);
-
-            // read interafce 
-            var readInterface = typeof(IEventHandlerBase<>).MakeGenericType(typeof(EntityReadingEvent<>).MakeGenericType(type));
-            container.AddTransient(readInterface, constraint);
-
-            // create interafce 
-            var createInterface = typeof(IEventHandlerBase<>).MakeGenericType(typeof(EntityCreatingEvent<>).MakeGenericType(type));
-            container.AddTransient(createInterface, constraint);
-        }
-    }
+    public void Register(IServiceCollection container, Type type) => container.AddSencillaSecurityFromDatabase(type);
 }

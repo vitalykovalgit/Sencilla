@@ -4,12 +4,30 @@ public static class RepoEFIServiceCollectionEx
 {
     static Type baseDbContextType = typeof(DbContext);
     static Type dynamicDbContextType = typeof(DynamicDbContext);
+
+    public static IServiceCollection RegisterEFFilters(this IServiceCollection container, Type type)
+    {
+        if (type.IsAssignableTo(typeof(IBaseEntity)) && type.IsClass && !type.IsAbstract && !type.IsGenericType)
+        {
+            var @event = typeof(EntityReadingEvent<>).MakeGenericType(type);
+            var @interface = typeof(IEventHandlerBase<>).MakeGenericType(@event);
+            var constraint = typeof(FilterConstraintHandler<>).MakeGenericType(type);
+            container.AddTransient(@interface, constraint);
+        }
+        return container;
+    }
+
+
     public static IServiceCollection RegisterEFContexts(this IServiceCollection container, Type type, Action<DbContextOptionsBuilder> configure)
     {
         if (type == dynamicDbContextType) return container;
 
         if (baseDbContextType.IsAssignableFrom(type) && type.IsClass && !type.IsAbstract && !type.IsGenericType)
         {
+            // Check if DbContext is already registered
+            if (container.Any(descriptor => descriptor.ServiceType == type))
+                return container; // Already registered, skip
+
             // Register DbContext dynamically using reflection
             Type dbContextType = type;
             var addDbContextMethod = typeof(EntityFrameworkServiceCollectionExtensions)

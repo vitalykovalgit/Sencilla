@@ -33,25 +33,26 @@ public static class RepositoryEntityFrameworkBootstrap
         return builder.AddSencillaRepositoryForEF(configure);
     }
 
+    public static IServiceCollection AddSencillaRepositories(this IServiceCollection builder)
+    {
+        var assembly = new StackFrame(1).GetMethod()?.DeclaringType?.Assembly;
+
+        if (assembly != null && !Assemblies.Contains(assembly))
+            Assemblies.Add(assembly);
+
+        return builder;
+    }
+
+
     public static IServiceCollection AddSencillaRepositoryForEF(this IServiceCollection builder, Action<DbContextOptionsBuilder> configure)
     {
         // Try to add repository for calling assembly
-        // Get calling asseambly
+        // Get calling assembly
         var assembly = new StackFrame(1).GetMethod()?.DeclaringType?.Assembly;
-        if (assembly != null)
-        {
-            if (!Assemblies.Contains(assembly))
-                Assemblies.Add(assembly);
+        if (assembly != null && !Assemblies.Contains(assembly))
+            Assemblies.Add(assembly);
 
-            foreach (var type in assembly.GetTypes())
-            {
-                builder.RegisterEFContexts(type, configure);
-
-                builder.RegisterEFRepositoriesForType(type, out bool isAdded);
-                if (isAdded && !Entities.Contains(type))
-                    Entities.Add(type);
-            }
-        }
+        builder.AddSencillaEFRepositoryForAssemblies(configure);
 
         builder.TryAddScoped<RepositoryDependency>();
         builder.AddDbContext<DynamicDbContext>(configure);
@@ -59,4 +60,43 @@ public static class RepositoryEntityFrameworkBootstrap
         builder.AddEntityFrameworkCoreExtensions();
         return builder;
     }
+
+    public static IServiceCollection AddSencillaEFRepositoryForAssemblies(this IServiceCollection builder, Action<DbContextOptionsBuilder> configure)
+    {
+        foreach (var assembly in Assemblies)
+            builder.AddSencillaEFRepositoryForAssembly(assembly, configure);
+        return builder;
+    }
+
+
+    public static IServiceCollection AddSencillaEFRepositoryForAssembly(this IServiceCollection builder, Assembly assembly, Action<DbContextOptionsBuilder> configure)
+    {
+        foreach (var type in assembly.GetTypes())
+        {
+            // builder.RegisterEFFilters(type); disable for now as we need to add only one registartion be combination interface - implemenattion
+            builder.RegisterEFContexts(type, configure);
+            builder.RegisterEFRepositoriesForType(type, out bool isAdded);
+            if (isAdded && !Entities.Contains(type))
+                Entities.Add(type);
+        }
+        return builder;
+    }
+
+    private static Assembly? GetCallingAssembly()
+    {
+        var currentAssembly = Assembly.GetExecutingAssembly();
+
+        for (int frameIndex = 1; frameIndex < 10; frameIndex++)
+        {
+            var frame = new StackFrame(frameIndex);
+            var method = frame.GetMethod();
+            var assembly = method?.DeclaringType?.Assembly;
+
+            if (assembly != null && assembly != currentAssembly)
+                return assembly;
+        }
+
+        return null;
+    }
+
 }

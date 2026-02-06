@@ -1,16 +1,9 @@
 ﻿
 namespace Sencilla.Component.Security;
 
-public class SecurityAttributeDeclaration : ISecurityDeclaration
+public class SecurityAttributeDeclaration(SecurityAttributeDiscoverer discoverer) : ISecurityDeclaration
 {
-    SecurityAttributeDiscoverer Discoverer;
-
-    public SecurityAttributeDeclaration(SecurityAttributeDiscoverer discoverer)
-    {
-        Discoverer = discoverer;
-    }
-
-    public Task<IEnumerable<Matrix>> Permissions(CancellationToken token) => Task.FromResult((IEnumerable<Matrix>)Discoverer.Permissions);
+    public Task<IEnumerable<Matrix>> Permissions(CancellationToken token) => Task.FromResult((IEnumerable<Matrix>)discoverer.Permissions);
 }
 
 

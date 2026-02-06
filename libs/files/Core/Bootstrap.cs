@@ -6,11 +6,14 @@ global using Microsoft.Extensions.DependencyInjection.Extensions;
 global using Sencilla.Component.Files;
 global using Sencilla.Core;
 global using Sencilla.Web;
+
 global using System.Collections.Immutable;
 global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Net.Mime;
 global using System.Text;
+global using System.Text.RegularExpressions;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 

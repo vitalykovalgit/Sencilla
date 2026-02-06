@@ -7,14 +7,5 @@ public class FilterConstraintRegistrator : ITypeRegistrator
     /// </summary>
     /// <param name="container"></param>
     /// <param name="type"></param>
-    public void Register(IServiceCollection container, Type type)
-    {
-        if (type.IsAssignableTo(typeof(IBaseEntity)) && type.IsClass && !type.IsAbstract && !type.IsGenericType)
-        {
-            var @event = typeof(EntityReadingEvent<>).MakeGenericType(type);
-            var @interface = typeof(IEventHandlerBase<>).MakeGenericType(@event);
-            var constraint = typeof(FilterConstraintHandler<>).MakeGenericType(type);
-            container.AddTransient(@interface, constraint);
-        }
-    }
+    public void Register(IServiceCollection container, Type type) => container.RegisterEFFilters(type);
 }
