@@ -66,4 +66,17 @@ public interface IReadRepository<TEntity, TKey> : IBaseRepository
     Task<object> GetMin(IFilter? filter = null, CancellationToken token = default);
     Task<double> GetAvarage(IFilter? filter = null, CancellationToken token = default);
 
+    /// <summary>
+    /// Begins a database transaction
+    /// </summary>
+    /// <param name="token"></param>
+    /// <returns>Database transaction</returns>
+    Task<IDbTransaction> BeginTransaction(CancellationToken token = default);
+
+    /// <summary>
+    /// Filters entities based on a predicate expression
+    /// </summary>
+    /// <param name="predicate">The filter predicate</param>
+    /// <returns>Filtered queryable</returns>
+    IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate);
 }

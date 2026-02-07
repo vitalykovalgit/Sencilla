@@ -100,6 +100,17 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
         return query.Average(filter?.Aggregate!);
     }
 
+    public async Task<IDbTransaction> BeginTransaction(CancellationToken token = default)
+    {
+        var transaction = await DbContext.Database.BeginTransactionAsync(token);
+        return new EFDbTransaction(transaction);
+    }
+
+    public IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
+    {
+        return Query.Where(predicate);
+    }
+
 
     protected async Task<IQueryable<TEntity>> QueryInternal(IFilter? filter, CancellationToken token)
     {
