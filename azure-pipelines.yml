@@ -1,0 +1,141 @@
+# Sencilla NuGet Package Build & Publish Pipeline
+# Builds all Sencilla libraries and publishes NuGet packages to Azure Artifacts
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+      - release/*
+  paths:
+    exclude:
+      - '**/*.md'
+      - 'docs/**'
+      - 'promts/**'
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+variables:
+  buildConfiguration: 'Release'
+  dotnetVersion: '10.0.x'
+  # Base version from libs/Directory.Build.props
+  baseVersion: '10.0.0'
+  # Azure Artifacts feed name - create this feed in Azure DevOps before first run
+  artifactsFeed: 'sencilla'
+
+  # Version suffix for pre-release packages on non-main branches
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+    versionSuffix: ''
+    packageVersion: '$(baseVersion)'
+  ${{ elseif startsWith(variables['Build.SourceBranch'], 'refs/heads/release/') }}:
+    versionSuffix: 'rc.$(Build.BuildId)'
+    packageVersion: '$(baseVersion)-rc.$(Build.BuildId)'
+  ${{ else }}:
+    versionSuffix: 'preview.$(Build.BuildId)'
+    packageVersion: '$(baseVersion)-preview.$(Build.BuildId)'
+
+stages:
+  - stage: Build
+    displayName: 'Build & Test'
+    jobs:
+      - job: BuildAndTest
+        displayName: 'Build, Test & Pack'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseDotNet@2
+            displayName: 'Install .NET SDK'
+            inputs:
+              packageType: 'sdk'
+              version: '$(dotnetVersion)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore NuGet packages'
+            inputs:
+              command: 'restore'
+              projects: 'Sencilla.sln'
+              feedsToUse: 'select'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Build solution'
+            inputs:
+              command: 'build'
+              projects: 'Sencilla.sln'
+              arguments: '--configuration $(buildConfiguration) --no-restore /p:Version=$(packageVersion)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Run tests'
+            inputs:
+              command: 'test'
+              projects: 'Tests/**/*.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-build --collect:"XPlat Code Coverage" --results-directory $(Agent.TempDirectory)/TestResults'
+              publishTestResults: true
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish code coverage'
+            inputs:
+              summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
+              failIfCoverageEmpty: false
+
+          # Pack with explicit version (GeneratePackageOnBuild is true in libs/Directory.Build.props,
+          # but we re-pack here to control version and output location)
+          - task: DotNetCoreCLI@2
+            displayName: 'Pack NuGet packages'
+            inputs:
+              command: 'pack'
+              packagesToPack: 'libs/**/*.csproj'
+              configuration: '$(buildConfiguration)'
+              nobuild: true
+              includesymbols: true
+              includesource: false
+              versioningScheme: 'byEnvVar'
+              versionEnvVar: 'packageVersion'
+              outputDir: '$(Build.ArtifactStagingDirectory)/packages'
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish NuGet artifacts'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/packages'
+              artifact: 'nuget-packages'
+              publishLocation: 'pipeline'
+
+  - stage: Publish
+    displayName: 'Publish to Azure Artifacts'
+    dependsOn: Build
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - job: PublishPackages
+        displayName: 'Push NuGet packages'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - download: current
+            artifact: 'nuget-packages'
+            displayName: 'Download NuGet artifacts'
+
+          - task: NuGetAuthenticate@1
+            displayName: 'Authenticate to Azure Artifacts'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Push packages to Azure Artifacts'
+            inputs:
+              command: 'push'
+              packagesToPush: '$(Pipeline.Workspace)/nuget-packages/*.nupkg'
+              nuGetFeedType: 'internal'
+              publishVstsFeed: '$(artifactsFeed)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Push symbol packages to Azure Artifacts'
+            inputs:
+              command: 'push'
+              packagesToPush: '$(Pipeline.Workspace)/nuget-packages/*.snupkg'
+              nuGetFeedType: 'internal'
+              publishVstsFeed: '$(artifactsFeed)'
+            continueOnError: true  # snupkg push may fail if feed doesn't support symbols
