@@ -32,7 +32,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
             foreach (var prop in with)
                 query = query.Include(prop);
 
-        return await query.FirstOrDefaultAsync(e => e.Id.Equals(id), token).ConfigureAwait(false);
+        return await query.AsNoTracking().FirstOrDefaultAsync(e => e.Id.Equals(id), token).ConfigureAwait(false);
     }
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
 
@@ -44,7 +44,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
             foreach (var prop in with)
                 query = query.Include(prop);
 
-        return await query.Where(e => ids.Contains(e.Id)).ToListAsync(token).ConfigureAwait(false);
+        return await query.AsNoTracking().Where(e => ids.Contains(e.Id)).ToListAsync(token).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<TEntity>> GetAll(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
@@ -55,7 +55,7 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
             foreach (var prop in with)
                 query = query.Include(prop);
 
-        return await query.ToListAsync(token).ConfigureAwait(false);
+        return await query.AsNoTracking().ToListAsync(token).ConfigureAwait(false);
     }
 
     public async Task<TEntity?> FirstOrDefault(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
@@ -66,38 +66,38 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
             foreach (var prop in with)
                 query = query.Include(prop);
 
-        return await query.FirstOrDefaultAsync(token).ConfigureAwait(false);
+        return await query.AsNoTracking().FirstOrDefaultAsync(token).ConfigureAwait(false);
     }
 
 
     public async Task<int> GetCount(IFilter? filter = null, CancellationToken token = default)
     {
         var query = await QueryInternal(filter, token);
-        return await query.CountAsync(token);
+        return await query.AsNoTracking().CountAsync(token);
     }
 
     public async Task<object> GetSum(IFilter? filter = null, CancellationToken token = default)
     {
         var query = await QueryInternal(filter, token);
-        return query.Sum(filter?.Aggregate!);
+        return query.AsNoTracking().Sum(filter?.Aggregate!);
     }
 
     public async Task<object> GetMax(IFilter? filter = null, CancellationToken token = default)
     {
         var query = await QueryInternal(filter, token);
-        return query.Max(filter?.Aggregate!);
+        return query.AsNoTracking().Max(filter?.Aggregate!);
     }
 
     public async Task<object> GetMin(IFilter? filter = null, CancellationToken token = default)
     {
         var query = await QueryInternal(filter, token);
-        return query.Min(filter?.Aggregate!);
+        return query.AsNoTracking().Min(filter?.Aggregate!);
     }
 
     public async Task<double> GetAvarage(IFilter? filter = null, CancellationToken token = default)
     {
         var query = await QueryInternal(filter, token);
-        return query.Average(filter?.Aggregate!);
+        return query.AsNoTracking().Average(filter?.Aggregate!);
     }
 
     public async Task<IDbTransaction> BeginTransaction(CancellationToken token = default)
