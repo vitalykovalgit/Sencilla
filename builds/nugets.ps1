@@ -1,5 +1,6 @@
 # Version and build configuration
 $build = "Debug"
+#$build = "Release"
 $version = "10.0.0"
 
 # Sencilla directories
@@ -12,6 +13,7 @@ $dirNugetsCache = Join-Path $env:USERPROFILE ".nuget\packages\"
 $packagesInfo = @(
     @{ Name = "Sencilla.Core"; Path = "core" },
     @{ Name = "Sencilla.Web"; Path = "web" },
+    @{ Name = "Sencilla.Web.MinimalApi"; Path = "webapi\MinimalApi" },
 
     @{ Name = "Sencilla.Repository.HttpClient"; Path = "repositories\HttpClient" },
     @{ Name = "Sencilla.Repository.EntityFramework"; Path = "repositories\EntityFramework" },
