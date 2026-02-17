@@ -2,7 +2,7 @@
 
 # Version and build configuration
 build="Debug"
-version="9.0.0"
+version="10.0.0"
 
 # Sencilla directories
 dirRoot="/Users/vitalykoval/Work"
@@ -14,6 +14,8 @@ dirNugetsCache="$HOME/.nuget/packages"
 declare -a packagesInfo=(
     "Sencilla.Core:core"
     "Sencilla.Web:web"
+    "Sencilla.Web.MinimalApi:webapi/MinimalApi"
+
     "Sencilla.Repository.HttpClient:repositories/HttpClient"
     "Sencilla.Repository.EntityFramework:repositories/EntityFramework"
 
@@ -30,12 +32,12 @@ declare -a packagesInfo=(
     "Sencilla.Messaging.Scheduler:messaging/Scheduler"
     "Sencilla.Messaging.SourceGenerator:messaging/SourceGenerator"
     
-    "Sencilla.Component.Files:files/Core",
-    "Sencilla.Component.Files.LocalDrive:files/LocalDrive",
-    "Sencilla.Component.Files.AzureStorage:files/AzureStorage",
-    "Sencilla.Component.Files.GoogleStorage:files/GoogleStorage",
-    "Sencilla.Component.Files.AmazonS3:files/AmazonS3",
-    "Sencilla.Component.Files.Database:files/Database",
+    "Sencilla.Component.Files:files/Core"
+    "Sencilla.Component.Files.LocalDrive:files/LocalDrive"
+    "Sencilla.Component.Files.AzureStorage:files/AzureStorage"
+    "Sencilla.Component.Files.GoogleStorage:files/GoogleStorage"
+    "Sencilla.Component.Files.AmazonS3:files/AmazonS3"
+    "Sencilla.Component.Files.Database:files/Database"
 
     "Sencilla.Component.I18n:components/I18n"
     "Sencilla.Component.Users:components/Users"
@@ -60,6 +62,7 @@ for pkg in "${packagesInfo[@]}"; do
     name="${pkg%%:*}"
     path="${pkg##*:}"
     sourceFile="$dirSencilla/libs/$path/bin/$build/$name.$version.nupkg"
+    #printf "\033[0;37mCopying sourceFile: $sourceFile\033[0m\n"
     printf "\033[0;37mCopying $name.$version.nupkg\033[0m"
     if [ -f "$sourceFile" ]; then
         cp -f "$sourceFile" "$dirNugets/"
