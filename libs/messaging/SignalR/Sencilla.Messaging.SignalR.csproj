@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\core\Sencilla.Messaging.csproj" />
+    <ProjectReference Include="..\Core\Sencilla.Messaging.csproj" />
   </ItemGroup>
 
   <ItemGroup>

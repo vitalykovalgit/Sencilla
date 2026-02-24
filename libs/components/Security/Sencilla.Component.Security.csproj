@@ -3,7 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
     <ProjectReference Include="..\..\web\Sencilla.Web.csproj" />
-    <ProjectReference Include="..\users\Sencilla.Component.Users.csproj" />
+    <ProjectReference Include="..\Users\Sencilla.Component.Users.csproj" />
   </ItemGroup>
 
   <ItemGroup>
