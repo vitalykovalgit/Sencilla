@@ -84,7 +84,7 @@
     <Folder Include="Resources\drawable\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\Sencilla.Core.csproj">
+    <ProjectReference Include="..\..\core\Sencilla.Core.csproj">
       <Project>{3C5B8832-AFD4-44FA-938D-09DD43BEE6A2}</Project>
       <Name>Sencilla.Core</Name>
     </ProjectReference>
