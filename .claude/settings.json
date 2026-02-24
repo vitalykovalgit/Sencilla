@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet test tests/repositories/EntityFramework/Sencilla.Repository.EntityFramework.Tests.csproj --configuration Release --verbosity quiet)"
+    ]
+  }
+}

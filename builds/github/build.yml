@@ -65,13 +65,18 @@ jobs:
             /p:Version=${{ steps.version.outputs.VERSION }}
 
       # ── Test ──────────────────────────────────────────────────────────────
+      # continue-on-error lets the reporter step always run; we fail the job
+      # explicitly afterwards via the "Check test outcome" step.
       - name: Run tests
+        id: tests
+        continue-on-error: true
         run: |
           dotnet test Sencilla.sln \
             --configuration Release \
             --no-build \
             --verbosity normal \
             --logger "trx;LogFileName=test-results.trx" \
+            --results-directory ./test-results \
             /p:Version=${{ steps.version.outputs.VERSION }}
 
       # ── Publish test results ──────────────────────────────────────────────
@@ -80,9 +85,16 @@ jobs:
         if: always()
         with:
           name: Test Results
-          path: "**/*.trx"
+          path: "./test-results/**/*.trx"
           reporter: dotnet-trx
-          fail-on-error: true
+          fail-on-error: false
+
+      # Fail the job after the report is published so the results are always visible.
+      - name: Check test outcome
+        if: steps.tests.outcome == 'failure'
+        run: |
+          echo "Tests failed — see the 'Test Results' report above for details."
+          exit 1
 
       # ── Pack (verify packaging compiles) ─────────────────────────────────
       # This ensures all .csproj pack metadata is valid on every PR.
