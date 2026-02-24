@@ -1,13 +1,23 @@
+# Sencilla.Scheduler
 
-#Tasks 
+Cron-based task scheduler for the [Sencilla Framework](https://github.com/vitalykovalgit/Sencilla).
 
- - Add Multiple configs 
- - Think about combining option with scheduled task 
- - Add Logging
- - Handle Exceptions in Tasks
- 
- - Add config to attribute like e.g. ScheduleTask("%Schduler:Tasks:MyTask%")
- + Add autodiscovery for tasks
- + Register task in container when adding tasks 
+## What's Included
 
- - Ignore duplicates calls when adding sencilla 
+- Define scheduled tasks using cron expressions
+- Background task execution with .NET hosted services
+- Task registration via auto-discovery
+
+## Installation
+
+```bash
+dotnet add package Sencilla.Scheduler
+```
+
+## Documentation
+
+- [Scheduler](https://github.com/vitalykovalgit/Sencilla/blob/master/docs/scheduler/README.md)
+
+## License
+
+MIT
