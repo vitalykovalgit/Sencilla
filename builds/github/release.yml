@@ -62,16 +62,16 @@ jobs:
 
       # ── Pack ──────────────────────────────────────────────────────────────
       # Packs ALL projects that have <IsPackable>true</IsPackable> (default for library projects).
-      # --include-symbols: produces .snupkg symbol packages for source-link debugging.
+      # Symbol generation (snupkg) is configured in libs/Directory.Build.props;
+      # do NOT pass --include-symbols here — it overrides per-project opt-outs
+      # (e.g. Source Generator projects that set <IncludeSymbols>false</IncludeSymbols>).
       - name: Pack NuGet packages
         run: |
           dotnet pack Sencilla.sln \
             --configuration Release \
             --no-build \
-            --include-symbols \
             --output ./artifacts/nuget \
-            /p:Version=${{ steps.version.outputs.VERSION }} \
-            /p:SymbolPackageFormat=snupkg
+            /p:Version=${{ steps.version.outputs.VERSION }}
 
       # ── List packages (for debug / audit) ─────────────────────────────────
       - name: List produced packages
