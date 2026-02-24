@@ -155,7 +155,7 @@ public class DailyReportTask : IScheduledTaskHandler
 ```csharp
 // Program.cs
 builder.Services.AddSencillaScheduler();
-builder.Services.AddSencilla(typeof(Program).Assembly);
+builder.Services.AddSencilla(builder.Configuration);
 ```
 
 ### 3. Add tasks at runtime (optional)

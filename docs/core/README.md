@@ -38,25 +38,25 @@ dotnet add package Sencilla.Core
 
 ```csharp
 // Program.cs
-builder.Services.AddSencilla(typeof(Program).Assembly);
+builder.Services.AddSencilla(builder.Configuration);
 ```
 
 This single call:
 - Scans for `[AutoDiscovery]`-marked assemblies
-- Registers all classes decorated with `[Implement]`, `[Singleton]`, `[PerRequest]`
+- Registers all classes decorated with `[Implement]`, `[SingletonLifetime]`, `[PerRequestLifetime]`
 - Wires up command and event dispatchers
 - Sets up the `ISencillaApp` service provider
 
 ### Define an entity
 
 ```csharp
-public class Order : IEntity<Guid>, IEntityCreatable, IEntityUpdatable, IEntityRemoveable
+public class Order : IEntity<Guid>, IEntityCreateable, IEntityUpdateable, IEntityRemoveable
 {
     public Guid Id { get; set; }
     public string CustomerName { get; set; } = string.Empty;
     public decimal Total { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
     public bool IsRemoved { get; set; }  // soft delete
 }
 ```
@@ -68,7 +68,7 @@ public class Order : IEntity<Guid>, IEntityCreatable, IEntityUpdatable, IEntityR
 public class OrderService(IReadRepository<Order, Guid> orders)
 {
     public Task<IEnumerable<Order>> GetRecentAsync() =>
-        orders.GetAll(new Filter { Take = 10, OrderBy = ["CreatedAt"], Descending = true });
+        orders.GetAll(new Filter { Take = 10, OrderBy = ["CreatedDate"], Descending = true });
 }
 ```
 

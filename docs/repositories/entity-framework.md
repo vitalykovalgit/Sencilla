@@ -6,7 +6,7 @@
 
 **Dependencies:** `Microsoft.EntityFrameworkCore`, `Microsoft.EntityFrameworkCore.Relational`, `System.Linq.Dynamic.Core`, `Sencilla.Core`
 
-The EF Core repository is the **primary data access implementation**. It wraps a `DbContext` and provides the full Sencilla repository interface hierarchy.
+The EF Core repository is the **primary data access implementation**. It uses a `DynamicDbContext` that auto-discovers your entities and provides the full Sencilla repository interface hierarchy — with zero boilerplate.
 
 ---
 
@@ -18,21 +18,26 @@ dotnet add package Sencilla.Repository.EntityFramework
 
 ---
 
-## Class Hierarchy
+## How It Works
+
+Sencilla **auto-registers** repository implementations based on the lifecycle interfaces your entity implements. You do not need to create repository classes, DbContext classes, or manual DI registrations.
 
 ```text
-Resolveable
-└── BaseRepository<TContext>                      Holds DbContext + RepositoryDependency
-    ├── ReadRepository<TEntity, TContext>          IReadRepository<TEntity, TKey>
-    │   ├── CreateRepository<TEntity, TContext>    + ICreateRepository
-    │   ├── UpdateRepository<TEntity, TContext>    + IUpdateRepository
-    │   ├── DeleteRepository<TEntity, TContext>    + IDeleteRepository
-    │   ├── RemoveRepository<TEntity, TContext>    + IRemoveRepository
-    │   └── HideRepository<TEntity, TContext>      + IHideRepository
-    └── RepositoryDependency<TContext>             DI container for repository dependencies
-```
+Entity implements IEntityCreateable
+    → ICreateRepository<TEntity> auto-registered → backed by CreateRepository<TEntity, DynamicDbContext>
 
-> **How to read this:** `ReadRepository` gives you all read operations. Inherit from it and add `I*Repository` interfaces to enable write operations. The EF implementations are discovered automatically and mixed in.
+Entity implements IEntityUpdateable
+    → IUpdateRepository<TEntity> auto-registered → backed by UpdateRepository<TEntity, DynamicDbContext>
+
+Entity implements IEntityDeleteable
+    → IDeleteRepository<TEntity> auto-registered → backed by DeleteRepository<TEntity, DynamicDbContext>
+
+Entity implements IEntityRemoveable
+    → IRemoveRepository<TEntity> auto-registered → backed by RemoveRepository<TEntity, DynamicDbContext>
+
+All entities with IEntity<TKey>
+    → IReadRepository<TEntity> always auto-registered
+```
 
 ---
 
@@ -41,68 +46,84 @@ Resolveable
 ### 1. Define the entity
 
 ```csharp
-public class Product : IEntity<int>, IEntityCreatable, IEntityUpdatable, IEntityDeletable
+public class Product :
+    IEntity<int>,
+    IEntityCreateableTrack,   // auto-registers ICreateRepository<Product> + auto-sets CreatedDate
+    IEntityUpdateableTrack,   // auto-registers IUpdateRepository<Product> + auto-sets UpdatedDate
+    IEntityDeleteable         // auto-registers IDeleteRepository<Product>
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Price { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
 }
 ```
 
-### 2. Add to DbContext
-
-```csharp
-public class AppDbContext : DbContext
-{
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
-    public DbSet<Product> Products { get; set; }
-}
-```
-
-### 3. Implement the repository
-
-```csharp
-[Implement]
-public class ProductRepository :
-    ReadRepository<Product, AppDbContext>,
-    ICreateRepository<Product, int>,
-    IUpdateRepository<Product, int>,
-    IDeleteRepository<Product, int>
-{
-    public ProductRepository(RepositoryDependency<AppDbContext> dep) : base(dep) { }
-}
-```
-
-That's it. The framework provides the full implementation for all declared interfaces. You don't override anything unless you need custom behaviour.
-
-### 4. Register
+### 2. Register Sencilla
 
 ```csharp
 // Program.cs
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddSencilla(builder.Configuration);
+builder.Services.AddSencillaRepositoryForEF(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+```
 
-builder.Services.AddSencilla(typeof(Program).Assembly);
+That's it. No `DbContext`, no repository classes. Sencilla's `DynamicDbContext` auto-discovers your entities and builds the EF model. All matching `IReadRepository<Product>`, `ICreateRepository<Product>`, etc. are registered automatically.
+
+### 3. Inject and use
+
+```csharp
+public class ProductService(
+    IReadRepository<Product> reader,
+    ICreateRepository<Product> creator,
+    IUpdateRepository<Product> updater)
+{
+    public async Task<IEnumerable<Product>> GetAllProducts()
+        => await reader.GetAll();
+
+    public async Task<Product?> CreateProduct(Product product)
+        => await creator.Create(product);
+}
 ```
 
 ---
 
-## `BaseRepository<TContext>`
+## Class Hierarchy
 
-All repositories inherit from `BaseRepository<TContext>`, which provides:
+```text
+Resolveable
+└── BaseRepository<TContext>                      Holds DbContext + RepositoryDependency
+    └── ReadRepository<TEntity, TContext>          IReadRepository<TEntity, TKey>
+        ├── CreateRepository<TEntity, TContext>    + ICreateRepository
+        ├── UpdateRepository<TEntity, TContext>    + IUpdateRepository
+        ├── DeleteRepository<TEntity, TContext>    + IDeleteRepository
+        ├── RemoveRepository<TEntity, TContext>    + IRemoveRepository
+        └── HideRepository<TEntity, TContext>      + IHideRepository
+```
+
+---
+
+## `DynamicDbContext`
+
+Sencilla provides a `DynamicDbContext` that automatically builds EF model configurations for all discovered entities. You do **not** need to create a `DbContext` subclass.
+
+The `DynamicDbContext`:
+
+- Reads `[Table]`, `[Column]`, `[NotMapped]`, `[ForeignKey]`, `[JsonObject]` attributes from your entities
+- Applies `IEntityTypeConfiguration<T>` from your assemblies
+- Maps entities to tables using convention: entity name → table name in `dbo` schema
+
+### Custom DbContext (optional)
+
+If you need a custom `DbContext` for specific entities, use `[DbContextAttribute<T>]`:
 
 ```csharp
-public abstract class BaseRepository<TContext> : Resolveable
-    where TContext : DbContext
+[DbContextAttribute<MyCustomDbContext>]
+public class SpecialEntity : IEntity<int>, IEntityCreateable
 {
-    protected TContext Context { get; }
-    protected RepositoryDependency<TContext> Dependency { get; }
-
-    public Task<int> Save(CancellationToken token = default)
-        => Context.SaveChangesAsync(token);
+    public int Id { get; set; }
+    // ...
 }
 ```
 
@@ -145,8 +166,7 @@ Implements `ICreateRepository<TEntity, TKey>`.
 // Insert if no match found, update if match exists
 await repo.UpsertAsync(
     product,
-    x => x.ExternalId,   // the property that identifies an existing record
-    "Category");          // navigation properties to reload after upsert
+    x => x.ExternalId);   // the property that identifies an existing record
 ```
 
 The `matchExpression` lambda tells the upsert which property to use as the "natural key" for the lookup. If a record with the same value exists, it is updated; otherwise a new one is inserted.
@@ -162,19 +182,23 @@ await repo.MergeAsync(
 
 ---
 
-## `RepositoryDependency<TContext>`
+## `RepositoryDependency`
 
-A DI container object passed into all repository constructors. It holds all the services a repository might need (DbContext, event dispatcher, etc.) without requiring each class to declare a large constructor.
+A DI container object passed into all repository constructors internally. It holds the services a repository needs (event dispatcher, command dispatcher, service provider).
 
 ```csharp
-public class RepositoryDependency<TContext> where TContext : DbContext
+public class RepositoryDependency(
+    IServiceProvider resolver,
+    IEventDispatcher events,
+    ICommandDispatcher commands)
 {
-    public TContext Context { get; }
+    public IServiceProvider Resolver { get; }
     public IEventDispatcher Events { get; }
-    public IServiceProvider Services { get; }
-    // ...
+    public ICommandDispatcher Commands { get; }
 }
 ```
+
+You do not interact with `RepositoryDependency` directly — it is wired automatically by the DI container.
 
 ---
 
@@ -201,21 +225,23 @@ catch
 
 ## Advanced: Custom Repository Methods
 
-When the standard interface isn't enough, add methods to your own interface and implement them using `Query` or `Context`:
+For queries not covered by the standard interfaces, create a custom interface and implementation. Use `[Implement]` to register your custom class — the standard auto-registered repositories remain available alongside it.
 
 ```csharp
+// Custom interface extending the auto-registered create repo
 public interface IProductRepository : ICreateRepository<Product, int>
 {
     Task<IEnumerable<Product>> GetByCategoryAsync(int categoryId, bool inStockOnly = false);
     Task<decimal> GetAveragePriceAsync(int categoryId);
 }
 
-[Implement]
+// Custom implementation — [Implement] registers IProductRepository only
+[Implement(typeof(IProductRepository))]
 public class ProductRepository :
-    ReadRepository<Product, AppDbContext>,
+    CreateRepository<Product, DynamicDbContext>,
     IProductRepository
 {
-    public ProductRepository(RepositoryDependency<AppDbContext> dep) : base(dep) { }
+    public ProductRepository(RepositoryDependency dep, DynamicDbContext ctx) : base(dep, ctx) { }
 
     public Task<IEnumerable<Product>> GetByCategoryAsync(int categoryId, bool inStockOnly = false)
     {
@@ -225,8 +251,8 @@ public class ProductRepository :
         return Task.FromResult<IEnumerable<Product>>(query.ToList());
     }
 
-    public Task<decimal> GetAveragePriceAsync(int categoryId)
-        => Context.Products
+    public async Task<decimal> GetAveragePriceAsync(int categoryId)
+        => await Query
             .Where(p => p.CategoryId == categoryId)
             .AverageAsync(p => p.Price);
 }

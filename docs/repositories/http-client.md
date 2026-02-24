@@ -158,20 +158,21 @@ public class LegacyProductRepository : ReadRepository<Product>
 
 ## Combining HTTP and EF Core Repositories
 
-You can mix backends in one application. Some entities come from a database, others from a remote API:
+You can mix backends in one application. Local entities are auto-registered with EF Core (no manual repository needed); remote entities use HTTP:
 
 ```csharp
-// Local entity — EF Core
-[Implement]
-public class OrderRepository : ReadRepository<Order, AppDbContext>,
-    ICreateRepository<Order, int> { ... }
+// Local entity — auto-registered via EF Core (no repository class needed)
+public class Order : IEntity<int>, IEntityCreateable { ... }
 
-// Remote entity — HTTP
+// Remote entity — HTTP (needs explicit implementation)
 [Implement]
 public class ExchangeRateRepository : ReadRepository<ExchangeRate>,
-    IReadRepository<ExchangeRate, string> { ... }
+    IReadRepository<ExchangeRate, string>
+{
+    public ExchangeRateRepository(WebContext context) : base(context) { }
+}
 
-// Service uses both
+// Service injects both — same interface, different backends
 public class PricingService(
     IReadRepository<Order, int> orders,
     IReadRepository<ExchangeRate, string> rates) { ... }

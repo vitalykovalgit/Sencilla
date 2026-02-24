@@ -96,7 +96,7 @@ public class ProductEndpoints : IEndpoint
 
 ```csharp
 // Program.cs
-builder.Services.AddSencilla(typeof(Program).Assembly);
+builder.Services.AddSencilla(builder.Configuration);
 
 var app = builder.Build();
 app.MapSencillaEndpoints();   // discovers and maps all IEndpoint implementations

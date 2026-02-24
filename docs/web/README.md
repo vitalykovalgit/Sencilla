@@ -30,13 +30,13 @@ Apply `[CrudApi]` to an entity to generate `GET`, `POST`, `PUT`, `DELETE` endpoi
 
 ```csharp
 [CrudApi]
-public class Product : IEntity<int>, IEntityCreatable, IEntityUpdatable, IEntityDeletable
+public class Product : IEntity<int>, IEntityCreateable, IEntityUpdateable, IEntityDeleteable
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Price { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
 }
 ```
 

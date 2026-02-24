@@ -39,40 +39,40 @@ public interface IEntity : IEntity<int> { }
 
 These interfaces are **markers** — they have no methods. They signal to the framework (repositories, event system, validation) which operations are valid for a given entity.
 
-### `IEntityCreatable`
+### `IEntityCreateable`
 
-Marks the entity as creatable. Adds a `CreatedAt` timestamp.
+Marks the entity as creatable. Adds a `CreatedDate` timestamp.
 
 ```csharp
-public interface IEntityCreatable
+public interface IEntityCreateable
 {
-    DateTime CreatedAt { get; set; }
+    DateTime CreatedDate { get; set; }
 }
 ```
 
-When an entity implements this interface, the repository automatically sets `CreatedAt` before persisting.
+When an entity implements this interface, the repository automatically sets `CreatedDate` before persisting.
 
 ---
 
-### `IEntityUpdatable`
+### `IEntityUpdateable`
 
-Marks the entity as updatable. Adds an `UpdatedAt` timestamp.
+Marks the entity as updatable. Adds an `UpdatedDate` timestamp.
 
 ```csharp
-public interface IEntityUpdatable
+public interface IEntityUpdateable
 {
-    DateTime UpdatedAt { get; set; }
+    DateTime UpdatedDate { get; set; }
 }
 ```
 
 ---
 
-### `IEntityDeletable`
+### `IEntityDeleteable`
 
 Marks the entity as hard-deletable. Enables `IDeleteRepository<TEntity, TKey>`.
 
 ```csharp
-public interface IEntityDeletable { }
+public interface IEntityDeleteable { }
 ```
 
 Hard delete removes the row from the database permanently.
@@ -176,13 +176,13 @@ public class Country : IEntity<string>, IEntityNameable
 ### Standard CRUD entity
 
 ```csharp
-public class Article : IEntity<int>, IEntityCreatable, IEntityUpdatable, IEntityDeletable
+public class Article : IEntity<int>, IEntityCreateable, IEntityUpdateable, IEntityDeleteable
 {
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
 }
 ```
 
@@ -190,8 +190,8 @@ public class Article : IEntity<int>, IEntityCreatable, IEntityUpdatable, IEntity
 
 ```csharp
 public class Product : IEntity<Guid>,
-    IEntityCreatable,
-    IEntityUpdatable,
+    IEntityCreateable,
+    IEntityUpdateable,
     IEntityRemoveable,
     IEntityHideable,
     IEntityNameable
@@ -199,8 +199,8 @@ public class Product : IEntity<Guid>,
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Price { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
     public bool IsRemoved { get; set; }
     public bool IsHidden { get; set; }
 }
@@ -231,12 +231,12 @@ When entities implement the appropriate lifecycle interfaces, the repository lay
 
 | Event | Fired when | Requires interface |
 | ----- | ---------- | ------------------ |
-| `EntityCreatingEvent<TEntity>` | Before create | `IEntityCreatable` |
-| `EntityCreatedEvent<TEntity>` | After create | `IEntityCreatable` |
-| `EntityUpdatingEvent<TEntity>` | Before update | `IEntityUpdatable` |
-| `EntityUpdatedEvent<TEntity>` | After update | `IEntityUpdatable` |
-| `EntityDeletingEvent<TEntity>` | Before delete | `IEntityDeletable` |
-| `EntityDeletedEvent<TEntity>` | After delete | `IEntityDeletable` |
+| `EntityCreatingEvent<TEntity>` | Before create | `IEntityCreateable` |
+| `EntityCreatedEvent<TEntity>` | After create | `IEntityCreateable` |
+| `EntityUpdatingEvent<TEntity>` | Before update | `IEntityUpdateable` |
+| `EntityUpdatedEvent<TEntity>` | After update | `IEntityUpdateable` |
+| `EntityDeletingEvent<TEntity>` | Before delete | `IEntityDeleteable` |
+| `EntityDeletedEvent<TEntity>` | After delete | `IEntityDeleteable` |
 | `EntityReadingEvent<TEntity>` | On read | Any `IReadRepository` usage |
 
 ### `EntityBaseEvent<TEntity>`
@@ -277,8 +277,8 @@ public class ProductCreatedHandler : IEventHandler<EntityCreatedEvent<Product>>
 | Scenario | Interfaces to implement |
 | -------- | ----------------------- |
 | Read-only lookup | `IEntity<TKey>` |
-| Standard CRUD | `IEntity<TKey>`, `IEntityCreatable`, `IEntityUpdatable`, `IEntityDeletable` |
-| Soft-delete record | `IEntity<TKey>`, `IEntityCreatable`, `IEntityUpdatable`, `IEntityRemoveable` |
+| Standard CRUD | `IEntity<TKey>`, `IEntityCreateable`, `IEntityUpdateable`, `IEntityDeleteable` |
+| Soft-delete record | `IEntity<TKey>`, `IEntityCreateable`, `IEntityUpdateable`, `IEntityRemoveable` |
 | Publishable content | Add `IEntityPublishable` |
 | Menu / sortable list | Add `IEntityOrderable` |
 | Tree/hierarchy | Add `IEntityParentable<TKey>` |

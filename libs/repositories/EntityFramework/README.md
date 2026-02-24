@@ -8,7 +8,7 @@ Entity Framework Core repository implementation for the [Sencilla Framework](htt
 - Support for all Sencilla entity lifecycle interfaces (create, update, soft-delete, hide)
 - Built-in filtering, sorting, and pagination
 - Transaction support
-- Auto-discovery service registration
+- Zero-boilerplate auto-registration — define an entity, get repositories automatically
 
 ## Installation
 
@@ -18,18 +18,42 @@ dotnet add package Sencilla.Repository.EntityFramework
 
 ## Quick Start
 
+**1. Define an entity** — the interfaces you implement determine which repositories are auto-registered:
+
 ```csharp
 using Sencilla.Core;
-using Sencilla.Repository.EntityFramework;
 
-[Implement]
-public class ProductRepository :
-    ReadRepository<Product, AppDbContext>,
-    ICreateRepository<Product, int>,
-    IUpdateRepository<Product, int>,
-    IDeleteRepository<Product, int>
+public class Product :
+    IEntity<int>,
+    IEntityCreateableTrack,   // → ICreateRepository<Product> + auto-sets CreatedDate
+    IEntityUpdateableTrack,   // → IUpdateRepository<Product> + auto-sets UpdatedDate
+    IEntityDeleteable         // → IDeleteRepository<Product>
 {
-    public ProductRepository(RepositoryDependency<AppDbContext> dep) : base(dep) { }
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
+}
+```
+
+**2. Register Sencilla** — no DbContext or repository classes needed:
+
+```csharp
+builder.Services.AddSencilla(builder.Configuration);
+builder.Services.AddSencillaRepositoryForEF(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+```
+
+**3. Inject and use:**
+
+```csharp
+public class ProductService(
+    IReadRepository<Product> reader,
+    ICreateRepository<Product> creator,
+    IUpdateRepository<Product> updater)
+{
+    // All repositories are auto-injected
 }
 ```
 

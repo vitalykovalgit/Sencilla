@@ -37,7 +37,7 @@ Welcome to the Sencilla Framework documentation. This guide is structured to tak
 If you are an AI assistant helping a developer build on top of Sencilla, start here:
 
 1. **Every project needs `Sencilla.Core`** — it defines all foundational interfaces
-2. **Entities** implement `IEntity<TKey>` plus lifecycle marker interfaces (`IEntityCreatable`, `IEntityUpdatable`, etc.)
+2. **Entities** implement `IEntity<TKey>` plus lifecycle marker interfaces (`IEntityCreateable`, `IEntityUpdateable`, etc.)
 3. **Repositories** are injected by interface — `IReadRepository<TEntity, TKey>`, `ICreateRepository<TEntity, TKey>`, etc.
 4. **Filtering** is done via `IFilter` — pass it to `GetAll()`, `GetCount()`, etc.
 5. **DI** is attribute-driven — add `[Implement]` to a class and it self-registers

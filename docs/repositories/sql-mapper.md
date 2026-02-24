@@ -59,7 +59,7 @@ public class ProductMapping : TableMapping<Product>
         MapColumn(x => x.Id).AsKey().AsIdentity();
         MapColumn(x => x.Name).HasColumnName("ProductName").HasMaxLength(200);
         MapColumn(x => x.Price).HasColumnName("UnitPrice");
-        MapColumn(x => x.CreatedAt).HasColumnName("CreatedDate");
+        MapColumn(x => x.CreatedDate).HasColumnName("created_date");
     }
 }
 ```

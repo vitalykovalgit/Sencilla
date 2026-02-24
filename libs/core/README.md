@@ -4,7 +4,7 @@ Foundation package for the [Sencilla Framework](https://github.com/vitalykovalgi
 
 ## What's Included
 
-- **Entity interfaces** — `IEntity<TKey>`, lifecycle markers (`IEntityCreatable`, `IEntityUpdatable`, `IEntitySoftDeletable`, etc.)
+- **Entity interfaces** — `IEntity<TKey>`, lifecycle markers (`IEntityCreateable`, `IEntityUpdateable`, `IEntityDeleteable`, etc.)
 - **Repository pattern** — `IReadRepository`, `ICreateRepository`, `IUpdateRepository`, `IDeleteRepository`, and more
 - **CQRS** — commands, queries, events, and dispatchers with middleware support
 - **Auto-discovery DI** — attribute-based service registration (`[Implement]`, `[Singleton]`)
@@ -23,17 +23,17 @@ dotnet add package Sencilla.Core
 using Sencilla.Core;
 
 // Define an entity
-public class Product : IEntity<int>, IEntityCreatable, IEntityUpdatable
+public class Product : IEntity<int>, IEntityCreateable, IEntityUpdateable
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Price { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
 }
 
 // Register services
-builder.Services.AddSencilla(typeof(Program).Assembly);
+builder.Services.AddSencilla(builder.Configuration);
 ```
 
 ## Documentation

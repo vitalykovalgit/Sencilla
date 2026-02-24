@@ -154,7 +154,7 @@ Your Application
 All Sencilla packages register themselves via `[AutoDiscovery]` assemblies and `[Implement]` attributes. You don't manually register framework types. One call wires everything:
 
 ```csharp
-builder.Services.AddSencilla(typeof(Program).Assembly);
+builder.Services.AddSencilla(builder.Configuration);
 ```
 
 ### Entity Lifecycle
@@ -163,9 +163,9 @@ Entities declare what operations they support through marker interfaces:
 
 ```text
 IEntity<TKey>
-├── IEntityCreatable     → Has CreatedAt timestamp, fires EntityCreatingEvent / EntityCreatedEvent
-├── IEntityUpdatable     → Has UpdatedAt timestamp, fires EntityUpdatingEvent / EntityUpdatedEvent
-├── IEntityDeletable     → Hard delete, fires EntityDeletingEvent / EntityDeletedEvent
+├── IEntityCreateable    → Has CreatedDate timestamp, fires EntityCreatingEvent / EntityCreatedEvent
+├── IEntityUpdateable    → Has UpdatedDate timestamp, fires EntityUpdatingEvent / EntityUpdatedEvent
+├── IEntityDeleteable    → Hard delete, fires EntityDeletingEvent / EntityDeletedEvent
 ├── IEntityRemoveable    → Soft delete (IsRemoved flag)
 ├── IEntityHideable      → Visibility toggle (IsHidden flag)
 ├── IEntityNameable      → Has a Name property

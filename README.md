@@ -27,70 +27,63 @@ All modules are independent NuGet packages. Use only what you need.
 
 ## Quick Start
 
-### 1. Install the core package
+### 1. Install packages
 
 ```bash
 dotnet add package Sencilla.Core
+dotnet add package Sencilla.Repository.EntityFramework
 ```
 
 ### 2. Define your entity
 
+The entity interfaces you implement determine which repositories are auto-registered. No repository classes or DbContext needed.
+
 ```csharp
 using Sencilla.Core;
 
-public class Product : IEntity<int>, IEntityCreatable, IEntityUpdatable
+public class Product :
+    IEntity<int>,
+    IEntityCreateableTrack,   // → auto-registers ICreateRepository<Product> + sets CreatedDate
+    IEntityUpdateableTrack,   // → auto-registers IUpdateRepository<Product> + sets UpdatedDate
+    IEntityDeleteable         // → auto-registers IDeleteRepository<Product>
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Price { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
 }
 ```
 
-### 3. Add Entity Framework repository
-
-```bash
-dotnet add package Sencilla.Repository.EntityFramework
-```
-
-```csharp
-using Sencilla.Core;
-using Sencilla.Repository.EntityFramework;
-
-// Your EF Core DbContext
-public class AppDbContext : DbContext
-{
-    public DbSet<Product> Products { get; set; }
-}
-
-// Implement the repository
-[Implement]
-public class ProductRepository :
-    ReadRepository<Product, AppDbContext>,
-    ICreateRepository<Product, int>,
-    IUpdateRepository<Product, int>,
-    IDeleteRepository<Product, int>
-{
-    public ProductRepository(RepositoryDependency<AppDbContext> dep) : base(dep) { }
-}
-```
-
-### 4. Register services
+### 3. Register Sencilla
 
 ```csharp
 // Program.cs
-builder.Services.AddSencilla(typeof(Program).Assembly);
+builder.Services.AddSencilla(builder.Configuration);
+builder.Services.AddSencillaRepositoryForEF(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 ```
 
-### 5. Inject and use
+### 4. Inject and use
 
 ```csharp
-app.MapGet("/products", async (IReadRepository<Product, int> repo) =>
+app.MapGet("/products", async (IReadRepository<Product> repo) =>
     await repo.GetAll());
 
-app.MapPost("/products", async (Product product, ICreateRepository<Product, int> repo) =>
+app.MapPost("/products", async (Product product, ICreateRepository<Product> repo) =>
     await repo.Create(product));
+```
+
+Or inject into a service class:
+
+```csharp
+public class ProductService(
+    IReadRepository<Product> reader,
+    ICreateRepository<Product> creator,
+    IUpdateRepository<Product> updater)
+{
+    // All repositories are auto-injected — zero boilerplate
+}
 ```
 
 ---

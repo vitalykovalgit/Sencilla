@@ -100,7 +100,7 @@ int count = await repo.GetCount(new Filter { /* active = true filter */ });
 // Raw LINQ for complex join
 var result = repo.Query
     .Where(p => p.Price > 100)
-    .OrderByDescending(p => p.CreatedAt)
+    .OrderByDescending(p => p.CreatedDate)
     .Take(5)
     .ToList();
 ```
@@ -266,25 +266,40 @@ Choose the **narrowest** interface that covers your use case. This makes intent 
 | Profile editing (update only) | `IUpdateRepository<TEntity, TKey>` |
 | Admin deletion | `IDeleteRepository<TEntity, TKey>` |
 | Archive/restore | `IRemoveRepository<TEntity, TKey>` |
-| Full CRUD controller | All of the above (inject separately or implement all on one concrete class) |
+| Full CRUD controller | All of the above (inject each separately) |
 
 ---
 
-## Implementing a Repository
+## Auto-Registration
 
-See [Entity Framework Repository](../repositories/entity-framework.md) for the concrete implementation guide. The pattern is:
+You do **not** need to create repository classes manually. Sencilla auto-registers repositories based on the entity's lifecycle interfaces:
 
 ```csharp
-[Implement]
-public class ProductRepository :
-    ReadRepository<Product, AppDbContext>,       // provides IReadRepository
-    ICreateRepository<Product, int>,             // adds Create/Upsert/Merge
-    IUpdateRepository<Product, int>,             // adds Update
-    IDeleteRepository<Product, int>              // adds Delete
+// Just define the entity — repositories are auto-registered
+public class Product :
+    IEntity<int>,
+    IEntityCreateableTrack,   // → ICreateRepository<Product> auto-registered
+    IEntityUpdateableTrack,   // → IUpdateRepository<Product> auto-registered
+    IEntityDeleteable         // → IDeleteRepository<Product> auto-registered
 {
-    public ProductRepository(RepositoryDependency<AppDbContext> dep) : base(dep) { }
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public DateTime CreatedDate { get; set; }
+    public DateTime UpdatedDate { get; set; }
+}
+
+// Then inject directly — no boilerplate
+public class ProductService(
+    IReadRepository<Product> reader,
+    ICreateRepository<Product> creator,
+    IUpdateRepository<Product> updater,
+    IDeleteRepository<Product> deleter)
+{
+    // ...
 }
 ```
+
+See [Entity Framework Repository](../repositories/entity-framework.md) for advanced scenarios like custom repository methods.
 
 ---
 

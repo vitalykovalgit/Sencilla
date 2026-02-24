@@ -58,7 +58,7 @@ public class FilterProperty
 | ----- | -------------- | --------------- | ------- |
 | `Equal` | `= value` | 1 | Price is exactly 9.99 |
 | `NotEqual` | `!= value` | 1 | Status is not "Inactive" |
-| `Greater` | `> value` | 1 | CreatedAt after date |
+| `Greater` | `> value` | 1 | CreatedDate after date |
 | `GreaterOrEqual` | `>= value` | 1 | Age ≥ 18 |
 | `Less` | `< value` | 1 | Stock < 5 |
 | `LessOrEqual` | `<= value` | 1 | Price ≤ 100 |
@@ -69,7 +69,7 @@ public class FilterProperty
 | `StartsWith` | `LIKE 'value%'` | 1 | Name starts with "S" |
 | `EndsWith` | `LIKE '%value'` | 1 | Email ends with "@corp.com" |
 | `IsNull` | `IS NULL` | 0 | ParentId is null |
-| `IsNotNull` | `IS NOT NULL` | 0 | UpdatedAt is not null |
+| `IsNotNull` | `IS NOT NULL` | 0 | UpdatedDate is not null |
 | `Bool` | `= 1 / = 0` | 1 | IsAvailable = true |
 
 ---
@@ -114,7 +114,7 @@ var sorted = new Filter
 // Descending (newest first)
 var newest = new Filter
 {
-    OrderBy = ["CreatedAt"],
+    OrderBy = ["CreatedDate"],
     Descending = true,
     Take = 10
 };
@@ -142,7 +142,7 @@ filter.AddProperty("Price", FilterPropertyType.Between, 10.0m, 100.0m);
 filter.AddProperty("Status", FilterPropertyType.In, "Active", "Pending");
 
 // Null check
-filter.AddProperty("DeletedAt", FilterPropertyType.IsNull);
+filter.AddProperty("DeletedDate", FilterPropertyType.IsNull);
 
 var products = await repo.GetAll(filter);
 ```
@@ -175,7 +175,7 @@ var filter = new Filter
 {
     Skip = 0,
     Take = 50,
-    OrderBy = ["CreatedAt"],
+    OrderBy = ["CreatedDate"],
     Descending = true,
     Search = "laptop"
 };

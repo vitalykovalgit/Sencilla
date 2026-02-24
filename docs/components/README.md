@@ -26,7 +26,7 @@ Sencilla Components are **pre-built domain modules** for concerns that appear in
 dotnet add package Sencilla.Component.Users
 ```
 
-Provides a base `User` entity implementing `IEntity<Guid>`, `IEntityCreatable`, `IEntityUpdatable`, `IEntityRemoveable`, along with a user repository and basic profile management.
+Provides a base `User` entity implementing `IEntity<Guid>`, `IEntityCreateable`, `IEntityUpdateable`, `IEntityRemoveable`, along with a user repository and basic profile management.
 
 ```csharp
 // Extend the base user

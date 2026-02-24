@@ -9,22 +9,19 @@ Sencilla provides **attribute-based, convention-driven DI** on top of the standa
 
 ## Registration Attributes
 
-### `[Implement]` — Scoped (per-request) lifetime
+### `[Implement]` — Register a custom service
 
-The most common attribute. Registers the class as a **scoped** service for all interfaces it implements.
+Registers the class for all interfaces it explicitly declares. Use it for your own services — **not** for repositories (those are auto-registered from entity interfaces).
 
 ```csharp
 [Implement]
-public class ProductRepository : ReadRepository<Product, AppDbContext>,
-    ICreateRepository<Product, int>
+public class NotificationService : INotificationService
 {
-    // ...
+    // Auto-registered as INotificationService
 }
 ```
 
-This registers:
-- `IReadRepository<Product, int>` → `ProductRepository` (scoped)
-- `ICreateRepository<Product, int>` → `ProductRepository` (scoped)
+> **Note:** Standard repositories (`IReadRepository<T>`, `ICreateRepository<T>`, etc.) are auto-registered when you define an entity with the matching lifecycle interfaces. You do **not** need `[Implement]` for them. See [Auto-Registration](repositories.md#auto-registration).
 
 ---
 
@@ -84,13 +81,11 @@ Auto-discovery scans assemblies marked with `[AutoDiscovery]`. Sencilla's own as
 public class MyAppAssemblyMarker { }
 ```
 
-Or, more commonly, pass your assembly directly to `AddSencilla`:
+Or mark your assembly with `[assembly: AutoDiscovery]` in any file (e.g. `AssemblyInfo.cs`):
 
 ```csharp
-builder.Services.AddSencilla(typeof(Program).Assembly);
+[assembly: AutoDiscovery]
 ```
-
-This overload marks your assembly for scanning automatically.
 
 ---
 
@@ -98,13 +93,14 @@ This overload marks your assembly for scanning automatically.
 
 ```csharp
 // Program.cs
-builder.Services.AddSencilla(typeof(Program).Assembly);
+builder.Services.AddSencilla(builder.Configuration);
 ```
 
 Internally this:
-1. Marks the provided assembly with `[AutoDiscovery]`
-2. Scans all `[AutoDiscovery]`-marked assemblies for `[Implement]`, `[Singleton]`, `[PerRequest]` classes
-3. Registers discovered services with the appropriate lifetime
+
+1. Scans all `[AutoDiscovery]`-marked assemblies for types
+2. Discovers all `ITypeRegistrator` implementations and invokes them for every type
+3. Registers `[Implement]`, `[SingletonLifetime]`, `[PerRequestLifetime]` services
 4. Registers command dispatchers, event dispatchers, and middleware
 5. Registers `ISencillaApp` service provider
 
@@ -153,12 +149,9 @@ public class MyCustomRegistrator : ITypeRegistrator
 
    ```csharp
    [Implement]
-   public class UserRepository :
-       ReadRepository<User, AppDbContext>,
-       ICreateRepository<User, int>,
-       IUpdateRepository<User, int>
+   public class OrderService : IOrderService, IOrderValidator
    { ... }
-   // Registers: IReadRepository<User,int>, ICreateRepository<User,int>, IUpdateRepository<User,int>
+   // Registers both IOrderService and IOrderValidator → OrderService
    ```
 
 3. **Inheritance** — sub-classes inherit their parent's `[Implement]` attribute if the parent has one, but it's cleaner to decorate the concrete class.
@@ -169,29 +162,34 @@ public class MyCustomRegistrator : ITypeRegistrator
 
 ## Practical Patterns
 
-### Repository with a custom method
+### Service using auto-registered repositories
+
+Standard repositories are auto-registered from entity interfaces — just inject them:
 
 ```csharp
-// Custom interface
-public interface IProductRepository : ICreateRepository<Product, int>
-{
-    Task<IEnumerable<Product>> GetByCategoryAsync(int categoryId);
-}
+// Product entity — IEntityCreateable + IEntityUpdateable → auto-registers create + update repos
+public class Product : IEntity<int>, IEntityCreateable, IEntityUpdateable { ... }
 
-// Implementation
+// Service — inject repository interfaces directly
 [Implement]
-public class ProductRepository :
-    ReadRepository<Product, AppDbContext>,
-    IProductRepository
+public class ProductService : IProductService
 {
-    public ProductRepository(RepositoryDependency<AppDbContext> dep) : base(dep) { }
+    private readonly IReadRepository<Product> _reader;
+    private readonly ICreateRepository<Product> _creator;
+
+    public ProductService(IReadRepository<Product> reader, ICreateRepository<Product> creator)
+    {
+        _reader = reader;
+        _creator = creator;
+    }
 
     public Task<IEnumerable<Product>> GetByCategoryAsync(int categoryId)
-        => Task.FromResult(Query.Where(p => p.CategoryId == categoryId).AsEnumerable());
+    {
+        var filter = new Filter();
+        filter.AddProperty("CategoryId", typeof(int), categoryId);
+        return _reader.GetAll(filter);
+    }
 }
-
-// Consumer injects the specific interface
-public class ProductService(IProductRepository repo) { ... }
 ```
 
 ### Service with singleton cache
