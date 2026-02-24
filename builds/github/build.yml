@@ -1,0 +1,99 @@
+name: CI Build
+
+# Triggers on push to main branches and on pull requests.
+on:
+  push:
+    branches:
+      - master
+      - main
+      - develop
+      - "release/**"
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "promts/**"
+  pull_request:
+    branches:
+      - master
+      - main
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "promts/**"
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── Compute a CI build version ────────────────────────────────────────
+      # Not used for publishing — only for verifying the build compiles with a version.
+      # Format: <base>-ci.<run_number>  (e.g. 10.0.0-ci.42)
+      - name: Compute CI version
+        id: version
+        run: |
+          BASE_VERSION=$(grep '<Version>' Directory.Build.props 2>/dev/null \
+            | sed 's/.*<Version>\(.*\)<\/Version>.*/\1/' \
+            | head -1 || echo "10.0.0")
+          VERSION="${BASE_VERSION:-10.0.0}-ci.${{ github.run_number }}"
+          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "CI build version: ${VERSION}"
+
+      # ── .NET SDK ──────────────────────────────────────────────────────────
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      # ── Restore ───────────────────────────────────────────────────────────
+      - name: Restore NuGet packages
+        run: dotnet restore Sencilla.sln
+
+      # ── Build ─────────────────────────────────────────────────────────────
+      - name: Build solution
+        run: |
+          dotnet build Sencilla.sln \
+            --configuration Release \
+            --no-restore \
+            /p:Version=${{ steps.version.outputs.VERSION }}
+
+      # ── Test ──────────────────────────────────────────────────────────────
+      - name: Run tests
+        run: |
+          dotnet test Sencilla.sln \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --logger "trx;LogFileName=test-results.trx" \
+            /p:Version=${{ steps.version.outputs.VERSION }}
+
+      # ── Publish test results ──────────────────────────────────────────────
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Test Results
+          path: "**/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+
+      # ── Pack (verify packaging compiles) ─────────────────────────────────
+      # This ensures all .csproj pack metadata is valid on every PR.
+      # Packages are NOT published from this workflow.
+      - name: Verify pack
+        run: |
+          dotnet pack Sencilla.sln \
+            --configuration Release \
+            --no-build \
+            --output ./artifacts/nuget \
+            /p:Version=${{ steps.version.outputs.VERSION }}
+
+      - name: List produced packages
+        run: ls -lh ./artifacts/nuget/

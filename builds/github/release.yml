@@ -1,0 +1,114 @@
+name: Release NuGet Packages
+
+# Triggers on any tag that starts with "v" (e.g. v10.0.3, v10.0.3-rc.1)
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Build & Publish NuGet Packages
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history for accurate versioning
+
+      # ── Extract version from tag ──────────────────────────────────────────
+      # Tag "v10.0.3"      → VERSION = "10.0.3"
+      # Tag "v10.0.3-rc.1" → VERSION = "10.0.3-rc.1"
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Releasing version: ${VERSION} from tag: ${TAG}"
+
+      # ── .NET SDK ──────────────────────────────────────────────────────────
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      # ── Restore ───────────────────────────────────────────────────────────
+      - name: Restore NuGet packages
+        run: dotnet restore Sencilla.sln
+
+      # ── Build ─────────────────────────────────────────────────────────────
+      # /p:Version sets the package version for ALL projects in the solution.
+      # /p:ContinuousIntegrationBuild=true enables deterministic builds.
+      - name: Build solution
+        run: |
+          dotnet build Sencilla.sln \
+            --configuration Release \
+            --no-restore \
+            /p:Version=${{ steps.version.outputs.VERSION }} \
+            /p:ContinuousIntegrationBuild=true
+
+      # ── Test ──────────────────────────────────────────────────────────────
+      - name: Run tests
+        run: |
+          dotnet test Sencilla.sln \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            /p:Version=${{ steps.version.outputs.VERSION }}
+
+      # ── Pack ──────────────────────────────────────────────────────────────
+      # Packs ALL projects that have <IsPackable>true</IsPackable> (default for library projects).
+      # --include-symbols: produces .snupkg symbol packages for source-link debugging.
+      - name: Pack NuGet packages
+        run: |
+          dotnet pack Sencilla.sln \
+            --configuration Release \
+            --no-build \
+            --include-symbols \
+            --output ./artifacts/nuget \
+            /p:Version=${{ steps.version.outputs.VERSION }} \
+            /p:SymbolPackageFormat=snupkg
+
+      # ── List packages (for debug / audit) ─────────────────────────────────
+      - name: List produced packages
+        run: ls -lh ./artifacts/nuget/
+
+      # ── Upload artifacts ──────────────────────────────────────────────────
+      - name: Upload packages as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages-${{ steps.version.outputs.VERSION }}
+          path: ./artifacts/nuget/
+          retention-days: 30
+
+      # ── Push to NuGet.org ─────────────────────────────────────────────────
+      # Requires a repository secret named NUGET_API_KEY.
+      # --skip-duplicate: if a package version already exists, don't fail.
+      - name: Push packages to NuGet.org
+        run: |
+          dotnet nuget push "./artifacts/nuget/*.nupkg" \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+
+      # ── Push symbol packages ──────────────────────────────────────────────
+      - name: Push symbol packages to NuGet.org
+        continue-on-error: true  # symbol push failure should not fail the release
+        run: |
+          dotnet nuget push "./artifacts/nuget/*.snupkg" \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+
+      # ── Create GitHub Release ─────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.TAG }}
+          name: "Release ${{ steps.version.outputs.VERSION }}"
+          generate_release_notes: true
+          files: ./artifacts/nuget/*.nupkg
