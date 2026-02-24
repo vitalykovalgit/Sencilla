@@ -43,13 +43,15 @@ jobs:
       # ── Build ─────────────────────────────────────────────────────────────
       # /p:Version sets the package version for ALL projects in the solution.
       # /p:ContinuousIntegrationBuild=true enables deterministic builds.
+      # /p:GeneratePackageOnBuild=false prevents packing during build (the explicit pack step handles it).
       - name: Build solution
         run: |
           dotnet build Sencilla.sln \
             --configuration Release \
             --no-restore \
             /p:Version=${{ steps.version.outputs.VERSION }} \
-            /p:ContinuousIntegrationBuild=true
+            /p:ContinuousIntegrationBuild=true \
+            /p:GeneratePackageOnBuild=false
 
       # ── Test ──────────────────────────────────────────────────────────────
       - name: Run tests

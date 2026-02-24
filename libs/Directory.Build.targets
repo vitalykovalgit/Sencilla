@@ -1,0 +1,10 @@
+<Project>
+  <!-- Source generators / analyzers set IncludeBuildOutput=false, which means there are
+       no PDBs to include in a symbol package. Enforce IncludeSymbols=false for these
+       projects at the end of MSBuild evaluation to guarantee no .snupkg is attempted,
+       preventing NU5017 ("Cannot create a package that has no dependencies nor content"). -->
+  <PropertyGroup Condition="'$(IncludeBuildOutput)' == 'false'">
+    <IncludeSymbols>false</IncludeSymbols>
+    <SymbolPackageFormat></SymbolPackageFormat>
+  </PropertyGroup>
+</Project>
