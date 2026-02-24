@@ -1,5 +1,7 @@
 # Core Module — `Sencilla.Core`
 
+[Home](../../README.md) / [Docs](../index.md) / Core
+
 **NuGet:** `Sencilla.Core`
 **Namespace:** `Sencilla.Core`
 **Source:** `libs/core/`
@@ -179,3 +181,7 @@ public interface ISystemVariable
 - [Getting Started](../getting-started.md)
 - [Architecture](../architecture.md)
 - [Entity Framework Repository](../repositories/entity-framework.md) — concrete implementation of core interfaces
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / **Core**

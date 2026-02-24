@@ -1,5 +1,7 @@
 # Getting Started
 
+[Home](../README.md) / [Docs](index.md) / Getting Started
+
 This guide walks you through setting up a new .NET project with Sencilla, defining an entity, and exposing it via API endpoints — with zero repository or DbContext boilerplate.
 
 ## Prerequisites
@@ -191,3 +193,7 @@ See [Filtering](core/filtering.md) for the full `IFilter` API.
 | EF Core repository internals | [Entity Framework Repository](repositories/entity-framework.md) |
 | Message-driven architecture | [Messaging](messaging/README.md) |
 | Background tasks | [Scheduler](scheduler/README.md) |
+
+---
+
+[Home](../README.md) / [Docs](index.md) / **Getting Started**

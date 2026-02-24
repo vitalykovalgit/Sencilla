@@ -31,6 +31,7 @@ All modules are independent NuGet packages. Use only what you need.
 
 ```bash
 dotnet add package Sencilla.Core
+dotnet add package Sencilla.Web
 dotnet add package Sencilla.Repository.EntityFramework
 ```
 
@@ -59,9 +60,11 @@ public class Product :
 
 ```csharp
 // Program.cs
+var mvcBuilder = builder.Services.AddControllers();
 builder.Services.AddSencilla(builder.Configuration);
 builder.Services.AddSencillaRepositoryForEF(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+builder.Services.AddSencillaWeb(mvcBuilder);
 ```
 
 ### 4. Inject and use
@@ -85,6 +88,56 @@ public class ProductService(
     // All repositories are auto-injected — zero boilerplate
 }
 ```
+
+### 5. Or skip writing controllers entirely — use `[CrudApi]`
+
+Add a single attribute to your entity to generate a full REST API automatically:
+
+```csharp
+using Sencilla.Core;
+using Sencilla.Web;
+
+[CrudApi(route: "api/products")]
+public class Product :
+    IEntity<int>,
+    IEntityCreateable,
+    IEntityUpdateable,
+    IEntityDeleteable
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+}
+```
+
+This generates 20+ REST endpoints — list, get by ID, count, sum, min, max, average, create, batch create, update, batch update, upsert, merge, soft-delete, undo, delete, and batch delete. No controller class needed.
+
+| Method | Route | Action |
+| ------ | ----- | ------ |
+| `GET` | `/api/products` | List all (with filtering & pagination) |
+| `GET` | `/api/products/{id}` | Get by ID |
+| `GET` | `/api/products/count` | Filtered count |
+| `PUT` | `/api/products/{id}` | Create |
+| `POST` | `/api/products/{id}` | Update |
+| `POST` | `/api/products/upsert/{id}` | Upsert |
+| `POST` | `/api/products/merge/{id}` | Merge |
+| `DELETE` | `/api/products/{id}` | Delete |
+| ... | ... | [See full endpoint list](docs/web/README.md#generated-endpoints) |
+
+Add `[Authorize]` or `[AllowAnonymous]` to the entity — they propagate to the generated controller automatically. Add `[UseCaching]` for in-memory response caching:
+
+```csharp
+[CrudApi(route: "api/categories")]
+[AllowAnonymous]
+[UseCaching(timeoutMinutes: 30)]
+public class Category : IEntity<int>, IEntityCreateable
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+```
+
+For full details, see the [Web Module documentation](docs/web/README.md).
 
 ---
 

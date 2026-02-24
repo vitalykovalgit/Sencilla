@@ -1,5 +1,7 @@
 # Web API — Minimal API
 
+[Home](../../README.md) / [Docs](../index.md) / Web API
+
 **NuGet:** `Sencilla.Web.MinimalApi`
 **Namespace:** `Sencilla.Web.MinimalApi`
 **Source:** `libs/webapi/MinimalApi/`
@@ -159,3 +161,7 @@ group.MapGet("/export", ExportHandler)
 - [Web Module](../web/README.md) — MVC controller alternative
 - [Core Repository Interfaces](../core/repositories.md) — injected into endpoints
 - [Getting Started](../getting-started.md) — minimal API setup example
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / **Web API**

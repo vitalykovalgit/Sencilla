@@ -1,5 +1,7 @@
 # Commands & Events (CQRS)
 
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / Commands & Events
+
 **Namespace:** `Sencilla.Core`
 **Source:** `libs/core/Command/`, `libs/core/Event/`
 
@@ -307,3 +309,7 @@ IEventHandler<ProductCreatedEvent> × N handlers
 - [Entities — Entity Events](entities.md#entity-events) — automatic repository events
 - [Dependency Injection](dependency-injection.md) — how `[Implement]` registers handlers
 - [Messaging](../messaging/README.md) — cross-process event publishing
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / **Commands & Events**

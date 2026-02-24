@@ -1,5 +1,7 @@
 # Files
 
+[Home](../../README.md) / [Docs](../index.md) / Files
+
 **NuGet:** `Sencilla.Component.Files` (core) + provider package
 **Source:** `libs/files/`
 
@@ -140,3 +142,7 @@ public interface IFileStorage
 
 - [Components](README.md) — other pre-built modules
 - [Config Component](../components/README.md#config) — runtime configuration
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / **Files**

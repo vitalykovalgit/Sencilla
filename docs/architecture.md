@@ -1,5 +1,7 @@
 # Architecture Overview
 
+[Home](../README.md) / [Docs](index.md) / Architecture
+
 Sencilla is a **layered, modular framework**. The modules are independent NuGet packages with explicit dependency relationships. You add only what you need.
 
 ## Design Philosophy
@@ -243,3 +245,7 @@ libs/
 └── extensions/
     └── EntityFrameworkCore/   → Microsoft.EntityFrameworkCore.Extension
 ```
+
+---
+
+[Home](../README.md) / [Docs](index.md) / **Architecture**

@@ -1,5 +1,7 @@
 # Web Module
 
+[Home](../../README.md) / [Docs](../index.md) / Web
+
 **NuGet:** `Sencilla.Web`
 **Namespace:** `Sencilla.Web`, `Microsoft.AspNetCore.Mvc`
 **Source:** `libs/web/`
@@ -494,3 +496,7 @@ This generates 20+ REST endpoints for `Product` and `Category` automatically, pl
 - [Core Repository Interfaces](../core/repositories.md) — repositories injected into controllers
 - [Filtering](../core/filtering.md) — `Filter` and `IFilter` details
 - [Getting Started](../getting-started.md) — framework setup guide
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / **Web**

@@ -1,5 +1,7 @@
 # Entity Framework Core Repository
 
+[Home](../../README.md) / [Docs](../index.md) / [Repositories](README.md) / Entity Framework
+
 **NuGet:** `Sencilla.Repository.EntityFramework`
 **Namespace:** `Sencilla.Repository.EntityFramework`
 **Source:** `libs/repositories/EntityFramework/`
@@ -294,3 +296,7 @@ Any database provider supported by EF Core works:
 - [Core Repository Interfaces](../core/repositories.md) — interface definitions
 - [Filtering](../core/filtering.md) — `IFilter` parameters
 - [Entities](../core/entities.md) — lifecycle interfaces and entity events
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / [Repositories](README.md) / **Entity Framework**

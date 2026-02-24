@@ -1,5 +1,7 @@
 # Filtering
 
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / Filtering
+
 **Namespace:** `Sencilla.Core`
 **Source:** `libs/core/Filter/`
 
@@ -265,3 +267,7 @@ var filter = new Filter
 
 - [Repository Interfaces](repositories.md) — methods that accept `IFilter`
 - [Entity Framework Repository](../repositories/entity-framework.md) — how filters are translated to EF Core queries
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / **Filtering**

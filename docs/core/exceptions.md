@@ -1,5 +1,7 @@
 # Exceptions
 
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / Exceptions
+
 **Namespace:** `Sencilla.Core`
 **Source:** `libs/core/Exceptions/`
 
@@ -253,3 +255,7 @@ public class UpdateProductHandler : ICommandHandler<UpdateProductCommand, Produc
 
 - [Commands & Events](commands-events.md) — where exceptions are typically thrown
 - [Getting Started](../getting-started.md) — error handler registration
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / **Exceptions**

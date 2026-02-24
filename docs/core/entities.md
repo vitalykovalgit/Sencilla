@@ -1,5 +1,7 @@
 # Entities
 
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / Entities
+
 **Namespace:** `Sencilla.Core`
 **Source:** `libs/core/Entity/`
 
@@ -291,3 +293,7 @@ public class ProductCreatedHandler : IEventHandler<EntityCreatedEvent<Product>>
 - [Repository Interfaces](repositories.md) — how entities flow through CRUD operations
 - [Filtering](filtering.md) — query entities with `IFilter`
 - [Entity Framework Repository](../repositories/entity-framework.md) — EF Core implementation details
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / **Entities**
