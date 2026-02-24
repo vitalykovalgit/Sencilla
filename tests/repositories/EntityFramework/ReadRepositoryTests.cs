@@ -72,7 +72,7 @@ public class ReadRepositoryTests : RepositoryTestBase<TestReadRepository>
             MakeProduct(2, price: 10),
             MakeProduct(3, price: 20));
 
-        var filter = new Filter { OrderBy = ["Price"], Descending = false };
+        var filter = new Filter { OrderBy = ["Price|ASC"] };
         var result = (await Repository.GetAll(filter)).ToList();
 
         Assert.Equal(10m, result[0].Price);
@@ -88,7 +88,7 @@ public class ReadRepositoryTests : RepositoryTestBase<TestReadRepository>
             MakeProduct(2, price: 30),
             MakeProduct(3, price: 20));
 
-        var filter = new Filter { OrderBy = ["Price"], Descending = true };
+        var filter = new Filter { OrderBy = ["Price|DESC"] };
         var result = (await Repository.GetAll(filter)).ToList();
 
         Assert.Equal(30m, result[0].Price);
