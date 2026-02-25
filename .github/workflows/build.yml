@@ -1,25 +1,26 @@
 name: CI Build
 
-# Triggers on push to main branches and on pull requests.
+# Manual trigger only — use "Run workflow" button in GitHub Actions.
 on:
-  push:
-    branches:
-      - master
-      - main
-      - develop
-      - "release/**"
-    paths-ignore:
-      - "**/*.md"
-      - "docs/**"
-      - "promts/**"
-  pull_request:
-    branches:
-      - master
-      - main
-    paths-ignore:
-      - "**/*.md"
-      - "docs/**"
-      - "promts/**"
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - master
+  #     - main
+  #     - develop
+  #     - "release/**"
+  #   paths-ignore:
+  #     - "**/*.md"
+  #     - "docs/**"
+  #     - "promts/**"
+  # pull_request:
+  #   branches:
+  #     - master
+  #     - main
+  #   paths-ignore:
+  #     - "**/*.md"
+  #     - "docs/**"
+  #     - "promts/**"
 
 jobs:
   build:
