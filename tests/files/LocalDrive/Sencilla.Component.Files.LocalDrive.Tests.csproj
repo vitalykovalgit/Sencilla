@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libs\files\LocalDrive\Sencilla.Component.Files.LocalDrive.csproj" />
+  </ItemGroup>
+
+</Project>
