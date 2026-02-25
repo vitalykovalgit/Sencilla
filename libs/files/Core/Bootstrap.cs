@@ -34,6 +34,7 @@ public static class Bootstrap
         services.TryAddKeyedTransient<IFileRequestHandler, CreateFileHandler>(IFileRequestHandler.ServiceKey(CreateFileHandler.Method));
         services.TryAddKeyedTransient<IFileRequestHandler, UploadFileHandler>(IFileRequestHandler.ServiceKey(UploadFileHandler.Method));
         services.TryAddKeyedTransient<IFileRequestHandler, HeadFileHandler>(IFileRequestHandler.ServiceKey(HeadFileHandler.Method));
+        services.TryAddKeyedTransient<IFileRequestHandler, DeleteFileHandler>(IFileRequestHandler.ServiceKey(DeleteFileHandler.Method));
 
         services.TryAddTransient<IFilePathResolver, FilePathResolver>();
         return services;

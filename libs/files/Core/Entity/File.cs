@@ -73,7 +73,14 @@ public class File
     public int? Height { get; set; }
 
     /// <summary>
-    /// 
+    /// Supported resolutions (dimensions) for this file.
+    /// Only set on the parent/original file.
+    /// </summary>
+    [JsonObject]
+    public int[]? Resolutions { get; set; }
+
+    /// <summary>
+    ///
     /// </summary>
     [JsonObject]
     public IDictionary<string, string>? Attrs { get; set; }

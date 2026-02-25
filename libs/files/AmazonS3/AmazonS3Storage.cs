@@ -349,7 +349,10 @@ public class AmazonS3Storage : IFileStorage
     private static (string bucket, string key) GetBucketAndKey(string? path)
     {
         if (string.IsNullOrEmpty(path)) return (string.Empty, string.Empty);
-        var parts = path.Split(new[] { Path.DirectorySeparatorChar, '/' }, 2);
+        // Normalize to forward slashes so the split works on Windows, Linux, and Mac
+        // regardless of which separator was used when the path was stored.
+        var normalized = path.Replace('\\', '/');
+        var parts = normalized.Split('/', 2);
         return parts.Length > 1 ? (parts[0], parts[1]) : (parts[0], string.Empty);
     }
 }

@@ -67,4 +67,42 @@ public class FileFilterTests
 
         Assert.Equal(2, filter.Properties.Count);
     }
+
+    [Fact]
+    public void ById_SingleId_AddsPropertyToFilter()
+    {
+        var filter = new FileFilter();
+        var id = Guid.NewGuid();
+
+        var result = filter.ById(id);
+
+        Assert.Same(filter, result);
+        Assert.Single(filter.Properties);
+    }
+
+    [Fact]
+    public void ById_MultipleIds_AddsAllValues()
+    {
+        var filter = new FileFilter();
+        var id1 = Guid.NewGuid();
+        var id2 = Guid.NewGuid();
+
+        filter.ById(id1, id2);
+
+        Assert.Single(filter.Properties);
+        var values = filter.GetProperty(nameof(File.Id))?.ToList();
+        Assert.NotNull(values);
+        Assert.Equal(2, values!.Count);
+    }
+
+    [Fact]
+    public void FluentChaining_ByIdAndByParentIdAndByDimmension_AddsAllProperties()
+    {
+        var filter = new FileFilter()
+            .ById(Guid.NewGuid())
+            .ByParentId(Guid.NewGuid())
+            .ByDimmension(300);
+
+        Assert.Equal(3, filter.Properties.Count);
+    }
 }
