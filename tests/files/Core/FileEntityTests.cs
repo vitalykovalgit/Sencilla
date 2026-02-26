@@ -74,31 +74,4 @@ public class FileEntityTests
         Assert.Equal("1", file.Attrs["projectId"]);
     }
 
-    [Fact]
-    public void File_Resolutions_DefaultIsNull()
-    {
-        var file = new File();
-
-        Assert.Null(file.Resolutions);
-    }
-
-    [Fact]
-    public void File_Resolutions_CanBeSetAndRetrieved()
-    {
-        var resolutions = new[] { 100, 200, 500 };
-        var file = new File { Resolutions = resolutions };
-
-        Assert.Equal(resolutions, file.Resolutions);
-        Assert.Equal(3, file.Resolutions!.Length);
-        Assert.Contains(200, file.Resolutions);
-    }
-
-    [Fact]
-    public void File_Resolutions_EmptyArray()
-    {
-        var file = new File { Resolutions = [] };
-
-        Assert.NotNull(file.Resolutions);
-        Assert.Empty(file.Resolutions);
-    }
 }

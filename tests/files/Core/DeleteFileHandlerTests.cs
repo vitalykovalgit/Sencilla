@@ -54,10 +54,10 @@ public class DeleteFileHandlerTests
     public async Task Handle_FileWithVariants_DeletesAllVariantsAndOriginal()
     {
         var fileId = Guid.NewGuid();
-        var file = new File { Id = fileId, Name = "photo.jpg", Resolutions = new[] { 100, 200 } };
+        var file = new File { Id = fileId, Name = "photo.jpg" };
 
-        var variant1 = new File { Id = Guid.NewGuid(), ParentId = fileId, Dim = 100 };
-        var variant2 = new File { Id = Guid.NewGuid(), ParentId = fileId, Dim = 200 };
+        var variant1 = new File { Id = Guid.NewGuid(), ParentId = fileId };
+        var variant2 = new File { Id = Guid.NewGuid(), ParentId = fileId };
         var context = CreateDeleteContext(fileId);
 
         _readRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>()))

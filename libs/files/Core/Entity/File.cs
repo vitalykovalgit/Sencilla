@@ -72,12 +72,12 @@ public class File
     /// </summary>
     public int? Height { get; set; }
 
-    /// <summary>
-    /// Supported resolutions (dimensions) for this file.
-    /// Only set on the parent/original file.
-    /// </summary>
-    [JsonObject]
-    public int[]? Resolutions { get; set; }
+    // /// <summary>
+    // /// Supported resolutions (dimensions) for this file.
+    // /// Only set on the parent/original file.
+    // /// </summary>
+    // [JsonObject]
+    // public int[]? Resolutions { get; set; }
 
     /// <summary>
     ///
