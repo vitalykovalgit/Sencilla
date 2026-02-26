@@ -119,7 +119,7 @@ fi
 # ── Clean old packages ────────────────────────────────────────────────────────
 if [[ "$CLEAN" == true ]]; then
     echo -e "${YELLOW}Cleaning old packages from $LOCAL_NUGET_DIR ...${NC}"
-    find "$LOCAL_NUGET_DIR" \( -name "Sencilla.*.nupkg" -o -name "Microsoft.EntityFrameworkCore.Extension.*.nupkg" \) \
+    find "$LOCAL_NUGET_DIR" -name "Sencilla.*.nupkg" \
         -delete -print | sed 's/^/  Removed: /'
     echo ""
 fi

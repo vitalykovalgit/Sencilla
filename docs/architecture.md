@@ -40,7 +40,7 @@ Sencilla is a **layered, modular framework**. The modules are independent NuGet 
    └─────────────────────────────────────────────────────────────────┘
 
    ┌─────────────────────────────────────────────────────────────────┐
-   │  Microsoft.EntityFrameworkCore.Extension                        │
+   │  Sencilla.Extensions.EntityFrameworkCore                         │
    │  (standalone EF Core utilities, depends on Sencilla.Core)       │
    └─────────────────────────────────────────────────────────────────┘
 ```
@@ -69,7 +69,7 @@ Sencilla is a **layered, modular framework**. The modules are independent NuGet 
 | `Sencilla.Repository.EntityFramework` | `Sencilla.Repository.EntityFramework` | Full EF Core repository, transactions, upsert, merge |
 | `Sencilla.Repository.HttpClient` | `Sencilla.Repository.HttpClient` | Calls remote REST APIs via repository interface |
 | `Sencilla.Repository.SqlMapper` | `Sencilla.Repository.SqlMapper` | Raw SQL + expression query builder |
-| `Microsoft.EntityFrameworkCore.Extension` | — | EF Core utilities and extensions |
+| `Sencilla.Extensions.EntityFrameworkCore` | — | EF Core utilities and extensions |
 
 ### Messaging
 
@@ -243,7 +243,7 @@ libs/
 │   ├── Entity/                → Sencilla.Mapper.Entity
 │   └── Excel/                 → Sencilla.Mapper.Excel
 └── extensions/
-    └── EntityFrameworkCore/   → Microsoft.EntityFrameworkCore.Extension
+    └── EntityFrameworkCore/   → Sencilla.Extensions.EntityFrameworkCore
 ```
 
 ---

@@ -57,7 +57,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extensions", "extensions", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Repository.EntityFramework.Extension.Tests", "tests\extensions\EntityFramework.Extension.Tests\Sencilla.Repository.EntityFramework.Extension.Tests.csproj", "{B98F9496-15C3-4F82-9DA7-02500E09BFAE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.EntityFrameworkCore.Extension", "libs\extensions\EntityFrameworkCore\Microsoft.EntityFrameworkCore.Extension.csproj", "{06C45A6D-D821-46DE-BB89-0AE56C3DC96C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Extensions.EntityFrameworkCore", "libs\extensions\EntityFrameworkCore\Sencilla.Extensions.EntityFrameworkCore.csproj", "{06C45A6D-D821-46DE-BB89-0AE56C3DC96C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sencilla.Component.Files", "libs\files\Core\Sencilla.Component.Files.csproj", "{8D6C609D-32FD-4719-BDB1-587343AE4894}"
 EndProject

@@ -45,7 +45,7 @@ declare -a packagesInfo=(
     "Sencilla.Component.Security:components/Security"
     "Sencilla.Component.Geography:components/Geography"
     
-    "Microsoft.EntityFrameworkCore.Extension:extensions/EntityFrameworkCore"
+    "Sencilla.Extensions.EntityFrameworkCore:extensions/EntityFrameworkCore"
 )
 
 printf "\033[1;33mCleaning old packages...\033[0m\n"
