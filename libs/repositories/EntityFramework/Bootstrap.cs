@@ -10,6 +10,7 @@ global using System.Text.Json;
 global using System.Diagnostics;
 
 global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Metadata;
 global using Microsoft.EntityFrameworkCore.Storage;
 global using Microsoft.EntityFrameworkCore.Query;
 global using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -98,6 +99,17 @@ public static class RepositoryEntityFrameworkBootstrap
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Pre-compiles EF Core model at startup to eliminate
+    /// model-building overhead on the first request.
+    /// Usage: app.WarmUpEFModel();
+    /// </summary>
+    public static IHost WarmUpEFModel(this IHost host)
+    {
+        DynamicDbContext.CompileModel(host.Services);
+        return host;
     }
 
 }

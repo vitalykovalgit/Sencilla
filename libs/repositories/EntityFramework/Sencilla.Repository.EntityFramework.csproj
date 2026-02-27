@@ -12,4 +12,8 @@
     <ProjectReference Include="..\..\extensions\EntityFrameworkCore\Sencilla.Extensions.EntityFrameworkCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sencilla.Repository.EntityFramework.Tests" />
+  </ItemGroup>
+
 </Project>

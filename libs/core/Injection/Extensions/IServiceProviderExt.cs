@@ -3,14 +3,15 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class IServiceProviderExt
 {
+    // Cache MethodInfo lookups to avoid repeated reflection
+    private static readonly ConcurrentDictionary<(Type, string, string), MethodInfo?> MethodInfoCache = new();
+
     public static Task InvokeMethod(this IServiceProvider provider, object? obj, string method, params object[] @params) 
     {
         if (provider == null || obj == null)
             return Task.CompletedTask;
 
-        //var methodInfos = obj.GetType().GetMethods().Where(m => m.Name.Equals(method, StringComparison.OrdinalIgnoreCase));
-        //var methodInfo = methodInfos.FirstOrDefault(m => m.GetParameters().StartWith(@params, (f, s) => f.ParameterType == s.GetType())) ?? methodInfos.FirstOrDefault();
-        var methodInfo = obj.GetMethod(method, @params);
+        var methodInfo = obj.GetMethodCached(method, @params);
         return (Task)(methodInfo?.Invoke(obj, provider.InjectMethodParameters(methodInfo, @params)) ?? Task.CompletedTask);
     }
 
@@ -19,10 +20,23 @@ public static class IServiceProviderExt
         if (provider == null || obj == null)
             return default;
 
-        //var methodInfos = obj.GetType().GetMethods().Where(m => m.Name.Equals(method, StringComparison.OrdinalIgnoreCase));
-        //var methodInfo = methodInfos.FirstOrDefault(m => m.GetParameters().StartWith(@params, (f, s) => f.ParameterType == s.GetType())) ?? methodInfos.FirstOrDefault();
-        var methodInfo = obj.GetMethod(method, @params);
+        var methodInfo = obj.GetMethodCached(method, @params);
         return await (Task<T>)(methodInfo?.Invoke(obj, provider.InjectMethodParameters(methodInfo, @params)) ?? Task.CompletedTask);
+    }
+
+    /// <summary>
+    /// Cached version of GetMethod — avoids repeated reflection GetMethods() calls.
+    /// Cache key is (handler type, method name, param types signature).
+    /// </summary>
+    public static MethodInfo? GetMethodCached(this object? obj, string method, object[] @params)
+    {
+        if (obj == null) return null;
+
+        var objType = obj.GetType();
+        var paramSig = string.Join(",", @params.Select(p => p.GetType().FullName));
+        var cacheKey = (objType, method, paramSig);
+
+        return MethodInfoCache.GetOrAdd(cacheKey, _ => obj.GetMethod(method, @params));
     }
 
     /// <summary>

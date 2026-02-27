@@ -121,6 +121,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Web.MinimalApi", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Web.ApiControllers", "libs\webapi\ApiControllers\Sencilla.Web.ApiControllers.csproj", "{E50AD276-4417-41A6-A1A3-C0D2781E199A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Component.Users.Tests", "tests\components\Users\Sencilla.Component.Users.Tests.csproj", "{202AC82A-C365-415D-9D61-C0B02D1038CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -647,6 +649,18 @@ Global
 		{E50AD276-4417-41A6-A1A3-C0D2781E199A}.Release|x64.Build.0 = Release|Any CPU
 		{E50AD276-4417-41A6-A1A3-C0D2781E199A}.Release|x86.ActiveCfg = Release|Any CPU
 		{E50AD276-4417-41A6-A1A3-C0D2781E199A}.Release|x86.Build.0 = Release|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Debug|x64.Build.0 = Debug|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Debug|x86.Build.0 = Debug|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Release|x64.ActiveCfg = Release|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Release|x64.Build.0 = Release|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Release|x86.ActiveCfg = Release|Any CPU
+		{202AC82A-C365-415D-9D61-C0B02D1038CB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -706,6 +720,7 @@ Global
 		{A4A8651C-F370-4392-B01E-ACCC1A3B9578} = {6C4D298B-81FB-2B6B-5AB6-46205EDDC72C}
 		{4A375A52-2F85-4284-ABD7-8C1C7B7E5185} = {A4A8651C-F370-4392-B01E-ACCC1A3B9578}
 		{E50AD276-4417-41A6-A1A3-C0D2781E199A} = {A4A8651C-F370-4392-B01E-ACCC1A3B9578}
+		{202AC82A-C365-415D-9D61-C0B02D1038CB} = {20C65D60-A80A-4583-8CBE-01BA9E306BA3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5EE15D7B-0AF6-4664-9D0B-7140B5B5961F}
