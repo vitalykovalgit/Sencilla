@@ -5,6 +5,8 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+> **Warning:** Sencilla is currently in **beta**. APIs are subject to change between releases without prior notice. Use in production at your own risk.
+
 > A comprehensive, modular .NET 10 framework that provides battle-tested patterns — repository, CQRS, messaging, scheduling, and more — so you can focus on your business logic.
 
 ---
