@@ -44,7 +44,7 @@ $packagesInfo = @(
     @{ Name = "Sencilla.Component.Security"; Path = "components\Security" },
     @{ Name = "Sencilla.Component.Geography"; Path = "components\Geography" },
     
-    @{ Name = "Microsoft.EntityFrameworkCore.Extension"; Path = "extensions\EntityFrameworkCore" }
+    @{ Name = "Sencilla.Extensions.EntityFrameworkCore"; Path = "extensions\EntityFrameworkCore" }
 )
 
 # Clean packages using loop

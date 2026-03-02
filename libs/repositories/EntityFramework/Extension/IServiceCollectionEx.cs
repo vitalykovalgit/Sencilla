@@ -12,7 +12,7 @@ public static class RepoEFIServiceCollectionEx
             var @event = typeof(EntityReadingEvent<>).MakeGenericType(type);
             var @interface = typeof(IEventHandlerBase<>).MakeGenericType(@event);
             var constraint = typeof(FilterConstraintHandler<>).MakeGenericType(type);
-            container.AddTransient(@interface, constraint);
+            container.AddScoped(@interface, constraint);
         }
         return container;
     }
@@ -78,13 +78,13 @@ public static class RepoEFIServiceCollectionEx
         // register read repo 
         if (typeof(IEntity<>).MakeGenericType(key).IsAssignableFrom(type))
         {
-            container.TryAddTransient(
+            container.TryAddScoped(
                 typeof(IReadRepository<,>).MakeGenericType(type, key),
                 typeof(ReadRepository<,,>).MakeGenericType(type, context, key));
 
             if (key == typeof(int))
             {
-                container.TryAddTransient(
+                container.TryAddScoped(
                     typeof(IReadRepository<>).MakeGenericType(type),
                     typeof(ReadRepository<,>).MakeGenericType(type, context));
             }
@@ -96,13 +96,13 @@ public static class RepoEFIServiceCollectionEx
         // register create repo 
         if (typeof(IEntityCreateable).IsAssignableFrom(type))
         {
-            container.TryAddTransient(
+            container.TryAddScoped(
                 typeof(ICreateRepository<,>).MakeGenericType(type, key),
                 typeof(CreateRepository<,,>).MakeGenericType(type, context, key));
 
             if (key == typeof(int))
             {
-                container.TryAddTransient(
+                container.TryAddScoped(
                     typeof(ICreateRepository<>).MakeGenericType(type),
                     typeof(CreateRepository<,>).MakeGenericType(type, context));
             }
@@ -114,13 +114,13 @@ public static class RepoEFIServiceCollectionEx
         // register update repo 
         if (typeof(IEntityUpdateable).IsAssignableFrom(type))
         {
-            container.TryAddTransient(
+            container.TryAddScoped(
                 typeof(IUpdateRepository<,>).MakeGenericType(type, key),
                 typeof(UpdateRepository<,,>).MakeGenericType(type, context, key));
 
             if (key == typeof(int))
             {
-                container.TryAddTransient(
+                container.TryAddScoped(
                     typeof(IUpdateRepository<>).MakeGenericType(type),
                     typeof(UpdateRepository<,>).MakeGenericType(type, context));
             }
@@ -132,13 +132,13 @@ public static class RepoEFIServiceCollectionEx
         // register remvoe repo 
         if (typeof(IEntityRemoveable).IsAssignableFrom(type))
         {
-            container.TryAddTransient(
+            container.TryAddScoped(
                 typeof(IRemoveRepository<,>).MakeGenericType(type, key),
                 typeof(RemoveRepository<,,>).MakeGenericType(type, context, key));
 
             if (key == typeof(int))
             {
-                container.TryAddTransient(
+                container.TryAddScoped(
                     typeof(IRemoveRepository<>).MakeGenericType(type),
                     typeof(RemoveRepository<,>).MakeGenericType(type, context));
             }
@@ -150,13 +150,13 @@ public static class RepoEFIServiceCollectionEx
         // register delete repo 
         if (typeof(IEntityDeleteable).IsAssignableFrom(type))
         {
-            container.TryAddTransient(
+            container.TryAddScoped(
                 typeof(IDeleteRepository<,>).MakeGenericType(type, key),
                 typeof(DeleteRepository<,,>).MakeGenericType(type, context, key));
 
             if (key == typeof(int))
             {
-                container.TryAddTransient(
+                container.TryAddScoped(
                     typeof(IDeleteRepository<>).MakeGenericType(type),
                     typeof(DeleteRepository<,>).MakeGenericType(type, context));
             }

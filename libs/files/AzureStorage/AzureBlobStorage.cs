@@ -454,7 +454,10 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
 
     private static (string container, string fname) GetContainerAndFileName(string? path)
     {
-        var parts = path?.Split(Path.DirectorySeparatorChar, 2);
+        // Normalize to forward slashes so the split works on Windows, Linux, and Mac
+        // regardless of which separator was used when the path was stored.
+        var normalized = path?.Replace('\\', '/');
+        var parts = normalized?.Split('/', 2);
         return parts?.Length > 1 ? (parts[0], parts[1]) : (string.Empty, string.Empty);
     }
 }

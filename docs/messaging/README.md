@@ -1,5 +1,7 @@
 # Messaging
 
+[Home](../../README.md) / [Docs](../index.md) / Messaging
+
 **NuGet:** `Sencilla.Messaging` (core) + provider package
 **Namespace:** `Sencilla.Messaging`
 **Source:** `libs/messaging/`
@@ -244,3 +246,7 @@ public class RetryMiddleware : IMessageMiddleware
 - [Commands & Events](../core/commands-events.md) — in-process CQRS (no broker)
 - [Scheduler](../scheduler/README.md) — time-based message dispatch
 - [Architecture](../architecture.md) — where messaging fits in the stack
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / **Messaging**

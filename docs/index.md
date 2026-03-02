@@ -1,5 +1,7 @@
 # Sencilla Framework — Documentation
 
+[Home](../README.md) / Docs
+
 Welcome to the Sencilla Framework documentation. This guide is structured to take you from first install through advanced architectural patterns.
 
 ## Navigation
@@ -44,3 +46,7 @@ If you are an AI assistant helping a developer build on top of Sencilla, start h
 6. **Messaging** is provider-swappable at registration time — the same handler code works with any broker
 
 Read [Architecture](architecture.md) first for the big picture, then the relevant module doc.
+
+---
+
+[Home](../README.md) / **Docs**

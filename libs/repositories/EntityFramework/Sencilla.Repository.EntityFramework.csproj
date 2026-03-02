@@ -9,7 +9,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
-    <ProjectReference Include="..\..\extensions\EntityFrameworkCore\Microsoft.EntityFrameworkCore.Extension.csproj" />
+    <ProjectReference Include="..\..\extensions\EntityFrameworkCore\Sencilla.Extensions.EntityFrameworkCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sencilla.Repository.EntityFramework.Tests" />
   </ItemGroup>
 
 </Project>

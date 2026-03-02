@@ -1,5 +1,7 @@
 # Repository Implementations
 
+[Home](../../README.md) / [Docs](../index.md) / Repositories
+
 Sencilla provides three concrete repository backends. All implement the same `IReadRepository` / `ICreateRepository` / etc. interfaces defined in `Sencilla.Core`, so switching backends is a one-line change in your DI registration.
 
 ---
@@ -39,3 +41,7 @@ This means you can:
 - [Entity Framework Repository](entity-framework.md)
 - [HTTP Client Repository](http-client.md)
 - [SQL Mapper Repository](sql-mapper.md)
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / **Repositories**

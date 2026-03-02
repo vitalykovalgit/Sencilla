@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Extension.Entity.Attributes;
+﻿using Sencilla.Extensions.EntityFrameworkCore.Entity.Attributes;
 
 namespace Sencilla.Component.Users;
 

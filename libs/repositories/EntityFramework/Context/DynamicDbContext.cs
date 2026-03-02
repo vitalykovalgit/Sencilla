@@ -3,6 +3,35 @@
 [DisableInjection]
 public class DynamicDbContext([NotNull] DbContextOptions options) : DbContext(options)
 {
+    private static IModel? _compiledModel;
+    private static readonly object _modelLock = new();
+
+    /// <summary>
+    /// Pre-compiles and caches the EF Core model at startup,
+    /// so subsequent DbContext instances skip OnModelCreating entirely.
+    /// Call this from Program.cs after building the host:
+    /// <code>app.WarmUpEFModel();</code>
+    /// </summary>
+    internal static void CompileModel(IServiceProvider serviceProvider)
+    {
+        if (_compiledModel != null) return;
+        lock (_modelLock)
+        {
+            if (_compiledModel != null) return;
+            using var scope = serviceProvider.CreateScope();
+            var ctx = scope.ServiceProvider.GetRequiredService<DynamicDbContext>();
+            _compiledModel = ctx.Model;
+        }
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (_compiledModel != null)
+        {
+            optionsBuilder.UseModel(_compiledModel);
+        }
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         foreach (var e in RepositoryEntityFrameworkBootstrap.Entities)

@@ -28,25 +28,28 @@ public class UserRegistrationMiddleware
             var user = userProvider.CurrentUser;
             if (!user.IsAnonymous())
             {
-                // check if user already exists (with caching)
                 var cacheKey = $"user_by_email_{user.Email}";
-                var dbUser = await _cache.GetOrCreateAsync(cacheKey, async entry =>
-                {
-                    var userRepo = container.GetService<ICreateRepository<User>>();
-                    entry.AbsoluteExpirationRelativeToNow = CacheExpiration;
-                    return await userRepo!.FirstOrDefault(ByEmail(user.Email), context.RequestAborted);
-                });
 
-                if (dbUser == null)
+                // Fast path: if user is already cached, skip all DI/repo resolution
+                if (_cache.TryGetValue(cacheKey, out User? dbUser) && dbUser != null)
                 {
-                    // create if not exists 
-                    var userRepo = container.GetService<ICreateRepository<User>>();
-                    dbUser = await UpsertUserAsync(container, userRepo!, user, userProvider.CurrentPrincipal?.Identity?.AuthenticationType);
-                    // Update cache with newly created user
-                    _cache.Set(cacheKey, dbUser, CacheExpiration);
+                    user = dbUser;
                 }
+                else
+                {
+                    // Cache miss — resolve repo and look up user in DB
+                    var userRepo = container.GetService<ICreateRepository<User>>();
+                    dbUser = await userRepo!.FirstOrDefault(ByEmail(user.Email), context.RequestAborted);
 
-                user = dbUser;
+                    if (dbUser == null)
+                    {
+                        // create if not exists
+                        dbUser = await UpsertUserAsync(container, userRepo!, user, userProvider.CurrentPrincipal?.Identity?.AuthenticationType);
+                    }
+
+                    _cache.Set(cacheKey, dbUser, CacheExpiration);
+                    user = dbUser;
+                }
             }
 
             // Set current user to system variable

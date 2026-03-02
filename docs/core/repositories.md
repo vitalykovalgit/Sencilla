@@ -1,5 +1,7 @@
 # Repository Interfaces
 
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / Repositories
+
 **Namespace:** `Sencilla.Core`
 **Source:** `libs/core/Repository/`
 
@@ -309,3 +311,7 @@ See [Entity Framework Repository](../repositories/entity-framework.md) for advan
 - [Filtering](filtering.md) — `IFilter` passed to `GetAll`, `GetCount`, etc.
 - [Entity Framework Repository](../repositories/entity-framework.md) — concrete EF Core implementation
 - [HTTP Client Repository](../repositories/http-client.md) — REST API backend
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / **Repositories**

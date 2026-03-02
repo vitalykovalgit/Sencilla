@@ -1,5 +1,7 @@
 # Dependency Injection
 
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / Dependency Injection
+
 **Namespace:** `Sencilla.Core`
 **Source:** `libs/core/Injection/`
 
@@ -225,3 +227,7 @@ public class CountryCache : ICountryCache
 - [Getting Started](../getting-started.md) — `AddSencilla` in context
 - [Repository Interfaces](repositories.md) — what `[Implement]` does for repositories
 - [Commands & Events](commands-events.md) — handler auto-registration
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / [Core](README.md) / **Dependency Injection**

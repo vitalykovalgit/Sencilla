@@ -1,5 +1,7 @@
 # Components
 
+[Home](../../README.md) / [Docs](../index.md) / Components
+
 > **Status:** Documentation in progress. Module structure and quick-start guides are included. Detailed API references are planned.
 
 Sencilla Components are **pre-built domain modules** for concerns that appear in almost every web application. Each component is an independent NuGet package; install only what you need.
@@ -151,3 +153,7 @@ All components
 - [Files](../files/README.md) — file storage component
 - [Architecture](../architecture.md) — component dependency graph
 - [Dependency Injection](../core/dependency-injection.md) — component registration
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / **Components**

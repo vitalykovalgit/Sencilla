@@ -1,5 +1,7 @@
 # HTTP Client Repository
 
+[Home](../../README.md) / [Docs](../index.md) / [Repositories](README.md) / HTTP Client
+
 **NuGet:** `Sencilla.Repository.HttpClient`
 **Namespace:** `Sencilla.Repository.HttpClient`
 **Source:** `libs/repositories/HttpClient/`
@@ -185,3 +187,7 @@ public class PricingService(
 - [Core Repository Interfaces](../core/repositories.md) — interface definitions
 - [Entity Framework Repository](entity-framework.md) — local DB alternative
 - [Filtering](../core/filtering.md) — `IFilter` serialization to query string
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / [Repositories](README.md) / **HTTP Client**

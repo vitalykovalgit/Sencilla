@@ -1,5 +1,7 @@
 # Scheduler
 
+[Home](../../README.md) / [Docs](../index.md) / Scheduler
+
 **NuGet:** `Sencilla.Scheduler`
 **Namespace:** `Sencilla.Scheduler`
 **Source:** `libs/scheduler/Core/`
@@ -230,3 +232,7 @@ With EF Core persistence, task history and execution records are stored in the d
 
 - [Messaging](../messaging/README.md) — `Sencilla.Messaging.Scheduler` for message-driven scheduling
 - [Dependency Injection](../core/dependency-injection.md) — `[Implement]` for task registration
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / **Scheduler**

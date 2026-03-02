@@ -16,4 +16,12 @@ public class FileFilter : Filter
         AddProperty(nameof(File.Dim), typeof(int), dim);
         return this;
     }
+
+    public FileFilter ById(params Guid[] ids)
+    {
+        foreach (var id in ids)
+            AddProperty(nameof(File.Id), typeof(Guid), id);
+
+        return this;
+    }
 }

@@ -1,5 +1,7 @@
 # SQL Mapper Repository
 
+[Home](../../README.md) / [Docs](../index.md) / [Repositories](README.md) / SQL Mapper
+
 **NuGet:** `Sencilla.Repository.SqlMapper`
 **Namespace:** `Sencilla.Repository.SqlMapper`
 **Source:** `libs/repositories/SqlMapper/`
@@ -197,3 +199,7 @@ while (await reader.ReadAsync())
 - [Core Repository Interfaces](../core/repositories.md) — the interface this implements
 - [Entity Framework Repository](entity-framework.md) — higher-level ORM alternative
 - [Filtering](../core/filtering.md) — `IFilter` → SQL translation
+
+---
+
+[Home](../../README.md) / [Docs](../index.md) / [Repositories](README.md) / **SQL Mapper**
