@@ -1,30 +1,39 @@
-﻿
+
 namespace Sencilla.Component.Files;
 
 [DisableInjection]
 [Route("api/v1/files/stream")]
-public class FileStreamController(IServiceProvider provider, IReadRepository<File, Guid> fileRepo) : ApiController(provider)
+public class FileStreamController(IServiceProvider provider, IReadRepository<File, Guid> fileRepo, IFilePathResolver pathResolver) : ApiController(provider)
 {
     // TODO: Move to config cache duration
     [HttpGet, Route("{fileId}")]
     [ResponseCache(Duration = 172000, Location = ResponseCacheLocation.Any)]
-    public async Task<IActionResult> GetFileStream(Guid fileId, int? dim, CancellationToken token)
+    public async Task<IActionResult> GetFileStream(Guid fileId, int? dim, int? res, CancellationToken token)
     {
-        var file = await fileRepo.FirstOrDefault(new FileFilter().ByParentId(fileId).ByDimmension(dim), token);
-        //var file = await fileRepo.GetById(Guid.Parse("E770032C-7478-4C74-AEFE-0003A646B894"));
-        //var file = new File {
-        //    Id = Guid.Parse("E770032C-7478-4C74-AEFE-0003A646B894"),
-        //    Name = "DSC01494.jpg",
-        //    MimeType = "image/jpeg",
-        //    Path = "user1\\project31\\editors\\e770032c-7478-4c74-aefe-0003a646b894_1000px.jpg",
-        //    Size = 147398,
-        //    Uploaded = 147398,
-        //    Origin = FileOrigin.User,
-        //    Storage = 2,
-        //    UserId = 1,
-        //    Dim = 100,
-        //};
-        return await RetriveFileStream(file, token);
+        // Resolution-based lookup
+        if (res.HasValue)
+        {
+            var file = await fileRepo.GetById(fileId, token);
+            if (file == null) return NotFound();
+
+            if (file.Res == null || !file.Res.ContainsKey(res.Value.ToString()))
+                return BadRequest($"File with resolution {res.Value} does not exist.");
+
+            var resPath = pathResolver.GetResolutionPath(file, res.Value);
+            var resFile = new File
+            {
+                Id = file.Id,
+                Name = file.Name,
+                MimeType = file.MimeType,
+                Path = resPath,
+                Storage = file.Storage
+            };
+            return await RetriveFileStream(resFile, token);
+        }
+
+        // Dimension-based lookup (existing behavior)
+        var dimFile = await fileRepo.FirstOrDefault(new FileFilter().ByParentId(fileId).ByDimmension(dim), token);
+        return await RetriveFileStream(dimFile, token);
     }
 
     [HttpGet, Route("{fileId}/stream")]
@@ -34,7 +43,7 @@ public class FileStreamController(IServiceProvider provider, IReadRepository<Fil
         return await RetriveFileStream(file, token);
     }
 
-    private async Task<IActionResult> RetriveFileStream(File? file, CancellationToken token) 
+    private async Task<IActionResult> RetriveFileStream(File? file, CancellationToken token)
     {
         if (file == null) return NotFound();
 
@@ -45,7 +54,7 @@ public class FileStreamController(IServiceProvider provider, IReadRepository<Fil
         if (stream == null) return NotFound();
 
         // Response...
-        // With file name we have issue 
+        // With file name we have issue
         // Invalid non-ASCII or control character in header: 0x03C3
         // So for now just replace with '_'
         var fileName = Regex.Replace(file.Name ?? "", @"[^\u0000-\u007F]+", "_");

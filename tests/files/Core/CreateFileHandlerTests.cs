@@ -5,7 +5,7 @@ namespace Sencilla.Component.Files.Tests;
 /// <summary>
 /// Tests for <see cref="CreateFileHandler"/>.
 ///
-/// Covers: standard file creation, idempotency, validation.
+/// Covers: standard file creation, idempotency, validation, resolution uploads.
 /// </summary>
 public class CreateFileHandlerTests
 {
@@ -13,9 +13,10 @@ public class CreateFileHandlerTests
     private readonly Mock<IEventDispatcher> _events = new();
     private readonly Mock<IFilePathResolver> _pathResolver = new();
     private readonly Mock<ICreateRepository<File, Guid>> _createRepo = new();
+    private readonly Mock<IUpdateRepository<FileResUpdate, Guid>> _resUpdateRepo = new();
 
     private CreateFileHandler CreateHandler() =>
-        new(_storage.Object, _events.Object, _pathResolver.Object, _createRepo.Object);
+        new(_storage.Object, _events.Object, _pathResolver.Object, _createRepo.Object, _resUpdateRepo.Object);
 
     private static HttpContext CreateHttpContext(long uploadLength, string metadata)
     {
@@ -168,5 +169,118 @@ public class CreateFileHandlerTests
 
         Assert.NotNull(createdFile);
         Assert.NotEqual(Guid.Empty, createdFile!.Id);
+    }
+
+    [Fact]
+    public async Task Handle_NewFileWithRes_CreatesFileWithResColumn()
+    {
+        var fileId = Guid.NewGuid();
+        var metadata = EncodeMetadata(("id", fileId.ToString()), ("name", "photo.jpg"), ("size", "120034"), (nameof(File.Res).ToLowerInvariant(),"600"));
+        var context = CreateHttpContext(120034, metadata);
+
+        File? createdFile = null;
+        _createRepo.Setup(r => r.GetById(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((File?)null);
+        _createRepo.Setup(r => r.Create(It.IsAny<File>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((File f, CancellationToken _) => { createdFile = f; return f; });
+        _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
+        _pathResolver.Setup(p => p.GetResolutionPath(It.IsAny<File>(), 600)).Returns("test/path_600.jpg");
+        _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<byte[]>(), 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0L);
+
+        var handler = CreateHandler();
+        await handler.Handle(context, CancellationToken.None);
+
+        Assert.Equal(StatusCodes.Status201Created, context.Response.StatusCode);
+        Assert.NotNull(createdFile);
+        Assert.NotNull(createdFile!.Res);
+        Assert.True(createdFile.Res.ContainsKey("600"));
+        Assert.Equal(120034, createdFile.Res["600"].S);
+        Assert.Equal(0, createdFile.Res["600"].U);
+    }
+
+    [Fact]
+    public async Task Handle_NewFileWithRes_LocationContainsResQueryParam()
+    {
+        var fileId = Guid.NewGuid();
+        var metadata = EncodeMetadata(("id", fileId.ToString()), ("name", "photo.jpg"), (nameof(File.Res).ToLowerInvariant(),"600"));
+        var context = CreateHttpContext(120034, metadata);
+
+        _createRepo.Setup(r => r.GetById(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((File?)null);
+        _createRepo.Setup(r => r.Create(It.IsAny<File>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((File f, CancellationToken _) => f);
+        _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
+        _pathResolver.Setup(p => p.GetResolutionPath(It.IsAny<File>(), 600)).Returns("test/path_600.jpg");
+        _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<byte[]>(), 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0L);
+
+        var handler = CreateHandler();
+        await handler.Handle(context, CancellationToken.None);
+
+        var location = context.Response.Headers["Location"].ToString();
+        Assert.Contains("?res=600", location);
+    }
+
+    [Fact]
+    public async Task Handle_ExistingFileWithRes_UpdatesResColumnWithoutCreating()
+    {
+        var fileId = Guid.NewGuid();
+        var existingFile = new File
+        {
+            Id = fileId,
+            Name = "photo.jpg",
+            Path = "test/path.jpg",
+            Storage = 1,
+            Res = new Dictionary<string, ResolutionInfo>
+            {
+                ["1000"] = new ResolutionInfo()
+            }
+        };
+        var metadata = EncodeMetadata(("id", fileId.ToString()), ("name", "photo.jpg"), ("size", "5200"), (nameof(File.Res).ToLowerInvariant(),"100"));
+        var context = CreateHttpContext(5200, metadata);
+
+        _createRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingFile);
+        _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
+        _pathResolver.Setup(p => p.GetResolutionPath(existingFile, 100)).Returns("test/path_100.jpg");
+        _resUpdateRepo.Setup(r => r.Update(It.IsAny<FileResUpdate>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((FileResUpdate f, CancellationToken _) => f);
+        _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<byte[]>(), 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0L);
+
+        var handler = CreateHandler();
+        await handler.Handle(context, CancellationToken.None);
+
+        Assert.Equal(StatusCodes.Status201Created, context.Response.StatusCode);
+        _createRepo.Verify(r => r.Create(It.IsAny<File>(), It.IsAny<CancellationToken>()), Times.Never);
+        _resUpdateRepo.Verify(r => r.Update(
+            It.Is<FileResUpdate>(u => u.Id == fileId && u.Res!.ContainsKey("100") && u.Res["100"].S == 5200),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ExistingFileWithRes_WritesEmptyResolutionFile()
+    {
+        var fileId = Guid.NewGuid();
+        var existingFile = new File { Id = fileId, Name = "photo.jpg", Path = "test/path.jpg", Storage = 1 };
+        var metadata = EncodeMetadata(("id", fileId.ToString()), ("name", "photo.jpg"), ("size", "5200"), (nameof(File.Res).ToLowerInvariant(),"500"));
+        var context = CreateHttpContext(5200, metadata);
+
+        _createRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingFile);
+        _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
+        _pathResolver.Setup(p => p.GetResolutionPath(existingFile, 500)).Returns("test/path_500.jpg");
+        _resUpdateRepo.Setup(r => r.Update(It.IsAny<FileResUpdate>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((FileResUpdate f, CancellationToken _) => f);
+        _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<byte[]>(), 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0L);
+
+        var handler = CreateHandler();
+        await handler.Handle(context, CancellationToken.None);
+
+        _storage.Verify(s => s.WriteFileAsync(
+            It.Is<File>(f => f.Path == "test/path_500.jpg"),
+            It.IsAny<byte[]>(), 0, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

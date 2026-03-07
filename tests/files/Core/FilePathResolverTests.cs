@@ -150,4 +150,53 @@ public class FilePathResolverTests
         Assert.Equal(string.Empty, FilePathResolver.RemoveSpecialCharacters(""));
         Assert.Equal(string.Empty, FilePathResolver.RemoveSpecialCharacters("  "));
     }
+
+    [Fact]
+    public void GetResolutionPath_AppendsResolutionBeforeExtension()
+    {
+        var file = new File
+        {
+            Id = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
+            Name = "photo.jpg",
+            Origin = FileOrigin.System,
+            Path = "system/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg"
+        };
+
+        var path = _resolver.GetResolutionPath(file, 600);
+
+        Assert.Equal("system/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_600.jpg", path);
+    }
+
+    [Fact]
+    public void GetResolutionPath_WithDimInPath_AppendsResAfterDim()
+    {
+        var file = new File
+        {
+            Id = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
+            Name = "photo.jpg",
+            Dim = 200,
+            Origin = FileOrigin.System,
+            Path = "system/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_200px.jpg"
+        };
+
+        var path = _resolver.GetResolutionPath(file, 100);
+
+        Assert.Equal("system/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee_200px_100.jpg", path);
+    }
+
+    [Fact]
+    public void GetResolutionPath_NoPathSet_UsesGetFullPath()
+    {
+        var file = new File
+        {
+            Id = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
+            Name = "photo.jpg",
+            Origin = FileOrigin.System
+        };
+
+        var path = _resolver.GetResolutionPath(file, 500);
+
+        Assert.Contains("_500", path);
+        Assert.EndsWith(".jpg", path);
+    }
 }

@@ -121,7 +121,7 @@ The `File` entity represents a stored file with full metadata:
 | `Dim` | `int?` | Image dimension (for resized variants) |
 | `Width` | `int?` | Image width in pixels |
 | `Height` | `int?` | Image height in pixels |
-| `Resolutions` | `int[]?` | Available dimension variants (JSON array, set on parent file) |
+| `Res` | `IDictionary<string,ResolutionInfo>?` | Resolution variants with upload tracking (JSON, see [resolutions.md](resolutions.md)) |
 | `Attrs` | `IDictionary<string,string>?` | Custom attributes (projectId, folder, etc.) |
 | `CreatedDate` | `DateTime` | Creation timestamp |
 | `UpdatedDate` | `DateTime` | Last update timestamp |
@@ -402,6 +402,7 @@ var files = await fileRepo.GetAll(
 
 ## See Also
 
+- [File Resolutions](resolutions.md) -- single-record multi-resolution file variants
 - [Components](README.md) -- other pre-built modules
 - [Config Component](../components/README.md#config) -- runtime configuration
 

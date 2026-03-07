@@ -5,7 +5,8 @@ internal class CreateFileHandler(
     IFileStorage storage,
     IEventDispatcher events,
     IFilePathResolver pathResolver,
-    ICreateRepository<File, Guid> fileRepo): IFileRequestHandler
+    ICreateRepository<File, Guid> fileRepo,
+    IUpdateRepository<FileResUpdate, Guid> resUpdateRepo): IFileRequestHandler
 {
     public const string Method = "POST";
 
@@ -34,6 +35,9 @@ internal class CreateFileHandler(
             return;
         }
 
+        // read res before ToFile() which strips metadata keys
+        var res = metadata.GetInt(nameof(File.Res));
+
         var file = ToFile(metadata, uploadLength, out var missingHeaders);
         if (file == null)
         {
@@ -45,14 +49,41 @@ internal class CreateFileHandler(
         var dbFile = await fileRepo.GetById(file.Id);
         if (dbFile == null)
         {
+            if (res.HasValue)
+                file.Res = new Dictionary<string, ResolutionInfo>
+                {
+                    [res.Value.ToString()] = new ResolutionInfo { S = file.Size, U = 0 }
+                };
+
             dbFile = await fileRepo.Create(file);
             await events.PublishAsync(new FileCreatedEvent { File = dbFile }, token);
-            // TODO: test cancellation token on middleware and test writing empty array to file
-            await storage.WriteFileAsync(dbFile!, []);
+
+            if (res.HasValue)
+            {
+                var resPath = pathResolver.GetResolutionPath(dbFile!, res.Value);
+                await storage.WriteFileAsync(new File { Path = resPath, Storage = dbFile!.Storage }, []);
+            }
+            else
+            {
+                await storage.WriteFileAsync(dbFile!, []);
+            }
+        }
+        else if (res.HasValue)
+        {
+            // File exists, add new resolution entry
+            var resolutions = dbFile.Res ?? new Dictionary<string, ResolutionInfo>();
+            resolutions[res.Value.ToString()] = new ResolutionInfo { S = uploadLength, U = 0 };
+            await resUpdateRepo.Update(new FileResUpdate { Id = dbFile.Id, Res = resolutions });
+
+            var resPath = pathResolver.GetResolutionPath(dbFile, res.Value);
+            await storage.WriteFileAsync(new File { Path = resPath, Storage = dbFile.Storage }, []);
         }
 
         // think about location for uploading, probably can be S3/CloudFare directly
         var location = $"{context.Request.Path.Value}/{dbFile!.Id}";
+        if (res.HasValue)
+            location += $"?res={res.Value}";
+
         context.WriteCreated(location);
     }
 
@@ -89,6 +120,7 @@ internal class CreateFileHandler(
 
             Attrs = metadata.RemoveKeys(
                 nameof(File.Id),
+                nameof(File.Res),
                 nameof(File.Dim),
                 nameof(File.Name),
                 nameof(File.Size),

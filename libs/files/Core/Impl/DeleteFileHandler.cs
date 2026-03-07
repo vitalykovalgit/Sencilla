@@ -4,6 +4,7 @@ namespace Sencilla.Component.Files;
 internal class DeleteFileHandler(
     IFileStorage storage,
     IEventDispatcher events,
+    IFilePathResolver pathResolver,
     IReadRepository<File, Guid> fileReadRepo,
     IDeleteRepository<File, Guid> fileDeleteRepo) : IFileRequestHandler
 {
@@ -25,6 +26,19 @@ internal class DeleteFileHandler(
         {
             await storage.DeleteFileAsync(variant, token);
             await fileDeleteRepo.Delete(variant, token);
+        }
+
+        // Delete all resolution files from storage
+        if (file.Res != null)
+        {
+            foreach (var resKey in file.Res.Keys)
+            {
+                if (int.TryParse(resKey, out var res))
+                {
+                    var resPath = pathResolver.GetResolutionPath(file, res);
+                    await storage.DeleteFileAsync(resPath, token);
+                }
+            }
         }
 
         // Delete the original file

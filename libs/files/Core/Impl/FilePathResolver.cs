@@ -39,6 +39,14 @@ internal class FilePathResolver : IFilePathResolver
         };
     }
 
+    public string GetResolutionPath(File file, int res)
+    {
+        var path = file.Path ?? GetFullPath(file);
+        var ext = Path.GetExtension(path);
+        var pathWithoutExt = path[..^ext.Length];
+        return $"{pathWithoutExt}_{res}{ext}";
+    }
+
     public static string RemoveSpecialCharacters(string? str)
     {
         if (string.IsNullOrWhiteSpace(str))

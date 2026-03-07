@@ -49,6 +49,7 @@ This document contains coding standards and best practices
 - One class per file
 - Order class members: fields, constructors, properties, methods
 - Group related functionality together
+- Organize code in logical blocks — declare variables close to where they are first used, not at the top of a method. Keep related logic together (validation, then processing, then response). Separate unrelated blocks with blank lines
 - do not use regions 
 - do not use `using` in the file instead move all usings to Bootstrap.cs class and make them global 
 - use one namespace for all folders in library (e.g. if you have lib `Company.Test.Data`, then namespace should be `Company.Test.Data` for all classes in the library regardless fodler structure)
@@ -61,6 +62,13 @@ This document contains coding standards and best practices
 ## Extensions 
 
 - use namespace of the class that is going to be extended (e.g. if we need to extend class `string` from namespace `System` the extension must be in namespace `System`) 
+
+## No Magic Strings
+
+- Never use magic strings for property names, query parameters, metadata keys, or dictionary lookups
+- Always use `nameof(Class.Property)` when referencing property names (e.g., `nameof(File.Res)` instead of `"res"`)
+- If `nameof` is not possible (e.g., the string does not map to a C# symbol), create a `const` field for it
+- This applies to: query string keys, header names, metadata keys, dictionary keys, filter property names, and any other string that references a known identifier
 
 ## Best Practices
 

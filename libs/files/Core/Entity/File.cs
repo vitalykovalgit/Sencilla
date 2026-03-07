@@ -72,15 +72,17 @@ public class File
     /// </summary>
     public int? Height { get; set; }
 
-    // /// <summary>
-    // /// Supported resolutions (dimensions) for this file.
-    // /// Only set on the parent/original file.
-    // /// </summary>
-    // [JsonObject]
-    // public int[]? Resolutions { get; set; }
+    /// <summary>
+    /// Resolution variants stored as JSON.
+    /// Key = resolution (smallest side), Value = upload progress.
+    /// During upload: { "600": { "s": 120034, "u": 3004 } }
+    /// After upload:  { "600": {} }
+    /// </summary>
+    [JsonObject]
+    public IDictionary<string, ResolutionInfo>? Res { get; set; }
 
     /// <summary>
-    ///
+    /// Custom attributes (projectId, folder, etc.)
     /// </summary>
     [JsonObject]
     public IDictionary<string, string>? Attrs { get; set; }
