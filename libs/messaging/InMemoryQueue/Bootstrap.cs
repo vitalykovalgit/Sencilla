@@ -7,8 +7,6 @@ global using Sencilla.Core;
 global using Sencilla.Messaging;
 global using Sencilla.Messaging.InMemoryQueue;
 
-//[assembly: AutoDiscovery]
-
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class Bootstrap

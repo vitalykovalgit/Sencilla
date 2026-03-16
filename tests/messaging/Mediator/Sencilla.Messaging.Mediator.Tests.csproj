@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libs\messaging\Mediator\Sencilla.Messaging.Mediator.csproj" />
+  </ItemGroup>
+
+</Project>

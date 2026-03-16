@@ -4,4 +4,4 @@ global using Microsoft.Extensions.DependencyInjection;
 
 global using Sencilla.Core;
 global using Sencilla.Messaging;
-global using Sencilla.Messaging.InMemoryQueue;
+global using Sencilla.Messaging.Mediator;
