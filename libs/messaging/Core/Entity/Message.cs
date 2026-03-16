@@ -56,6 +56,16 @@ public class Message
     /// 
     /// </summary>
     public string? Error { get; set; }
+    
+    public int? UserId { get; set; }
+    public string? UserEmail { get; set; }
+    public Guid? UserGlobalId { get; set; } 
+    
+    /// <summary>
+    /// Set or retrieve metadata for the message.
+    /// </summary>
+    /// <value></value>
+    public Dictionary<string, string>? Metadata { get; init; }
 }
 
 /// <summary>
