@@ -1,6 +1,5 @@
 namespace Sencilla.Messaging.InMemoryQueue;
 
-[DisableInjection]
 public class InMemoryProviderConfig: ProviderConfig
 {
     InMemoryProviderOptions Options = new();

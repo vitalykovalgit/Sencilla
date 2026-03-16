@@ -1,6 +1,5 @@
 namespace Sencilla.Messaging;
 
-[DisableInjection]
 public class RoutesConfig
 {
     /// <summary>

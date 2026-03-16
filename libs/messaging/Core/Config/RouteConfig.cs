@@ -3,7 +3,6 @@ namespace Sencilla.Messaging;
 /// <summary>
 /// Represents the routing configuration for a specific message type.
 /// </summary>
-[DisableInjection]
 public class RouteConfig(Type entityType)
 {
     /// <summary>

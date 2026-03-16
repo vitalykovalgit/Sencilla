@@ -10,8 +10,6 @@ global using Microsoft.AspNetCore.Builder;
 global using Sencilla.Core;
 global using Sencilla.Messaging;
 
-[assembly: AutoDiscovery]
-
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class Bootstrap
@@ -35,6 +33,7 @@ public static class Bootstrap
         if (existingConfig == null)
         {
             services.AddSingleton(options);
+            services.AddSingleton<IMessageDispatcher, MessageDispatcher>();
         }
 
         return services;

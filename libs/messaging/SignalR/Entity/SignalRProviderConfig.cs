@@ -1,6 +1,5 @@
 namespace Sencilla.Messaging.SignalR;
 
-[DisableInjection]
 public class SignalRProviderConfig : ProviderConfig
 {
     SignalRProviderOptions Options = new();

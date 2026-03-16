@@ -86,6 +86,47 @@ public class BootstrapTests
         Assert.Null(config.Services);
     }
 
+    [Fact]
+    public void AddSencillaMessaging_RegistersMessageDispatcher()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        services.AddSencillaMessaging(_ => { });
+
+        var sp = services.BuildServiceProvider();
+        var dispatcher = sp.GetRequiredService<IMessageDispatcher>();
+        Assert.NotNull(dispatcher);
+        Assert.IsType<MessageDispatcher>(dispatcher);
+    }
+
+    [Fact]
+    public void AddSencillaMessaging_RegistersMessageDispatcherAsSingleton()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        services.AddSencillaMessaging(_ => { });
+
+        var sp = services.BuildServiceProvider();
+        var first = sp.GetRequiredService<IMessageDispatcher>();
+        var second = sp.GetRequiredService<IMessageDispatcher>();
+        Assert.Same(first, second);
+    }
+
+    [Fact]
+    public void AddSencillaMessaging_CalledTwice_RegistersDispatcherOnce()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        services.AddSencillaMessaging(_ => { });
+        services.AddSencillaMessaging(_ => { });
+
+        var descriptors = services.Where(sd => sd.ServiceType == typeof(IMessageDispatcher)).ToList();
+        Assert.Single(descriptors);
+    }
+
     private class TestMiddleware : IMessageMiddleware
     {
         public Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)

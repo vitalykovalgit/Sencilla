@@ -4,7 +4,6 @@ namespace Sencilla.Messaging;
 /// Dispatches messages through a pipeline of registered middlewares.
 /// Middlewares are resolved once at construction time and executed in registration order.
 /// </summary>
-[SingletonLifetime]
 public class MessageDispatcher(
     IServiceProvider serviceProvider,
     MessagingConfig config,

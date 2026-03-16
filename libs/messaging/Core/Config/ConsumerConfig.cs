@@ -3,7 +3,6 @@ namespace Sencilla.Messaging;
 /// <summary>
 /// 
 /// </summary>
-[DisableInjection]
 public class ConsumerConfig
 {
     public ConsumerConfig(ConsumerConfig? config = null)

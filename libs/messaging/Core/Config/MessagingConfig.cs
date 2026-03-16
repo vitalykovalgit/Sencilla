@@ -3,7 +3,6 @@
 /// <summary>
 /// 
 /// </summary>
-[DisableInjection]
 public class MessagingConfig : ProviderConfig
 {
     /// <summary>
