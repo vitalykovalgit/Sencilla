@@ -1,38 +1,54 @@
 namespace Sencilla.Messaging;
 
 /// <summary>
-/// A collection of message middlewares to be used in the messaging pipeline.
-/// Resolved in specific order based on the configuration.
+/// Dispatches messages through a pipeline of registered middlewares.
+/// Middlewares are resolved once at construction time and executed in registration order.
 /// </summary>
-/// <typeparam name="IMessageMiddleware"></typeparam>
 [SingletonLifetime]
-public class MessageDispatcher(IServiceProvider serviceProvider, MessagingConfig config): IMessageDispatcher
+public class MessageDispatcher(
+    IServiceProvider serviceProvider,
+    MessagingConfig config,
+    ILogger<MessageDispatcher>? logger = null) : IMessageDispatcher
 {
-    private readonly IEnumerable<IMessageMiddleware> Middlewares = config.Middlewares.Select(m => (IMessageMiddleware)serviceProvider.GetRequiredService(m));
+    private readonly IMessageMiddleware[] Middlewares = config.Middlewares
+        .Select(m => (IMessageMiddleware)serviceProvider.GetRequiredService(m))
+        .ToArray();
 
     /// <summary>
-    /// Publishes a message to all registered middlewares. 
-    /// This method processes the message asynchronously through each middleware in the order they were registered.
+    /// Wraps the payload in a <see cref="Message{T}"/> and dispatches it through all registered middlewares.
     /// </summary>
-    public async Task Send<T>(T payload, CancellationToken cancellationToken = default)
+    /// <param name="payload">The payload to send.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    public Task Send<T>(T payload, CancellationToken cancellationToken = default)
     {
         var message = new Message<T> { Payload = payload };
-        await Send(message, cancellationToken);
+        return Send(message, cancellationToken);
     }
 
     /// <summary>
-    /// 
+    /// Dispatches a message through all registered middlewares in the order they were registered.
     /// </summary>
-    /// <param name="message"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>    
+    /// <param name="message">The message to dispatch.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
     public async Task Send<T>(Message<T> message, CancellationToken cancellationToken = default)
     {
-        if (Middlewares == null) return;
-
-        foreach (var m in Middlewares)
+        for (var i = 0; i < Middlewares.Length; i++)
         {
-            await m.ProcessAsync(message, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            try
+            {
+                await Middlewares[i].ProcessAsync(message, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Middleware {Middleware} failed processing message {MessageId}", Middlewares[i].GetType().Name, message.Id);
+                throw;
+            }
         }
     }
 }
