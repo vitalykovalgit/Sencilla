@@ -54,12 +54,20 @@ public class MessagingConfig : ProviderConfig
 
     public MessagingConfig AddHostedServiceOnce<T>(ProviderConfig config) where T : class, IHostedService
     {
-        // check if service already registered
         if (Services.Any(sd => sd.ServiceType == typeof(IHostedService) && sd.ImplementationType == typeof(T)))
             return this;
 
-        if (config.Consumers.HasAnyConsumers)
+        if (!config.Consumers.HasAnyConsumers)
+            return this;
+
+        if (config.AutoStartConsumers)
+        {
             Services.AddHostedService<T>();
+        }
+        else if (!Services.Any(sd => sd.ServiceType == typeof(T)))
+        {
+            Services.AddSingleton<T>();
+        }
 
         return this;
     }

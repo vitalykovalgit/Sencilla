@@ -19,6 +19,12 @@ public class ProviderConfig
     public RoutesConfig Routes { get; }
 
     /// <summary>
+    /// When true (default), stream consumers auto-start as a BackgroundService.
+    /// When false, consumers are not auto-started; call ExecuteConsumersAsync manually from your own hosted service.
+    /// </summary>
+    public bool AutoStartConsumers { get; set; } = true;
+
+    /// <summary>
     /// 
     /// </summary>
     public ProviderConfig()

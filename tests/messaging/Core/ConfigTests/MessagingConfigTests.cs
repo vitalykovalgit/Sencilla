@@ -243,6 +243,68 @@ public class MessagingConfigTests
         Assert.Same(config, result);
     }
 
+    [Fact]
+    public void AddHostedServiceOnce_AutoStartTrue_RegistersAsHostedService()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSencillaMessaging(config =>
+        {
+            var providerConfig = new TestProviderConfig();
+            providerConfig.AutoStartConsumers = true;
+            providerConfig.AddConsumers(c => c.ForStream("test-stream"));
+            providerConfig.AddStreams(s => s.AddStream("test-stream"));
+
+            config.AddHostedServiceOnce<TestHostedService>(providerConfig);
+
+            var hostedDescriptor = config.Services
+                .Any(sd => sd.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService) && sd.ImplementationType == typeof(TestHostedService));
+            Assert.True(hostedDescriptor);
+        });
+    }
+
+    [Fact]
+    public void AddHostedServiceOnce_AutoStartFalse_RegistersAsSingleton()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSencillaMessaging(config =>
+        {
+            var providerConfig = new TestProviderConfig();
+            providerConfig.AutoStartConsumers = false;
+            providerConfig.AddConsumers(c => c.ForStream("test-stream"));
+            providerConfig.AddStreams(s => s.AddStream("test-stream"));
+
+            config.AddHostedServiceOnce<TestHostedService>(providerConfig);
+
+            var hostedDescriptor = config.Services
+                .Any(sd => sd.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService) && sd.ImplementationType == typeof(TestHostedService));
+            Assert.False(hostedDescriptor);
+
+            var singletonDescriptor = config.Services
+                .Any(sd => sd.ServiceType == typeof(TestHostedService));
+            Assert.True(singletonDescriptor);
+        });
+    }
+
+    [Fact]
+    public void AddHostedServiceOnce_NoConsumers_DoesNotRegister()
+    {
+        var services = new ServiceCollection();
+        services.AddSencillaMessaging(config =>
+        {
+            var providerConfig = new TestProviderConfig();
+            config.AddHostedServiceOnce<TestHostedService>(providerConfig);
+
+            var hasHosted = config.Services
+                .Any(sd => sd.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService) && sd.ImplementationType == typeof(TestHostedService));
+            var hasSingleton = config.Services
+                .Any(sd => sd.ServiceType == typeof(TestHostedService));
+            Assert.False(hasHosted);
+            Assert.False(hasSingleton);
+        });
+    }
+
     private class TestMiddleware : IMessageMiddleware
     {
         public Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
@@ -256,4 +318,10 @@ public class MessagingConfigTests
     }
 
     private class TestProviderConfig : ProviderConfig { }
+
+    private class TestHostedService : Microsoft.Extensions.Hosting.IHostedService
+    {
+        public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    }
 }

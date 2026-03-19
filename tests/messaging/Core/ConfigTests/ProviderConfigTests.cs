@@ -107,4 +107,21 @@ public class ProviderConfigTests
 
         Assert.Same(config.Routes, captured);
     }
+
+    [Fact]
+    public void AutoStartConsumers_DefaultsToTrue()
+    {
+        var config = new ProviderConfig();
+
+        Assert.True(config.AutoStartConsumers);
+    }
+
+    [Fact]
+    public void AutoStartConsumers_CanBeSetToFalse()
+    {
+        var config = new ProviderConfig();
+        config.AutoStartConsumers = false;
+
+        Assert.False(config.AutoStartConsumers);
+    }
 }
