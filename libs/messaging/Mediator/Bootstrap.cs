@@ -6,7 +6,7 @@ global using Sencilla.Messaging.Mediator;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
-public static class Boostrap
+public static class Bootstrap
 {
     /// <summary>
     /// Bootstrap method to add MediatR support to the messaging system.

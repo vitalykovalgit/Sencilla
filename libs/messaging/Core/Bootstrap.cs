@@ -1,5 +1,7 @@
 ﻿global using System.Collections.Concurrent;
 global using System.Collections.Generic;
+global using System.Reflection;
+global using System.Text.Json;
 
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
@@ -34,6 +36,7 @@ public static class Bootstrap
         {
             services.AddSingleton(options);
             services.AddSingleton<IMessageDispatcher, MessageDispatcher>();
+            services.AddSingleton<IMessageHandlerExecutor, MessageHandlerExecutor>();
         }
 
         return services;

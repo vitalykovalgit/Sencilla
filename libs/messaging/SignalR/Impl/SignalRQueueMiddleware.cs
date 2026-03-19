@@ -2,10 +2,9 @@ namespace Sencilla.Messaging.SignalR;
 
 public class SignalRQueueMiddleware(SignalRProviderConfig config, SignalRStreamProvider streamProvider) : MessageMiddleware, IMessageMiddleware
 {
-    public async Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
+    public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
     {
-        // Validate the message
-        if (msg is not null)
-            await SendToStream(msg, config, streamProvider);
+        await SendToStream(message, config, streamProvider);
+        await next(message, cancellationToken);
     }
 }

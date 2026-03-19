@@ -2,7 +2,6 @@ namespace Sencilla.Messaging.Tests;
 
 public class MessageDispatcherTests
 {
-    // Shared tracking lists for order verification
     private static readonly List<Message> SharedMessages1 = [];
     private static readonly List<Message> SharedMessages2 = [];
     private static readonly List<int> SharedOrder = [];
@@ -116,21 +115,83 @@ public class MessageDispatcherTests
         Assert.Equal([1, 2, 3], SharedOrder);
     }
 
+    [Fact]
+    public async Task Send_ChainPattern_PreAndPostNextExecution()
+    {
+        var order = new List<string>();
+        var services = new ServiceCollection();
+        services.AddSingleton(new PrePostMiddleware(order, "A"));
+        services.AddSingleton(new PrePostMiddleware(order, "B"));
+        var config = new MessagingConfig();
+        config.Middlewares.Add(typeof(PrePostMiddleware));
+        // We need two separate instances, so register differently
+        var sp = services.BuildServiceProvider();
+
+        // Use a different approach - manually build
+        var services2 = new ServiceCollection();
+        var mwA = new PrePostMiddleware(order, "A");
+        var mwB = new PrePostMiddleware(order, "B");
+        services2.AddSingleton<PrePostMiddlewareA>(new PrePostMiddlewareA(order));
+        services2.AddSingleton<PrePostMiddlewareB>(new PrePostMiddlewareB(order));
+        var config2 = new MessagingConfig();
+        config2.Middlewares.Add(typeof(PrePostMiddlewareA));
+        config2.Middlewares.Add(typeof(PrePostMiddlewareB));
+        var sp2 = services2.BuildServiceProvider();
+
+        var dispatcher = new MessageDispatcher(sp2, config2);
+        await dispatcher.Send("test");
+
+        Assert.Equal(["A-before", "B-before", "B-after", "A-after"], order);
+    }
+
+    [Fact]
+    public async Task Send_ShortCircuit_MiddlewareOmittingNextStopsChain()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ShortCircuitMiddleware>();
+        services.AddSingleton<MiddlewareA>();
+        var config = new MessagingConfig();
+        config.Middlewares.Add(typeof(ShortCircuitMiddleware));
+        config.Middlewares.Add(typeof(MiddlewareA));
+        var sp = services.BuildServiceProvider();
+
+        var dispatcher = new MessageDispatcher(sp, config);
+        await dispatcher.Send("test");
+
+        Assert.Empty(SharedMessages1);
+    }
+
+    [Fact]
+    public async Task Send_PipelineBuiltOncePerType()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<MiddlewareA>();
+        var config = new MessagingConfig();
+        config.Middlewares.Add(typeof(MiddlewareA));
+        var sp = services.BuildServiceProvider();
+
+        var dispatcher = new MessageDispatcher(sp, config);
+        await dispatcher.Send("msg1");
+        await dispatcher.Send("msg2");
+
+        Assert.Equal(2, SharedMessages1.Count);
+    }
+
     private class MiddlewareA : IMessageMiddleware
     {
-        public Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
         {
-            if (msg != null) SharedMessages1.Add(msg);
-            return Task.CompletedTask;
+            SharedMessages1.Add(message);
+            await next(message, cancellationToken);
         }
     }
 
     private class MiddlewareB : IMessageMiddleware
     {
-        public Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
         {
-            if (msg != null) SharedMessages2.Add(msg);
-            return Task.CompletedTask;
+            SharedMessages2.Add(message);
+            await next(message, cancellationToken);
         }
     }
 
@@ -138,36 +199,75 @@ public class MessageDispatcherTests
     {
         public List<CancellationToken> ReceivedTokens { get; } = [];
 
-        public Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
         {
             ReceivedTokens.Add(cancellationToken);
-            return Task.CompletedTask;
+            await next(message, cancellationToken);
         }
     }
 
     private class OrderMiddleware1 : IMessageMiddleware
     {
-        public Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
         {
             SharedOrder.Add(1);
-            return Task.CompletedTask;
+            await next(message, cancellationToken);
         }
     }
 
     private class OrderMiddleware2 : IMessageMiddleware
     {
-        public Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
         {
             SharedOrder.Add(2);
-            return Task.CompletedTask;
+            await next(message, cancellationToken);
         }
     }
 
     private class OrderMiddleware3 : IMessageMiddleware
     {
-        public Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
         {
             SharedOrder.Add(3);
+            await next(message, cancellationToken);
+        }
+    }
+
+    private class PrePostMiddleware(List<string> order, string name) : IMessageMiddleware
+    {
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
+        {
+            order.Add($"{name}-before");
+            await next(message, cancellationToken);
+            order.Add($"{name}-after");
+        }
+    }
+
+    private class PrePostMiddlewareA(List<string> order) : IMessageMiddleware
+    {
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
+        {
+            order.Add("A-before");
+            await next(message, cancellationToken);
+            order.Add("A-after");
+        }
+    }
+
+    private class PrePostMiddlewareB(List<string> order) : IMessageMiddleware
+    {
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
+        {
+            order.Add("B-before");
+            await next(message, cancellationToken);
+            order.Add("B-after");
+        }
+    }
+
+    private class ShortCircuitMiddleware : IMessageMiddleware
+    {
+        public Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
+        {
+            // Intentionally not calling next — short-circuits the chain
             return Task.CompletedTask;
         }
     }

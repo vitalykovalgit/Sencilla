@@ -133,18 +133,58 @@ public class MessageDispatcherEdgeCaseTests
         Assert.Single(processedMessages);
     }
 
+    [Fact]
+    public async Task Send_ExceptionBeforeNext_PropagatesAndStopsChain()
+    {
+        var processedMessages = new List<Message>();
+        var services = new ServiceCollection();
+        services.AddSingleton<ThrowBeforeNextMiddleware>();
+        services.AddSingleton(new TrackingMiddleware(processedMessages));
+        var config = new MessagingConfig();
+        config.Middlewares.Add(typeof(ThrowBeforeNextMiddleware));
+        config.Middlewares.Add(typeof(TrackingMiddleware));
+        var sp = services.BuildServiceProvider();
+
+        var dispatcher = new MessageDispatcher(sp, config);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => dispatcher.Send("test"));
+
+        Assert.Empty(processedMessages);
+    }
+
+    [Fact]
+    public async Task Send_ExceptionAfterNext_PropagatesButChainRan()
+    {
+        var processedMessages = new List<Message>();
+        var services = new ServiceCollection();
+        services.AddSingleton<ThrowAfterNextMiddleware>();
+        services.AddSingleton(new TrackingMiddleware(processedMessages));
+        var config = new MessagingConfig();
+        config.Middlewares.Add(typeof(ThrowAfterNextMiddleware));
+        config.Middlewares.Add(typeof(TrackingMiddleware));
+        var sp = services.BuildServiceProvider();
+
+        var dispatcher = new MessageDispatcher(sp, config);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => dispatcher.Send("test"));
+
+        Assert.Single(processedMessages);
+    }
+
     private class TrackingMiddleware(List<Message> messages) : IMessageMiddleware
     {
-        public Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
         {
-            if (msg != null) messages.Add(msg);
-            return Task.CompletedTask;
+            messages.Add(message);
+            await next(message, cancellationToken);
         }
     }
 
     private class ThrowingMiddleware : IMessageMiddleware
     {
-        public Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
+        public Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
         {
             throw new InvalidOperationException("Middleware failed");
         }
@@ -152,9 +192,27 @@ public class MessageDispatcherEdgeCaseTests
 
     private class SlowMiddleware : IMessageMiddleware
     {
-        public async Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
         {
             await Task.Delay(5000, cancellationToken);
+            await next(message, cancellationToken);
+        }
+    }
+
+    private class ThrowBeforeNextMiddleware : IMessageMiddleware
+    {
+        public Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("Before next");
+        }
+    }
+
+    private class ThrowAfterNextMiddleware : IMessageMiddleware
+    {
+        public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
+        {
+            await next(message, cancellationToken);
+            throw new InvalidOperationException("After next");
         }
     }
 }

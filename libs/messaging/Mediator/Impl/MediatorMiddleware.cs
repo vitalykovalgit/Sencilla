@@ -1,47 +1,22 @@
-﻿
-namespace Sencilla.Messaging.Mediator;
+﻿namespace Sencilla.Messaging.Mediator;
 
 /// <summary>
-/// Process commands in memory 
-/// Inject resolvable as TEvent generic param is used in ProcessAsync 
+/// In-process message handler middleware. Resolves and executes handlers via IMessageHandlerExecutor.
+/// Supports MediatorConfig filtering to allow/disable specific message types.
 /// </summary>
-public class MediatorMiddleware(IServiceProvider globalProvider/*, MediatrConfig config*/) : IMessageMiddleware
+public class MediatorMiddleware(
+    IServiceScopeFactory scopeFactory,
+    IMessageHandlerExecutor executor,
+    MediatorConfig config) : IMessageMiddleware
 {
-    public async Task ProcessAsync<T>(Message<T>? message, CancellationToken cancellationToken = default)
+    public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
     {
-        // Get scoped provider
-        using var scope = globalProvider.CreateScope();
-        var provider = scope.ServiceProvider;
-
-        // process all handlers for the message first 
-        var handlers = provider.GetServices<IMessageHandler<Message<T>>>();
-        foreach (var handler in handlers)
+        if (config.ShouldHandle(typeof(T)))
         {
-            if (handler is not null && message is not null)
-                await handler.HandleAsync(message, cancellationToken);
-
-            DoneMessage(message);
+            using var scope = scopeFactory.CreateScope();
+            await executor.ExecuteAsync(message, scope.ServiceProvider, cancellationToken);
         }
 
-        // process all handlers for the message type
-        var typeHandlers = provider.GetServices<IMessageHandler<T>>();
-        foreach (var typeHandler in typeHandlers)
-        {
-            if (typeHandler is null) continue;
-            if (message is null) continue;
-            if (message.Payload is null) continue;
-
-            await typeHandler.HandleAsync(message.Payload, cancellationToken);
-
-            DoneMessage(message);
-        }
-    }
-
-    private static void DoneMessage<T>(Message<T>? message)
-    {
-        if (message is null) return;
-
-        // Mark the message as processed
-        message.ProcessedAt = DateTime.UtcNow;
+        await next(message, cancellationToken);
     }
 }

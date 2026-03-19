@@ -1,8 +1,8 @@
 namespace Sencilla.Messaging;
 
 /// <summary>
-/// Dispatches messages through a pipeline of registered middlewares.
-/// Middlewares are resolved once at construction time and executed in registration order.
+/// Dispatches messages through a chain-of-responsibility pipeline of registered middlewares.
+/// The pipeline is built once per message type T and cached for subsequent calls.
 /// </summary>
 public class MessageDispatcher(
     IServiceProvider serviceProvider,
@@ -13,11 +13,11 @@ public class MessageDispatcher(
         .Select(m => (IMessageMiddleware)serviceProvider.GetRequiredService(m))
         .ToArray();
 
+    private readonly ConcurrentDictionary<Type, object> PipelineCache = [];
+
     /// <summary>
-    /// Wraps the payload in a <see cref="Message{T}"/> and dispatches it through all registered middlewares.
+    /// Wraps the payload in a <see cref="Message{T}"/> and dispatches it through the middleware chain.
     /// </summary>
-    /// <param name="payload">The payload to send.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
     public Task Send<T>(T payload, CancellationToken cancellationToken = default)
     {
         var message = new Message<T> { Payload = payload };
@@ -25,29 +25,46 @@ public class MessageDispatcher(
     }
 
     /// <summary>
-    /// Dispatches a message through all registered middlewares in the order they were registered.
+    /// Dispatches a message through the middleware chain built from registered middlewares.
     /// </summary>
-    /// <param name="message">The message to dispatch.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    public async Task Send<T>(Message<T> message, CancellationToken cancellationToken = default)
+    public Task Send<T>(Message<T> message, CancellationToken cancellationToken = default)
     {
-        for (var i = 0; i < Middlewares.Length; i++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        var pipeline = (Func<Message<T>, CancellationToken, Task>)PipelineCache.GetOrAdd(
+            typeof(T),
+            _ => BuildPipeline<T>());
 
-            try
+        return pipeline(message, cancellationToken);
+    }
+
+    private Func<Message<T>, CancellationToken, Task> BuildPipeline<T>()
+    {
+        Func<Message<T>, CancellationToken, Task> next = (_, _) => Task.CompletedTask;
+
+        for (var i = Middlewares.Length - 1; i >= 0; i--)
+        {
+            var middleware = Middlewares[i];
+            var current = next;
+            next = (msg, token) =>
             {
-                await Middlewares[i].ProcessAsync(message, cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "Middleware {Middleware} failed processing message {MessageId}", Middlewares[i].GetType().Name, message.Id);
-                throw;
-            }
+                token.ThrowIfCancellationRequested();
+
+                try
+                {
+                    return middleware.HandleAsync(msg, current, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "Middleware {Middleware} failed processing message {MessageId}",
+                        middleware.GetType().Name, msg.Id);
+                    throw;
+                }
+            };
         }
+
+        return next;
     }
 }

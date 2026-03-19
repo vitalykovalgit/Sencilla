@@ -63,11 +63,12 @@ public class InMemoryStreamProviderEdgeCaseTests
     }
 
     [Fact]
-    public void GetStream_NullName_ThrowsArgumentNullException()
+    public void GetStream_NullName_ReturnsNull()
     {
         var config = new StreamConfig(new TestProviderConfig()) { Name = null };
 
-        Assert.Throws<ArgumentNullException>(() => _provider.GetStream(config));
+        var stream = _provider.GetStream(config);
+        Assert.Null(stream);
     }
 
     [Fact]

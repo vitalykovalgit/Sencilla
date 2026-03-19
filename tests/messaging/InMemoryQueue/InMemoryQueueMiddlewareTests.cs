@@ -2,19 +2,10 @@ namespace Sencilla.Messaging.InMemoryQueue.Tests;
 
 public class InMemoryQueueMiddlewareTests
 {
-    [Fact]
-    public async Task ProcessAsync_NullMessage_DoesNotThrow()
-    {
-        var config = new InMemoryProviderConfig();
-        var provider = new InMemoryStreamProvider();
-
-        var middleware = new InMemoryQueueMiddleware(config, provider);
-
-        await middleware.ProcessAsync<string>(null);
-    }
+    private static Func<Message<T>, CancellationToken, Task> NoOpNext<T>() => (_, _) => Task.CompletedTask;
 
     [Fact]
-    public async Task ProcessAsync_NoRoutes_DoesNotThrow()
+    public async Task HandleAsync_NoRoutes_DoesNotThrow()
     {
         var config = new InMemoryProviderConfig();
         var provider = new InMemoryStreamProvider();
@@ -22,11 +13,11 @@ public class InMemoryQueueMiddlewareTests
         var middleware = new InMemoryQueueMiddleware(config, provider);
         var message = new Message<string> { Payload = "test" };
 
-        await middleware.ProcessAsync(message);
+        await middleware.HandleAsync(message, NoOpNext<string>());
     }
 
     [Fact]
-    public async Task ProcessAsync_WithRoute_SendsToStream()
+    public async Task HandleAsync_WithRoute_SendsToStream()
     {
         var config = new InMemoryProviderConfig();
         config.AddStreams(s => s.AddStream("my-queue"));
@@ -35,7 +26,7 @@ public class InMemoryQueueMiddlewareTests
 
         var middleware = new InMemoryQueueMiddleware(config, provider);
         var message = new Message<string> { Payload = "routed" };
-        await middleware.ProcessAsync(message);
+        await middleware.HandleAsync(message, NoOpNext<string>());
 
         var streamConfig = config.Streams.GetConfig("my-queue")!;
         var stream = provider.GetStream(streamConfig);
@@ -45,7 +36,7 @@ public class InMemoryQueueMiddlewareTests
     }
 
     [Fact]
-    public async Task ProcessAsync_WithMultipleRoutes_SendsToAllStreams()
+    public async Task HandleAsync_WithMultipleRoutes_SendsToAllStreams()
     {
         var config = new InMemoryProviderConfig();
         config.AddStreams(s =>
@@ -58,7 +49,7 @@ public class InMemoryQueueMiddlewareTests
 
         var middleware = new InMemoryQueueMiddleware(config, provider);
         var message = new Message<string> { Payload = "multi" };
-        await middleware.ProcessAsync(message);
+        await middleware.HandleAsync(message, NoOpNext<string>());
 
         var configA = config.Streams.GetConfig("queue-a")!;
         var configB = config.Streams.GetConfig("queue-b")!;
@@ -73,10 +64,9 @@ public class InMemoryQueueMiddlewareTests
     }
 
     [Fact]
-    public async Task ProcessAsync_RouteWithNoStreamConfig_ThrowsInvalidOperation()
+    public async Task HandleAsync_RouteWithNoStreamConfig_ThrowsInvalidOperation()
     {
         var config = new InMemoryProviderConfig();
-        // Route to a stream that doesn't exist in streams config
         config.AddRoutes(r => r.Send<string>().ToStream("nonexistent"));
         var provider = new InMemoryStreamProvider();
 
@@ -84,6 +74,24 @@ public class InMemoryQueueMiddlewareTests
         var message = new Message<string> { Payload = "test" };
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => middleware.ProcessAsync(message));
+            () => middleware.HandleAsync(message, NoOpNext<string>()));
+    }
+
+    [Fact]
+    public async Task HandleAsync_CallsNext()
+    {
+        var config = new InMemoryProviderConfig();
+        var provider = new InMemoryStreamProvider();
+        var middleware = new InMemoryQueueMiddleware(config, provider);
+        var nextCalled = false;
+
+        var message = new Message<string> { Payload = "test" };
+        await middleware.HandleAsync(message, (_, _) =>
+        {
+            nextCalled = true;
+            return Task.CompletedTask;
+        });
+
+        Assert.True(nextCalled);
     }
 }

@@ -95,7 +95,7 @@ public class MediatorBootstrapTests
 
     private class TestMiddleware : IMessageMiddleware
     {
-        public Task ProcessAsync<T>(Message<T>? msg, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
+        public Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)
+            => next(message, cancellationToken);
     }
 }

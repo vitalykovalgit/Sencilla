@@ -2,14 +2,14 @@ namespace Sencilla.Messaging.InMemoryQueue.Tests;
 
 public class InMemoryStreamProviderTests
 {
-    private readonly InMemoryStreamProvider _provider = new();
+    private readonly InMemoryStreamProvider Provider = new();
 
     [Fact]
     public void GetOrCreateStream_CreatesNewStream()
     {
         var config = new StreamConfig(new TestProviderConfig()) { Name = "test-stream" };
 
-        var stream = _provider.GetOrCreateStream(config);
+        var stream = Provider.GetOrCreateStream(config);
 
         Assert.NotNull(stream);
         Assert.Equal("test-stream", stream.Name);
@@ -20,8 +20,8 @@ public class InMemoryStreamProviderTests
     {
         var config = new StreamConfig(new TestProviderConfig()) { Name = "test-stream" };
 
-        var stream1 = _provider.GetOrCreateStream(config);
-        var stream2 = _provider.GetOrCreateStream(config);
+        var stream1 = Provider.GetOrCreateStream(config);
+        var stream2 = Provider.GetOrCreateStream(config);
 
         Assert.Same(stream1, stream2);
     }
@@ -31,7 +31,7 @@ public class InMemoryStreamProviderTests
     {
         var config = new StreamConfig(new TestProviderConfig()) { Name = null };
 
-        Assert.Throws<ArgumentNullException>(() => _provider.GetOrCreateStream(config));
+        Assert.Throws<ArgumentNullException>(() => Provider.GetOrCreateStream(config));
     }
 
     [Fact]
@@ -40,22 +40,42 @@ public class InMemoryStreamProviderTests
         var config1 = new StreamConfig(new TestProviderConfig()) { Name = "stream-1" };
         var config2 = new StreamConfig(new TestProviderConfig()) { Name = "stream-2" };
 
-        var stream1 = _provider.GetOrCreateStream(config1);
-        var stream2 = _provider.GetOrCreateStream(config2);
+        var stream1 = Provider.GetOrCreateStream(config1);
+        var stream2 = Provider.GetOrCreateStream(config2);
 
         Assert.NotSame(stream1, stream2);
     }
 
     [Fact]
-    public void GetStream_ReturnsStream()
+    public void GetStream_ReturnsNull_WhenStreamNotCreated()
+    {
+        var config = new StreamConfig(new TestProviderConfig()) { Name = "missing-stream" };
+
+        var stream = Provider.GetStream(config);
+
+        Assert.Null(stream);
+    }
+
+    [Fact]
+    public void GetStream_ReturnsStream_WhenAlreadyCreated()
     {
         var config = new StreamConfig(new TestProviderConfig()) { Name = "test-stream" };
 
-        // GetStream delegates to GetOrCreateStream
-        var stream = _provider.GetStream(config);
+        var created = Provider.GetOrCreateStream(config);
+        var retrieved = Provider.GetStream(config);
 
-        Assert.NotNull(stream);
-        Assert.Equal("test-stream", stream!.Name);
+        Assert.NotNull(retrieved);
+        Assert.Same(created, retrieved);
+    }
+
+    [Fact]
+    public void GetStream_NullName_ReturnsNull()
+    {
+        var config = new StreamConfig(new TestProviderConfig()) { Name = null };
+
+        var stream = Provider.GetStream(config);
+
+        Assert.Null(stream);
     }
 
     [Fact]
@@ -63,7 +83,7 @@ public class InMemoryStreamProviderTests
     {
         var config = new StreamConfig(new TestProviderConfig()) { Name = "bounded", MaxQueueSize = 10 };
 
-        var stream = _provider.GetOrCreateStream(config);
+        var stream = Provider.GetOrCreateStream(config);
 
         Assert.NotNull(stream);
         Assert.Equal("bounded", stream.Name);
