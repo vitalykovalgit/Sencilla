@@ -9,6 +9,7 @@
 - Create well detailed and structured documentation for messaging
 - extend unit tests according to new requirements, use edge tests negative and positive testing
 
-For now implement just
+For now refactor just
+- Core library
 - Mediator
-- InMemmoryQueue
+- and InMemmoryQueue
