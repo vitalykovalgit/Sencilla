@@ -1,20 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>    
+  <ItemGroup>
     <PackageReference Include="RabbitMQ.Client" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Sencilla.Messaging.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Attributes\" />
   </ItemGroup>
 
 </Project>

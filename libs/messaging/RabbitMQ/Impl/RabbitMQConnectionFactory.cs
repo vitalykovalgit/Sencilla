@@ -1,86 +1,69 @@
 namespace Sencilla.Messaging.RabbitMQ;
 
-/// <summary>
-/// RabbitMQ connection factory implementation
-/// </summary>
-public class RabbitMQConnectionFactory : IRabbitMQConnectionFactory, IAsyncDisposable, IDisposable
+public class RabbitMQConnectionFactory(
+    RabbitMQProviderOptions options,
+    ILogger<RabbitMQConnectionFactory> logger) : IRabbitMQConnectionFactory, IAsyncDisposable, IDisposable
 {
-    readonly ConnectionFactory _connectionFactory;
-    readonly ILogger<RabbitMQConnectionFactory> _logger;
-    readonly RabbitMQOptions _options;
-    IConnection? _connection;
-    readonly SemaphoreSlim _semaphore = new(1, 1);
-
-    public RabbitMQConnectionFactory(IOptions<RabbitMQOptions> options, ILogger<RabbitMQConnectionFactory> logger)
+    private readonly ConnectionFactory Factory = new()
     {
-        _options = options.Value;
-        _logger = logger;
-        _connectionFactory = new ConnectionFactory
-        {
-            Uri = new Uri(_options.ConnectionString),
-            AutomaticRecoveryEnabled = true,
-            NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
-            RequestedHeartbeat = TimeSpan.FromSeconds(60)
-        };
-    }
+        Uri = new Uri(options.ConnectionString),
+        AutomaticRecoveryEnabled = true,
+        NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
+        RequestedHeartbeat = TimeSpan.FromSeconds(60)
+    };
+
+    private IConnection? Connection;
+    private readonly SemaphoreSlim Semaphore = new(1, 1);
 
     public async Task<IConnection> CreateConnectionAsync()
     {
-        if (_connection == null || !_connection.IsOpen)
+        if (Connection is not null && Connection.IsOpen)
+            return Connection;
+
+        await Semaphore.WaitAsync();
+        try
         {
-            await _semaphore.WaitAsync();
-            try
-            {
-                if (_connection == null || !_connection.IsOpen)
-                {
-                    try
-                    {
-                        if (_connection != null)
-                        {
-                            await _connection.DisposeAsync();
-                        }
-                        _connection = await _connectionFactory.CreateConnectionAsync();
-                        _logger.LogInformation("RabbitMQ connection established");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to create RabbitMQ connection");
-                        throw;
-                    }
-                }
-            }
-            finally
-            {
-                _semaphore.Release();
-            }
+            if (Connection is not null && Connection.IsOpen)
+                return Connection;
+
+            if (Connection is not null)
+                await Connection.DisposeAsync();
+
+            Connection = await Factory.CreateConnectionAsync();
+            logger.LogInformation("RabbitMQ connection established");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to create RabbitMQ connection");
+            throw;
+        }
+        finally
+        {
+            Semaphore.Release();
         }
 
-        return _connection;
+        return Connection;
     }
 
     public async Task<IChannel> CreateChannelAsync()
     {
         var connection = await CreateConnectionAsync();
         var channel = await connection.CreateChannelAsync();
-        
-        // Set basic QoS
-        await channel.BasicQosAsync(0, _options.PrefetchCount, false);
-        
+        await channel.BasicQosAsync(0, options.PrefetchCount, false);
         return channel;
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (_connection != null)
-        {
-            await _connection.DisposeAsync();
-        }
-        _semaphore.Dispose();
+        if (Connection is not null)
+            await Connection.DisposeAsync();
+
+        Semaphore.Dispose();
     }
 
     public void Dispose()
     {
-        _connection?.Dispose();
-        _semaphore.Dispose();
+        Connection?.Dispose();
+        Semaphore.Dispose();
     }
 }

@@ -24,7 +24,7 @@ public interface IRabbitMQTopologyManager
     /// <param name="autoDelete">Whether the queue auto-deletes</param>
     /// <param name="arguments">Additional queue arguments</param>
     /// <returns>Task representing the declare operation</returns>
-    Task DeclareQueueAsync(string queueName, bool durable = true, bool exclusive = false, bool autoDelete = false, IDictionary<string, object>? arguments = null);
+    Task DeclareQueueAsync(string queueName, bool durable = true, bool exclusive = false, bool autoDelete = false, IDictionary<string, object?>? arguments = null);
 
     /// <summary>
     /// Bind a queue to an exchange
