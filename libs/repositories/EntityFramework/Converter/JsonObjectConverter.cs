@@ -3,7 +3,11 @@
 [DisableInjection]
 public class JsonObjectConverter<T> : ValueConverter<T, string>
 {
-    private static readonly JsonSerializerOptions _options = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private static readonly JsonSerializerOptions _options = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        NumberHandling = JsonNumberHandling.AllowReadingFromString
+    };
 
     public JsonObjectConverter()
         : base(
