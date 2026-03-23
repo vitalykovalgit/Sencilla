@@ -61,10 +61,115 @@ public class ProviderConfig
     /// Adds routing configurations to the messaging system.
     /// </summary>
     /// <param name="config">The routing configuration action.</param>
-    /// <returns>  </returns>
     public ProviderConfig AddRoutes(Action<RoutesConfig> config)
     {
         config(Routes);
+        return this;
+    }
+
+    /// <summary>
+    /// Fluent alias for <see cref="AddRoutes"/>. Configures message routing.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// c.Route(r => {
+    ///     r.Message&lt;MyMessage&gt;().To("queue1");
+    ///     r.Messages(typeof(Msg1), typeof(Msg2)).To("queue1");
+    /// });
+    /// </code>
+    /// </example>
+    public ProviderConfig Route(Action<RoutesConfig> config) => AddRoutes(config);
+
+    /// <summary>
+    /// Creates consumers for multiple queues/topics at once.
+    /// Topic subscriptions use the "topic:subscription" format.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// q.AddConsumerFor(["queue1", "queue2", "topic:subscription"], con => {
+    ///     con.LoadHandlersFromAssembly();
+    ///     con.Process&lt;MyProcessor&gt;();
+    /// });
+    /// </code>
+    /// </example>
+    public ProviderConfig AddConsumerFor(string[] streams, Action<ConsumerConfig>? config = null)
+    {
+        foreach (var stream in streams)
+        {
+            var parts = stream.Split(':', 2);
+            if (parts.Length == 2)
+                Consumers.ForTopic(parts[0], parts[1], config);
+            else
+                Consumers.ForQueue(stream, config);
+        }
+        return this;
+    }
+
+    /// <summary>
+    /// Creates a consumer for a single queue.
+    /// </summary>
+    public ProviderConfig AddConsumerFor(string queue, Action<ConsumerConfig>? config = null)
+    {
+        Consumers.ForQueue(queue, config);
+        return this;
+    }
+
+    /// <summary>
+    /// Creates a consumer for a queue restricted to handling messages of type <typeparamref name="T"/>.
+    /// </summary>
+    public ProviderConfig AddConsumerFor<T>(string queue)
+    {
+        Consumers.ForQueue(queue, c => c.HandleOnly<T>());
+        return this;
+    }
+
+    /// <summary>
+    /// Creates a consumer for a queue restricted to handling the specified message types.
+    /// </summary>
+    public ProviderConfig AddConsumerFor(string queue, Type[] types)
+    {
+        Consumers.ForQueue(queue, c => c.HandleOnly(types));
+        return this;
+    }
+
+    /// <summary>
+    /// Creates a consumer for a queue restricted to handling messages matching the specified namespace strings.
+    /// </summary>
+    public ProviderConfig AddConsumerFor(string queue, string[] namespaces)
+    {
+        Consumers.ForQueue(queue, c => c.HandleOnly(namespaces));
+        return this;
+    }
+
+    /// <summary>
+    /// Defines a queue with optional stream-level configuration.
+    /// </summary>
+    public ProviderConfig DefineQueue(string name, Action<StreamConfig>? config = null)
+    {
+        Streams.AddQueue(name, config);
+        return this;
+    }
+
+    /// <summary>
+    /// Fluent alias for <see cref="DefineQueue"/>.
+    /// </summary>
+    public ProviderConfig ForQueue(string name, Action<StreamConfig>? config = null) => DefineQueue(name, config);
+
+    /// <summary>
+    /// Defines multiple queues with shared stream-level configuration.
+    /// </summary>
+    public ProviderConfig ForQueues(string[] names, Action<StreamConfig>? config = null)
+    {
+        Streams.AddQueues(names, config);
+        return this;
+    }
+
+    /// <summary>
+    /// Defines a topic with optional stream-level configuration.
+    /// </summary>
+    public ProviderConfig DefineTopic(string name, Action<StreamConfig>? config = null)
+    {
+        Streams.AddTopic(name, config);
         return this;
     }
 }

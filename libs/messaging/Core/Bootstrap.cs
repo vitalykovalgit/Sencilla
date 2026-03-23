@@ -42,6 +42,20 @@ public static class Bootstrap
         return services;
     }
 
+    /// <summary>
+    /// Adds Sencilla messaging services using <see cref="IMessagingConfig"/> implementations
+    /// discovered from the specified assemblies.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="assemblies">Assemblies to scan for <see cref="IMessagingConfig"/> implementations.</param>
+    public static IServiceCollection AddSencillaMessaging(this IServiceCollection services, params Assembly[] assemblies)
+    {
+        return services.AddSencillaMessaging(options =>
+        {
+            options.ApplyConfigurationsFromAssemblies(assemblies);
+        });
+    }
+
     public static void UseSencillaMessaging(this IApplicationBuilder app)
     {
         var messagingConfig = app.ApplicationServices.GetRequiredService<MessagingConfig>();

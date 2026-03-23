@@ -64,10 +64,21 @@ public class StreamConfig
         return this;
     }
 
+    /// <summary>
+    /// Registers a consumer for this stream's queue/topic on the parent provider.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// q.AddConsumer(con => {
+    ///     con.HandleOnly&lt;MyMessage&gt;();
+    ///     con.Process&lt;MyProcessor&gt;();
+    /// });
+    /// </code>
+    /// </example>
     public StreamConfig AddConsumer(Action<ConsumerConfig>? config = null)
     {
-        //if (Name is not null)
-        //    providerConfig.Consumers.AddConsumer(Name ?? "", config);
+        if (Name is not null)
+            ProviderConfig.Consumers.ForStream(Name, config);
         return this;
     }
 }

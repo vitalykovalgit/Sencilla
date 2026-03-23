@@ -39,6 +39,16 @@ public class MessagingConfig : ProviderConfig
     }
 
     /// <summary>
+    /// Registers a middleware in the global messaging pipeline.
+    /// Fluent alias for <see cref="AddMiddlewareOnce{T}"/>.
+    /// </summary>
+    /// <example>
+    /// <code>c.UseMiddleware&lt;MyCustomMiddleware&gt;();</code>
+    /// </example>
+    public MessagingConfig UseMiddleware<T>() where T : class, IMessageMiddleware
+        => AddMiddlewareOnce<T>();
+
+    /// <summary>
     /// Add stream provider to the messaging pipeline only once.
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -138,6 +148,29 @@ public class MessagingConfig : ProviderConfig
 
         AppBuilders.ForEach(builder => builder.Invoke(null, app));
         AppBuilders.Clear();
+    }
+
+    /// <summary>
+    /// Scans the specified assemblies for <see cref="IMessagingConfig"/> implementations
+    /// and invokes their <see cref="IMessagingConfig.Configure"/> method.
+    /// </summary>
+    /// <param name="assemblies">Assemblies to scan.</param>
+    public MessagingConfig ApplyConfigurationsFromAssemblies(params Assembly[] assemblies)
+    {
+        foreach (var assembly in assemblies)
+        {
+            var configTypes = assembly.GetTypes()
+                .Where(t => t is { IsAbstract: false, IsInterface: false }
+                         && typeof(IMessagingConfig).IsAssignableFrom(t));
+
+            foreach (var configType in configTypes)
+            {
+                if (Activator.CreateInstance(configType) is IMessagingConfig config)
+                    config.Configure(this);
+            }
+        }
+
+        return this;
     }
 
     internal void Init(IServiceCollection services)

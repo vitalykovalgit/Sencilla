@@ -138,4 +138,52 @@ public class StreamConfigTests
 
         Assert.Same(config, result);
     }
+
+    [Fact]
+    public void AddConsumer_WithName_RegistersConsumer()
+    {
+        var config = new StreamConfig(_provider) { Name = "consumer-stream" };
+
+        config.AddConsumer();
+
+        Assert.True(_provider.Consumers.HasAnyConsumers);
+        var consumer = _provider.Consumers.GetConsumers().First();
+        Assert.Equal("consumer-stream", consumer.StreamName);
+    }
+
+    [Fact]
+    public void AddConsumer_WithConfig_AppliesConfig()
+    {
+        var config = new StreamConfig(_provider) { Name = "configured-stream" };
+
+        config.AddConsumer(c =>
+        {
+            c.MaxConcurrentHandlers = 5;
+            c.HandleOnly<string>();
+        });
+
+        var consumer = _provider.Consumers.GetConsumers().First();
+        Assert.Equal(5, consumer.MaxConcurrentHandlers);
+        Assert.Contains(typeof(string), consumer.AllowedTypes);
+    }
+
+    [Fact]
+    public void AddConsumer_NullName_DoesNotRegister()
+    {
+        var config = new StreamConfig(_provider) { Name = null };
+
+        config.AddConsumer();
+
+        Assert.False(_provider.Consumers.HasAnyConsumers);
+    }
+
+    [Fact]
+    public void AddConsumer_NullName_WithConfig_DoesNotRegister()
+    {
+        var config = new StreamConfig(_provider) { Name = null };
+
+        config.AddConsumer(c => c.MaxConcurrentHandlers = 10);
+
+        Assert.False(_provider.Consumers.HasAnyConsumers);
+    }
 }

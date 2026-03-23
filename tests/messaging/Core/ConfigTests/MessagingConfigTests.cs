@@ -317,11 +317,117 @@ public class MessagingConfigTests
         public IMessageStream GetOrCreateStream(StreamConfig config) => throw new NotImplementedException();
     }
 
+    // ── UseMiddleware<T>() alias ──
+
+    [Fact]
+    public void UseMiddleware_IsAliasForAddMiddlewareOnce()
+    {
+        var services = new ServiceCollection();
+        services.AddSencillaMessaging(config =>
+        {
+            var result = config.UseMiddleware<TestMiddleware>();
+
+            Assert.Single(config.Middlewares);
+            Assert.Contains(typeof(TestMiddleware), config.Middlewares);
+            Assert.Same(config, result);
+        });
+    }
+
+    [Fact]
+    public void UseMiddleware_CalledTwice_RegistersOnlyOnce()
+    {
+        var services = new ServiceCollection();
+        services.AddSencillaMessaging(config =>
+        {
+            config.UseMiddleware<TestMiddleware>();
+            config.UseMiddleware<TestMiddleware>();
+
+            Assert.Single(config.Middlewares);
+        });
+    }
+
+    // ── ApplyConfigurationsFromAssemblies ──
+
+    [Fact]
+    public void ApplyConfigurationsFromAssemblies_DiscoverAndAppliesConfigs()
+    {
+        var services = new ServiceCollection();
+        services.AddSencillaMessaging(config =>
+        {
+            config.ApplyConfigurationsFromAssemblies(typeof(MessagingConfigTests).Assembly);
+
+            // TestMessagingConfig adds a consumer for "test-discovered-queue"
+            Assert.True(config.Consumers.HasAnyConsumers);
+            var consumer = config.Consumers.GetConsumers().FirstOrDefault(c => c.StreamName == "test-discovered-queue");
+            Assert.NotNull(consumer);
+        });
+    }
+
+    [Fact]
+    public void ApplyConfigurationsFromAssemblies_ReturnsSelf_ForFluent()
+    {
+        var services = new ServiceCollection();
+        services.AddSencillaMessaging(config =>
+        {
+            var result = config.ApplyConfigurationsFromAssemblies(typeof(MessagingConfigTests).Assembly);
+            Assert.Same(config, result);
+        });
+    }
+
+    // ── Bootstrap assembly scanning overload ──
+
+    [Fact]
+    public void AddSencillaMessaging_AssemblyOverload_DiscoversConfigs()
+    {
+        var services = new ServiceCollection();
+
+        services.AddSencillaMessaging(typeof(MessagingConfigTests).Assembly);
+
+        var sp = services.BuildServiceProvider();
+        var config = sp.GetRequiredService<MessagingConfig>();
+        Assert.True(config.Consumers.HasAnyConsumers);
+    }
+
+    [Fact]
+    public void AddSencillaMessaging_RegistersCoreServices()
+    {
+        var services = new ServiceCollection();
+
+        services.AddSencillaMessaging(_ => { });
+
+        Assert.Contains(services, sd => sd.ServiceType == typeof(MessagingConfig));
+        Assert.Contains(services, sd => sd.ServiceType == typeof(IMessageDispatcher));
+        Assert.Contains(services, sd => sd.ServiceType == typeof(IMessageHandlerExecutor));
+    }
+
+    [Fact]
+    public void AddSencillaMessaging_CalledTwice_DoesNotDuplicateCoreServices()
+    {
+        var services = new ServiceCollection();
+
+        services.AddSencillaMessaging(_ => { });
+        services.AddSencillaMessaging(_ => { });
+
+        var configCount = services.Count(sd => sd.ServiceType == typeof(MessagingConfig));
+        Assert.Equal(1, configCount);
+    }
+
     private class TestProviderConfig : ProviderConfig { }
 
     private class TestHostedService : Microsoft.Extensions.Hosting.IHostedService
     {
         public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// Discovered by ApplyConfigurationsFromAssemblies tests.
+/// </summary>
+public class TestMessagingConfig : IMessagingConfig
+{
+    public void Configure(MessagingConfig options)
+    {
+        options.AddConsumerFor("test-discovered-queue");
     }
 }
