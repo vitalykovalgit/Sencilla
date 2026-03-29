@@ -19,25 +19,9 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
         if (query == null)
             return;
 
-
-        if (filter.OrderBy?.Length > 0)
-            query = query.OrderBy(filter.OrderBy.Join(", ").Replace("|", " "));
-
-        // {
-        //     var suffix = filter.Descending == true ? " DESC" : "";
-        //     var orderBy = string.Join(", ", filter.OrderBy.Select(f => f.Replace("|", " ") + suffix));
-        //     query = query.OrderBy(orderBy);
-        // }
-
         if (filter.Properties?.Count > 0)
             foreach (var kvp in filter.Properties)
                 query = query.Where(ToExpression(kvp.Value));
-
-        if (filter.Skip != null)
-            query = query.Skip(filter.Skip.Value);
-
-        if (filter.Take != null)
-            query = query.Take(filter.Take.Value);
 
         if (filter.With?.Length > 0)
         {

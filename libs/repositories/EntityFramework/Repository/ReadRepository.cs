@@ -114,12 +114,26 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
 
     protected async Task<IQueryable<TEntity>> QueryInternal(IFilter? filter, CancellationToken token)
     {
-        var e = new EntityReadingEvent<TEntity> 
-        { 
+        var e = new EntityReadingEvent<TEntity>
+        {
             Filter = filter,
             Entities = DbContext.Query<TEntity>()
         };
         await D.Events.PublishAsync(e, token).ConfigureAwait(false);
-        return e.Entities;
+
+        var query = e.Entities;
+
+        // Apply ordering and pagination after all event handlers (e.g. security constraints)
+        // so that Skip/Take operates on the fully filtered result set
+        if (filter?.OrderBy?.Length > 0)
+            query = query.OrderBy(filter.OrderBy.Join(", ").Replace("|", " "));
+
+        if (filter?.Skip != null)
+            query = query.Skip(filter.Skip.Value);
+
+        if (filter?.Take != null)
+            query = query.Take(filter.Take.Value);
+
+        return query;
     }
 }
