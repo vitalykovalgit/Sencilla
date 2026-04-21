@@ -28,12 +28,10 @@ internal class FilePathResolver : IFilePathResolver
         var projectId = file.Attrs?.GetString("projectId");
         var projectPath = projectId == null ? "" : $"project{projectId}";
 
-        var folder = file.Attrs?.GetString("folder");
-        var folderPath = RemoveSpecialCharacters(folder); // remove any special characters leves only latters and numbers 
-
+     
         return file.Origin switch
         {
-            FileOrigin.User => Path.Combine($"user{file.UserId ?? 0}", projectPath, folderPath, fileName),
+            FileOrigin.User => Path.Combine($"user{file.UserId ?? 0}", projectPath, fileName),
             FileOrigin.System => $"system/{fileName}",
             _ => $"none/{fileName}"
         };

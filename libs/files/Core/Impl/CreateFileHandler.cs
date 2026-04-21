@@ -46,7 +46,7 @@ internal class CreateFileHandler(
         }
 
         // check if file exists use it otherways create it
-        var dbFile = await fileRepo.GetById(file.Id);
+        var dbFile = await fileRepo.GetById(file.ParentId == null ? file.Id : file.ParentId.Value);
         if (dbFile == null)
         {
             if (res.HasValue)
@@ -54,7 +54,7 @@ internal class CreateFileHandler(
                 {
                     [res.Value.ToString()] = new ResolutionInfo { S = file.Size, U = 0 }
                 };
-
+            
             dbFile = await fileRepo.Create(file);
             await events.PublishAsync(new FileCreatedEvent { File = dbFile }, token);
 
@@ -74,7 +74,7 @@ internal class CreateFileHandler(
             var resolutions = dbFile.Res ?? new Dictionary<string, ResolutionInfo>();
             resolutions[res.Value.ToString()] = new ResolutionInfo { S = uploadLength, U = 0 };
             await resUpdateRepo.Update(new FileResUpdate { Id = dbFile.Id, Res = resolutions });
-
+            
             var resPath = pathResolver.GetResolutionPath(dbFile, res.Value);
             await storage.WriteFileAsync(new File { Path = resPath, Storage = dbFile.Storage }, []);
         }
