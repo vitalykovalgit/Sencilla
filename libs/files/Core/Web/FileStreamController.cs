@@ -3,7 +3,11 @@ namespace Sencilla.Component.Files;
 
 [DisableInjection]
 [Route("api/v1/files/stream")]
-public class FileStreamController(IServiceProvider provider, IReadRepository<File, Guid> fileRepo, IFilePathResolver pathResolver) : ApiController(provider)
+public class FileStreamController(
+    IServiceProvider provider, 
+    IReadRepository<File, Guid> fileRepo, 
+    IDeleteRepository<File, Guid> deleteRepo,
+    IFilePathResolver pathResolver) : ApiController(provider)
 {
     // TODO: Move to config cache duration
     [HttpGet, Route("{fileId}")]
@@ -41,6 +45,22 @@ public class FileStreamController(IServiceProvider provider, IReadRepository<Fil
     {
         var file = await fileRepo.GetById(fileId);
         return await RetriveFileStream(file, token);
+    }
+
+    [HttpDelete, Route("{fileId}")]
+    public async Task<IActionResult> DeleteFile(Guid fileId, CancellationToken token)
+    {
+        var file = await fileRepo.GetById(fileId, token);
+        if (file == null) return NotFound();
+
+        var storage = file.Storage == 0 ? provider.GetService<IFileStorage>() : provider.GetKeyedService<IFileStorage>(file.Storage);
+        if (storage == null) return BadRequest($"File Storage is not configured for {file.Storage}");
+
+        await storage.DeleteFileAsync(file, token);
+
+        await deleteRepo.Delete(fileId, token);
+
+        return NoContent();
     }
 
     private async Task<IActionResult> RetriveFileStream(File? file, CancellationToken token)
