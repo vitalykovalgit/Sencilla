@@ -7,7 +7,7 @@ public class UploadFileHandler(
     IFilePathResolver pathResolver,
     IReadRepository<File, Guid> fileRepository,
     IUpdateRepository<FileUpload, Guid> fileUploadRepository,
-    IUpdateRepository<FileResUpdate, Guid> resUpdateRepository) : IFileRequestHandler
+    IMergeRepository<File, Guid> fileMergeRepository) : IFileRequestHandler
 {
     public const string Method = "PATCH";
 
@@ -70,20 +70,20 @@ public class UploadFileHandler(
         var length = (long)context.Request.ContentLength!;
         var newOffset = await fileStorage.WriteFileAsync(resFile, chunk, offset, length, token);
 
-        // Update resolution upload progress
-        var resolutions = file.Res!;
+        // Update resolution upload progress (atomic JSON merge — no read-modify-write race)
+        ResolutionInfo updatedInfo;
         if (resInfo.S.HasValue && newOffset >= resInfo.S.Value)
         {
             // Upload complete — clear size and uploaded
-            resolutions[resKey] = new ResolutionInfo();
+            updatedInfo = new ResolutionInfo();
             await events.PublishAsync(new FileUploadedEvent { File = file, Resolution = res }, token);
         }
         else
         {
-            resolutions[resKey] = new ResolutionInfo { S = resInfo.S, U = newOffset };
+            updatedInfo = new ResolutionInfo { S = resInfo.S, U = newOffset };
         }
 
-        await resUpdateRepository.Update(new FileResUpdate { Id = file.Id, Res = resolutions });
+        await fileMergeRepository.MergeAsync(file.Id, f => f.Res, resKey, updatedInfo, token);
 
         context.WriteNoContentWithOffset(newOffset);
     }
