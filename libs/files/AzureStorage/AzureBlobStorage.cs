@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.Files.AzureStorage;
 
-public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
+public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver pathResolver) : IFileStorage
 {
     private readonly BlobServiceClient BlobServiceClient = new BlobServiceClient(options.ConnectionString);
 
@@ -318,7 +318,7 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
     {
         foreach (var resKey in file.Res.Keys)
         {
-            var resPath = GetResolutionPath(file.Path, resKey);
+            var resPath = pathResolver.GetResolutionPath(file.Path ?? string.Empty, resKey);
             var (resContainerName, resBlobName) = GetContainerAndFileName(resPath);
 
             if (!string.IsNullOrEmpty(resContainerName) && !string.IsNullOrEmpty(resBlobName))
@@ -469,20 +469,6 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
         if (string.IsNullOrEmpty(blobName)) throw new ApplicationException($"File name is empty");
 
         return BlobServiceClient.GetBlobContainerClient(containerName);
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="file"></param>
-    /// <returns></returns>
-    private static string GetResolutionPath(string? path, string resKey)
-    {
-        if (string.IsNullOrEmpty(path)) return string.Empty;
-
-        var ext = Path.GetExtension(path);
-        var pathWithoutExt = path[..^ext.Length];
-        return $"{pathWithoutExt}_{resKey}{ext}";
     }
 
     private static (string container, string fname) GetContainerAndFileName(File file)

@@ -56,9 +56,9 @@ public class FileStreamController(
         var storage = file.Storage == 0 ? provider.GetService<IFileStorage>() : provider.GetKeyedService<IFileStorage>(file.Storage);
         if (storage == null) return BadRequest($"File Storage is not configured for {file.Storage}");
 
-        await storage.DeleteFileAsync(file, token);
+        await deleteRepo.Delete(file, token);
 
-        await deleteRepo.Delete(fileId, token);
+        await storage.DeleteFileAsync(file, token);
 
         return NoContent();
     }

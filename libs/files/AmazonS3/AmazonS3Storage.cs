@@ -4,10 +4,12 @@ public class AmazonS3Storage : IFileStorage
 {
     private readonly IAmazonS3 Client;
     private readonly AmazonS3StorageOptions options;
+    private readonly IFilePathResolver pathResolver;
 
-    public AmazonS3Storage(AmazonS3StorageOptions options)
+    public AmazonS3Storage(AmazonS3StorageOptions options, IFilePathResolver pathResolver)
     {
         this.options = options;
+        this.pathResolver = pathResolver;
         var config = new AmazonS3Config();
         if (!string.IsNullOrEmpty(options.Region))
             config.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
@@ -257,7 +259,7 @@ public class AmazonS3Storage : IFileStorage
     {
         foreach (var resKey in file.Res.Keys)
         {
-            var resPath = GetResolutionPath(file.Path, resKey);
+            var resPath = pathResolver.GetResolutionPath(file.Path ?? string.Empty, resKey);
             var (resBucket, resS3Key) = GetBucketAndKey(resPath);
 
             if (!string.IsNullOrEmpty(resBucket) && !string.IsNullOrEmpty(resS3Key))
@@ -374,15 +376,6 @@ public class AmazonS3Storage : IFileStorage
         using var fs = System.IO.File.OpenWrite(dstPath);
         await src.CopyToAsync(fs);
         return true;
-    }
-
-    private static string GetResolutionPath(string? path, string resKey)
-    {
-        if (string.IsNullOrEmpty(path)) return string.Empty;
-
-        var ext = Path.GetExtension(path);
-        var pathWithoutExt = path[..^ext.Length];
-        return $"{pathWithoutExt}_{resKey}{ext}";
     }
 
     private static (string bucket, string key) GetBucketAndKey(string? path)

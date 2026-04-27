@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.Files.LocalDrive;
 
-public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
+public class LocalDriveStorage(LocalDriveStorageOptions options, IFilePathResolver pathResolver) : IFileStorage
 {
     public byte Type => options.Type;
 
@@ -301,18 +301,8 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
 
     private string GetResolutionFilePath(File file, string resKey)
     {
-        var directory = Path.GetDirectoryName(file.Path) ?? string.Empty;
-        var fileNameWithExt = Path.GetFileName(file.Path) ?? $"{file.Id}_{resKey}{Path.GetExtension(file.Name)}";
-
-        // If file.Path has a filename, construct resolution filename based on it
-        if (!string.IsNullOrEmpty(Path.GetFileName(file.Path)))
-        {
-            var ext = Path.GetExtension(file.Path);
-            var nameWithoutExt = Path.GetFileNameWithoutExtension(file.Path);
-            fileNameWithExt = $"{nameWithoutExt}_{resKey}{ext}";
-        }
-
-        return Path.Combine(options.RootPath, directory, fileNameWithExt);
+        var path = file.Path ?? pathResolver.GetFullPath(file);
+        return Path.Combine(options.RootPath, pathResolver.GetResolutionPath(path, resKey));
     }
 
     private string GetFullPath(string relativeFilePath)
