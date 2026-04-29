@@ -6,7 +6,7 @@ internal class CreateFileHandler(
     IEventDispatcher events,
     IFilePathResolver pathResolver,
     ICreateRepository<File, Guid> fileRepo,
-    IUpdateRepository<FileResUpdate, Guid> resUpdateRepo): IFileRequestHandler
+    IUpdateRepository<File, Guid> fileUpdateRepo): IFileRequestHandler
 {
     public const string Method = "POST";
 
@@ -46,7 +46,7 @@ internal class CreateFileHandler(
         }
 
         // check if file exists use it otherways create it
-        var dbFile = await fileRepo.GetById(file.Id);
+        var dbFile = await fileRepo.GetById(file.ParentId == null ? file.Id : file.ParentId.Value);
         if (dbFile == null)
         {
             if (res.HasValue)
@@ -54,7 +54,7 @@ internal class CreateFileHandler(
                 {
                     [res.Value.ToString()] = new ResolutionInfo { S = file.Size, U = 0 }
                 };
-
+            
             dbFile = await fileRepo.Create(file);
             await events.PublishAsync(new FileCreatedEvent { File = dbFile }, token);
 
@@ -70,10 +70,10 @@ internal class CreateFileHandler(
         }
         else if (res.HasValue)
         {
-            // File exists, add new resolution entry
-            var resolutions = dbFile.Res ?? new Dictionary<string, ResolutionInfo>();
-            resolutions[res.Value.ToString()] = new ResolutionInfo { S = uploadLength, U = 0 };
-            await resUpdateRepo.Update(new FileResUpdate { Id = dbFile.Id, Res = resolutions });
+            // File exists, atomically add new resolution entry (no read-modify-write race)
+            var resKey = res.Value.ToString();
+            var resInfo = new ResolutionInfo { S = uploadLength, U = 0 };
+            await fileUpdateRepo.JsonMergeAsync(dbFile.Id, f => f.Res, resKey, resInfo, token);
 
             var resPath = pathResolver.GetResolutionPath(dbFile, res.Value);
             await storage.WriteFileAsync(new File { Path = resPath, Storage = dbFile.Storage }, []);

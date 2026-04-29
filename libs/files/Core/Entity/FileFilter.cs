@@ -6,8 +6,8 @@ public class FileFilter : Filter
     public FileFilter ByParentId(params Guid[] filesId)
     {
         foreach (var fileId in filesId)
-            AddProperty(nameof(File.ParentId), typeof(Guid), fileId);
-
+           AddProperty(nameof(File.ParentId), typeof(Guid), fileId);
+    
         return this;
     }
 
