@@ -39,4 +39,13 @@ public interface IUpdateRepository<TEntity, TKey> : IReadRepository<TEntity, TKe
     void Detach(IEnumerable<TEntity> entities);
     void ClearChangeTracker();
 
+    /// <summary>
+    /// Atomically sets <paramref name="key"/> -> <paramref name="value"/> on the JSON
+    /// dictionary property selected by <paramref name="property"/> for the entity
+    /// identified by <paramref name="id"/>, without read-modify-write. Concurrent
+    /// merges to other keys of the same property are preserved.
+    /// </summary>
+    Task<int> JsonMergeAsync<TValue>(TKey id, Expression<Func<TEntity, IDictionary<string, TValue>?>> property,
+        string key, TValue value, CancellationToken token = default);
+
 }

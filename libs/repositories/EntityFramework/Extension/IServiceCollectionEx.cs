@@ -64,7 +64,6 @@ public static class RepoEFIServiceCollectionEx
             RegisterReadRepo(container, type, context, key);
             RegisterCreateRepo(container, type, context, key);
             RegisterUpdateRepo(container, type, context, key);
-            RegisterMergeRepo(container, type, context, key);
             RegisterRemoveRepo(container, type, context, key);
             RegisterDeleteRepo(container, type, context, key);
 
@@ -124,24 +123,6 @@ public static class RepoEFIServiceCollectionEx
                 container.TryAddScoped(
                     typeof(IUpdateRepository<>).MakeGenericType(type),
                     typeof(UpdateRepository<,>).MakeGenericType(type, context));
-            }
-        }
-    }
-
-    private static void RegisterMergeRepo(IServiceCollection container, Type type, Type context, Type key)
-    {
-        // register merge repo 
-        if (typeof(IEntityMergeable).IsAssignableFrom(type))
-        {
-            container.TryAddScoped(
-                typeof(IMergeRepository<,>).MakeGenericType(type, key),
-                typeof(MergeRepository<,,>).MakeGenericType(type, context, key));
-
-            if (key == typeof(int))
-            {
-                container.TryAddScoped(
-                    typeof(IMergeRepository<>).MakeGenericType(type),
-                    typeof(MergeRepository<,>).MakeGenericType(type, context));
             }
         }
     }

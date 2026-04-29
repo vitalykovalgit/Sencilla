@@ -6,7 +6,7 @@ internal class CreateFileHandler(
     IEventDispatcher events,
     IFilePathResolver pathResolver,
     ICreateRepository<File, Guid> fileRepo,
-    IMergeRepository<File, Guid> fileMergeRepo): IFileRequestHandler
+    IUpdateRepository<File, Guid> fileUpdateRepo): IFileRequestHandler
 {
     public const string Method = "POST";
 
@@ -73,7 +73,7 @@ internal class CreateFileHandler(
             // File exists, atomically add new resolution entry (no read-modify-write race)
             var resKey = res.Value.ToString();
             var resInfo = new ResolutionInfo { S = uploadLength, U = 0 };
-            await fileMergeRepo.MergeAsync(dbFile.Id, f => f.Res, resKey, resInfo, token);
+            await fileUpdateRepo.JsonMergeAsync(dbFile.Id, f => f.Res, resKey, resInfo, token);
 
             var resPath = pathResolver.GetResolutionPath(dbFile, res.Value);
             await storage.WriteFileAsync(new File { Path = resPath, Storage = dbFile.Storage }, []);

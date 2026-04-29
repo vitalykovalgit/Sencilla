@@ -5,7 +5,6 @@ public class File
     : IEntity<Guid>
     , IEntityCreateable
     , IEntityUpdateable
-    , IEntityMergeable
     , IEntityRemoveable
     , IEntityDeleteable
 {
