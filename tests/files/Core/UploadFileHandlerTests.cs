@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using System.Linq.Expressions;
 
 namespace Sencilla.Component.Files.Tests;
 
@@ -14,10 +15,10 @@ public class UploadFileHandlerTests
     private readonly Mock<IFilePathResolver> _pathResolver = new();
     private readonly Mock<IReadRepository<File, Guid>> _readRepo = new();
     private readonly Mock<IUpdateRepository<FileUpload, Guid>> _uploadRepo = new();
-    private readonly Mock<IUpdateRepository<FileResUpdate, Guid>> _resUpdateRepo = new();
+    private readonly Mock<IMergeRepository<File, Guid>> _resMergeRepo = new();
 
     private UploadFileHandler CreateHandler() =>
-        new(_events.Object, _storage.Object, _pathResolver.Object, _readRepo.Object, _uploadRepo.Object, _resUpdateRepo.Object);
+        new(_events.Object, _storage.Object, _pathResolver.Object, _readRepo.Object, _uploadRepo.Object, _resMergeRepo.Object);
 
     private static HttpContext CreatePatchContext(Guid fileId, long offset, byte[] body, int? res = null)
     {
@@ -147,8 +148,6 @@ public class UploadFileHandlerTests
         _pathResolver.Setup(p => p.GetResolutionPath(file, 600)).Returns("test/path_600.jpg");
         _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<Stream>(), 0, 1024, It.IsAny<CancellationToken>()))
             .ReturnsAsync(1024L);
-        _resUpdateRepo.Setup(r => r.Update(It.IsAny<FileResUpdate>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((FileResUpdate f, CancellationToken _) => f);
 
         var handler = CreateHandler();
         await handler.Handle(context, CancellationToken.None);
@@ -182,14 +181,15 @@ public class UploadFileHandlerTests
         _pathResolver.Setup(p => p.GetResolutionPath(file, 600)).Returns("test/path_600.jpg");
         _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<Stream>(), 0, 1024, It.IsAny<CancellationToken>()))
             .ReturnsAsync(1024L);
-        _resUpdateRepo.Setup(r => r.Update(It.IsAny<FileResUpdate>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((FileResUpdate f, CancellationToken _) => f);
 
         var handler = CreateHandler();
         await handler.Handle(context, CancellationToken.None);
 
-        _resUpdateRepo.Verify(r => r.Update(
-            It.Is<FileResUpdate>(u => u.Res!["600"].S == null && u.Res["600"].U == null),
+        _resMergeRepo.Verify(r => r.MergeAsync(
+            fileId,
+            It.IsAny<Expression<Func<File, IDictionary<string, ResolutionInfo>?>>>(),
+            "600",
+            It.Is<ResolutionInfo>(i => i.S == null && i.U == null),
             It.IsAny<CancellationToken>()), Times.Once);
         _events.Verify(e => e.PublishAsync(
             It.Is<FileUploadedEvent>(ev => ev.Resolution == 600),
@@ -219,14 +219,15 @@ public class UploadFileHandlerTests
         _pathResolver.Setup(p => p.GetResolutionPath(file, 600)).Returns("test/path_600.jpg");
         _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<Stream>(), 0, 1024, It.IsAny<CancellationToken>()))
             .ReturnsAsync(1024L);
-        _resUpdateRepo.Setup(r => r.Update(It.IsAny<FileResUpdate>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((FileResUpdate f, CancellationToken _) => f);
 
         var handler = CreateHandler();
         await handler.Handle(context, CancellationToken.None);
 
-        _resUpdateRepo.Verify(r => r.Update(
-            It.Is<FileResUpdate>(u => u.Res!["600"].S == 5000 && u.Res["600"].U == 1024),
+        _resMergeRepo.Verify(r => r.MergeAsync(
+            fileId,
+            It.IsAny<Expression<Func<File, IDictionary<string, ResolutionInfo>?>>>(),
+            "600",
+            It.Is<ResolutionInfo>(i => i.S == 5000 && i.U == 1024),
             It.IsAny<CancellationToken>()), Times.Once);
         _events.Verify(e => e.PublishAsync(It.IsAny<FileUploadedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
     }

@@ -8,16 +8,19 @@ public class FilterTypeBinder : IModelBinder
     IDictionary<ModelMetadata, IModelBinder> FilterProperties;
     IDictionary<ModelMetadata, IModelBinder> EntityProperties;
     IDictionary<string, ModelMetadata> EntityArrayProperties;
+    ISet<string> JsonArrayProperties;
 
     public FilterTypeBinder(
         ILoggerFactory logger,
         IDictionary<ModelMetadata, IModelBinder> filterProperties,
         IDictionary<ModelMetadata, IModelBinder> entityProperties,
-        IDictionary<string, ModelMetadata> entityArrayProperties)
+        IDictionary<string, ModelMetadata> entityArrayProperties,
+        ISet<string>? jsonArrayProperties = null)
     {
         FilterProperties = filterProperties;
         EntityProperties = entityProperties;
         EntityArrayProperties = entityArrayProperties;
+        JsonArrayProperties = jsonArrayProperties ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         ComplexTypeModelBinder = new ComplexTypeModelBinder(filterProperties, logger);
     }
 
@@ -44,7 +47,7 @@ public class FilterTypeBinder : IModelBinder
             {
                 // Get values as array for the property 
                 ModelBindingResult result;
-                var propertyType = property.Key.ModelType;//Nullable.GetUnderlyingType(property.Key.ModelType) ?? property.Key.ModelType;
+                var propertyType = property.Key.ModelType;
 
                 var metaArray = EntityArrayProperties[propertyType.FullName];
                 using (bindingContext.EnterNestedScope(metaArray, bindingContext.FieldName, propName, null))
@@ -59,6 +62,10 @@ public class FilterTypeBinder : IModelBinder
                 {
                     foreach (var v in (System.Collections.IEnumerable)result.Model)
                         filter.AddProperty(propName, propertyType, v);
+
+                    // Mark as JSON array so FilterConstraintHandler generates LIKE instead of IN
+                    if (JsonArrayProperties.Contains(propName) && filter.Properties?.TryGetValue(propName, out var fp) == true)
+                        fp.IsJsonArray = true;
                 }
             }
             else

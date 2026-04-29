@@ -45,10 +45,19 @@ public class FilterTypeBinderProvider : IModelBinderProvider
                     filterPropertyBinders.Add(property, context.CreateBinder(property));
 
                 var entityPropertyBinders = new Dictionary<ModelMetadata, IModelBinder>();
+                var jsonArrayProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
                 foreach (var property in entityProperties ?? Enumerable.Empty<ModelMetadata>())
                 {
                     var binderMetadata = context.MetadataProvider.GetMetadataForType(property.ModelType.MakeArrayType());
                     entityPropertyBinders.Add(property, context.CreateBinder(binderMetadata));
+
+                    // Detect [JsonObjectString] — column stores a JSON array string,
+                    // needs LIKE-based containment filter instead of IN.
+                    var propInfo = type?.GetProperty(property.PropertyName ?? "", 
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase);
+                    if (propInfo?.GetCustomAttribute<JsonObjectStringAttribute>() != null)
+                        jsonArrayProperties.Add(property.PropertyName ?? "");
                 }
 
                 var loggerFactory = context.Services.GetRequiredService<ILoggerFactory>();
@@ -65,7 +74,7 @@ public class FilterTypeBinderProvider : IModelBinderProvider
                 }
                 else
                 {
-                    return new FilterTypeBinder(loggerFactory, filterPropertyBinders, entityPropertyBinders, arrayEntityProperties);
+                    return new FilterTypeBinder(loggerFactory, filterPropertyBinders, entityPropertyBinders, arrayEntityProperties, jsonArrayProperties);
                 }
             }
         }

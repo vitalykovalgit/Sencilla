@@ -77,6 +77,16 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
             return $"{prop.Query} == null";
         }
 
+        // JSON array column (e.g. "[1,2,3]" stored as string).
+         if (prop.IsJsonArray)
+        {
+            const string normalize = $"(\",\" + {{0}}.Replace(\"[\",\",\").Replace(\"]\",\",\"))";
+            var conditions = prop.Values
+                .Where(v => v != null)
+                .Select(v => string.Format(normalize, prop.Query) + $".Contains(\",{v},\")");
+            return string.Join(" || ", conditions);
+        }
+
         if (prop.Type == typeof(Guid)) 
         {
             var exp = new StringBuilder();

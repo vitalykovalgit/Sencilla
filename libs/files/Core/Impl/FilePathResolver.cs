@@ -27,24 +27,26 @@ internal class FilePathResolver : IFilePathResolver
         
         var projectId = file.Attrs?.GetString("projectId");
         var projectPath = projectId == null ? "" : $"project{projectId}";
-
-        var folder = file.Attrs?.GetString("folder");
-        var folderPath = RemoveSpecialCharacters(folder); // remove any special characters leves only latters and numbers 
+        //var folder = file.Attrs?.GetString("folder");
+        //var folderPath = RemoveSpecialCharacters(folder); // remove any special characters leves only latters and numbers 
 
         return file.Origin switch
         {
-            FileOrigin.User => Path.Combine($"user{file.UserId ?? 0}", projectPath, folderPath, fileName),
+            FileOrigin.User => Path.Combine($"user{file.UserId ?? 0}", projectPath,/* folderPath,*/ fileName),
             FileOrigin.System => $"system/{fileName}",
             _ => $"none/{fileName}"
         };
     }
 
     public string GetResolutionPath(File file, int res)
+        => GetResolutionPath(file.Path ?? GetFullPath(file), res.ToString());
+
+    public string GetResolutionPath(string path, string resKey)
     {
-        var path = file.Path ?? GetFullPath(file);
+        if (string.IsNullOrEmpty(path)) return string.Empty;
         var ext = Path.GetExtension(path);
         var pathWithoutExt = path[..^ext.Length];
-        return $"{pathWithoutExt}_{res}{ext}";
+        return $"{pathWithoutExt}_{resKey}{ext}";
     }
 
     public static string RemoveSpecialCharacters(string? str)

@@ -4,10 +4,12 @@ public class AmazonS3Storage : IFileStorage
 {
     private readonly IAmazonS3 Client;
     private readonly AmazonS3StorageOptions options;
+    private readonly IFilePathResolver pathResolver;
 
-    public AmazonS3Storage(AmazonS3StorageOptions options)
+    public AmazonS3Storage(AmazonS3StorageOptions options, IFilePathResolver pathResolver)
     {
         this.options = options;
+        this.pathResolver = pathResolver;
         var config = new AmazonS3Config();
         if (!string.IsNullOrEmpty(options.Region))
             config.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
@@ -212,7 +214,7 @@ public class AmazonS3Storage : IFileStorage
 
     public Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken token = default)
         => WriteStreamToS3Async(file, stream, token);
-
+    
     public async Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
     {
         if (file == null)
@@ -225,13 +227,17 @@ public class AmazonS3Storage : IFileStorage
             if (string.IsNullOrEmpty(bucket) || string.IsNullOrEmpty(key))
                 return null;
 
-            var deleteRequest = new DeleteObjectRequest 
-            { 
-                BucketName = bucket, 
-                Key = key 
+            var deleteRequest = new DeleteObjectRequest
+            {
+                BucketName = bucket,
+                Key = key
             };
 
             var response = await Client.DeleteObjectAsync(deleteRequest, token);
+
+            // Delete resolution files if they exist
+            if (file.Res != null && file.Res.Count > 0)
+               await DeleteFileResAsync(file, token);
 
             // Check if deletion was successful (HTTP 204 No Content)
             if (response.HttpStatusCode == System.Net.HttpStatusCode.NoContent)
@@ -247,6 +253,32 @@ public class AmazonS3Storage : IFileStorage
         catch (AmazonS3Exception ex)
         {
             throw new IOException($"S3 error when deleting object: {file.Path}. Status: {ex.StatusCode}, Error: {ex.ErrorCode}", ex);
+        }
+    }
+    private async Task DeleteFileResAsync(File? file, CancellationToken token = default)
+    {
+        foreach (var resKey in file.Res.Keys)
+        {
+            var resPath = pathResolver.GetResolutionPath(file.Path ?? string.Empty, resKey);
+            var (resBucket, resS3Key) = GetBucketAndKey(resPath);
+
+            if (!string.IsNullOrEmpty(resBucket) && !string.IsNullOrEmpty(resS3Key))
+            {
+                var resDeleteRequest = new DeleteObjectRequest { BucketName = resBucket, Key = resS3Key };
+                try
+                {
+                    await Client.DeleteObjectAsync(resDeleteRequest, token);
+                }
+                catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    // Resolution file doesn't exist, continue with next
+                    continue;
+                }
+                catch (AmazonS3Exception ex)
+                {
+                    throw new IOException($"S3 error when deleting resolution file: {resPath}. Status: {ex.StatusCode}, Error: {ex.ErrorCode}", ex);
+                }
+            }
         }
     }
 

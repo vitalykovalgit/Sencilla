@@ -5,6 +5,7 @@ public class File
     : IEntity<Guid>
     , IEntityCreateable
     , IEntityUpdateable
+    , IEntityMergeable
     , IEntityRemoveable
     , IEntityDeleteable
 {
@@ -78,6 +79,7 @@ public class File
     /// During upload: { "600": { "s": 120034, "u": 3004 } }
     /// After upload:  { "600": {} }
     /// </summary>
+    [Column("Res")]
     [JsonObject]
     public IDictionary<string, ResolutionInfo>? Res { get; set; }
 
