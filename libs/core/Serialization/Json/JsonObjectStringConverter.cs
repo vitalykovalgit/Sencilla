@@ -11,6 +11,9 @@ public class JsonObjectStringConverter : JsonConverter<string>
         if (reader.TokenType is JsonTokenType.StartObject)
             return JsonSerializer.Serialize(JsonSerializer.Deserialize<Dictionary<string, object>>(ref reader, options), options);
 
+        if (reader.TokenType is JsonTokenType.StartArray)
+            return JsonSerializer.Serialize(JsonSerializer.Deserialize<List<object>>(ref reader, options), options);
+
         reader.Skip();
 
         return default;
@@ -20,9 +23,18 @@ public class JsonObjectStringConverter : JsonConverter<string>
     {
         if (string.IsNullOrWhiteSpace(value))
             return;
-        
-        // TODO: combine with array by reading first char in value { or [
-        var obj = JsonSerializer.Deserialize<Dictionary<string, object>>(value, options);
-        JsonSerializer.Serialize(writer, obj, options);
+
+        var trimmed = value.TrimStart();
+
+        if (trimmed.StartsWith('['))
+        {
+            var arr = JsonSerializer.Deserialize<List<object>>(value, options);
+            JsonSerializer.Serialize(writer, arr, options);
+        }
+        else
+        {
+            var obj = JsonSerializer.Deserialize<Dictionary<string, object>>(value, options);
+            JsonSerializer.Serialize(writer, obj, options);
+        }
     }
 }

@@ -21,7 +21,10 @@ public class FilterProperty
     /// </summary>
     public List<object?>? Values {get; set;}
 
-    //public List<>
+    /// <summary>
+    /// When true the property stores a JSON array string (e.g. "[1,2,3]").
+    /// </summary>
+    public bool IsJsonArray { get; set; }
 
     /// <summary>
     /// 
