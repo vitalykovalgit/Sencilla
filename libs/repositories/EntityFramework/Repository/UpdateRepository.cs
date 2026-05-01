@@ -85,5 +85,10 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
 
         return query;
     }
+
+    public Task<int> JsonMergeAsync<TValue>(TKey id,Expression<Func<TEntity, IDictionary<string, TValue>?>> property, string key, TValue value, CancellationToken token = default)
+    {
+        return DbContext.JsonMergeAsync(id, property, key, value, token);
+    }
 }
 

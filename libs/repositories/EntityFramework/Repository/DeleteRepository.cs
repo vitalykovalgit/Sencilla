@@ -32,7 +32,6 @@ public class DeleteRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         await Save(token);
         return count;
     }
-
     public Task<int> Delete(TEntity entity, CancellationToken token = default)
     {
         return Delete(new[] { entity }, token);

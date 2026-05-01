@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.Files.AzureStorage;
 
-public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
+public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver pathResolver) : IFileStorage
 {
     private readonly BlobServiceClient BlobServiceClient = new BlobServiceClient(options.ConnectionString);
 
@@ -297,6 +297,10 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
 
             var response = await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: token);
 
+            // Delete resolution files if they exist
+            if (file.Res != null && file.Res.Count > 0)
+                await DeleteFileResAsync(file, containerClient, token);
+
             return response.Value ? file : null;
         }
         catch (Azure.RequestFailedException ex) when (ex.Status == 404)
@@ -310,6 +314,31 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
         }
     }
 
+    private async Task DeleteFileResAsync(File? file, BlobContainerClient containerClient, CancellationToken token = default)
+    {
+        foreach (var resKey in file.Res.Keys)
+        {
+            var resPath = pathResolver.GetResolutionPath(file.Path ?? string.Empty, resKey);
+            var (resContainerName, resBlobName) = GetContainerAndFileName(resPath);
+
+            if (!string.IsNullOrEmpty(resContainerName) && !string.IsNullOrEmpty(resBlobName))
+            {
+                try {
+                    var resBlobClient = containerClient.GetBlobClient(resBlobName);
+                    await resBlobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: token);
+                }
+                catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+                {
+                    // Resolution file doesn't exist, continue with next
+                    continue;
+                }
+                catch (Azure.RequestFailedException ex)
+                {
+                    throw new IOException($"Azure Storage error when deleting resolution blob: {resPath}. Status: {ex.Status}, Error: {ex.ErrorCode}", ex);
+                }
+            }
+        }
+    }
     public async Task DeleteFileAsync(string filePath, CancellationToken token = default)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -442,11 +471,6 @@ public class AzureBlobStorage(AzureBlobStorageOptions options) : IFileStorage
         return BlobServiceClient.GetBlobContainerClient(containerName);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="file"></param>
-    /// <returns></returns>
     private static (string container, string fname) GetContainerAndFileName(File file)
     {
         return GetContainerAndFileName(file.Path);

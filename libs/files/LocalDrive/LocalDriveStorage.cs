@@ -1,6 +1,6 @@
 ﻿namespace Sencilla.Component.Files.LocalDrive;
 
-public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
+public class LocalDriveStorage(LocalDriveStorageOptions options, IFilePathResolver pathResolver) : IFileStorage
 {
     public byte Type => options.Type;
 
@@ -207,7 +207,14 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
             {
                 System.IO.File.Delete(path);
             }
-
+            // Delete resolution files if they exist
+            if (file.Res != null && file.Res.Count > 0)
+                foreach (var resKey in file.Res.Keys)
+                {
+                    var resPath = GetResolutionFilePath(file, resKey);
+                    if (System.IO.File.Exists(resPath))
+                        System.IO.File.Delete(resPath);
+                }
             return Task.FromResult<File?>(file);
         }
         catch (UnauthorizedAccessException ex)
@@ -290,6 +297,12 @@ public class LocalDriveStorage(LocalDriveStorageOptions options) : IFileStorage
         var directory = Path.GetDirectoryName(file.Path) ?? string.Empty;
         var fileNameWithExt = Path.GetFileName(file.Path) ?? $"{file.Id}{Path.GetExtension(file.Name)}";
         return Path.Combine(options.RootPath, directory, fileNameWithExt);
+    }
+
+    private string GetResolutionFilePath(File file, string resKey)
+    {
+        var path = file.Path ?? pathResolver.GetFullPath(file);
+        return Path.Combine(options.RootPath, pathResolver.GetResolutionPath(path, resKey));
     }
 
     private string GetFullPath(string relativeFilePath)
