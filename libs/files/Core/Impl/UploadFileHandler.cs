@@ -74,14 +74,9 @@ public class UploadFileHandler(
         ResolutionInfo updatedInfo;
         if (resInfo.S.HasValue && newOffset >= resInfo.S.Value)
         {
-            // Upload complete — clear size and uploaded
-            updatedInfo = new ResolutionInfo();
             await events.PublishAsync(new FileUploadedEvent { File = file, Resolution = res }, token);
         }
-        else
-        {
-            updatedInfo = new ResolutionInfo { S = resInfo.S, U = newOffset };
-        }
+        updatedInfo = new ResolutionInfo { S = resInfo.S, U = newOffset };
 
         await fileUpdateRepository.JsonMergeAsync(file.Id, f => f.Res, resKey, updatedInfo, token);
 

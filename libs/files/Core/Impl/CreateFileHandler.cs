@@ -46,7 +46,7 @@ internal class CreateFileHandler(
         }
 
         // check if file exists use it otherways create it
-        var dbFile = await fileRepo.GetById(file.ParentId == null ? file.Id : file.ParentId.Value);
+        var dbFile = await fileRepo.GetById(file.Id);
         if (dbFile == null)
         {
             if (res.HasValue)
