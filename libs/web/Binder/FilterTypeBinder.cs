@@ -60,20 +60,40 @@ public class FilterTypeBinder : IModelBinder
                 var filter = bindingContext.Model as IFilter;
                 if (filter != null)
                 {
-                    foreach (var v in (System.Collections.IEnumerable)result.Model)
-                        filter.AddProperty(propName, propertyType, v);
+                    // DateTime range.
+                    var underlyingType = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
+                    if (underlyingType == typeof(DateTime) && result.Model is System.Collections.IEnumerable parsed)
+                    {
+                        var dates = parsed.Cast<DateTime>().Select(d => d.ToUniversalTime()).ToList();
+                        if (dates.Count >= 2)
+                            filter.AddProperty(BuildDateRangeExpression(property.Key.Name, dates.Min(), dates.Max()), null);
+                    }
+                    else
+                    {
+                        foreach (var v in (System.Collections.IEnumerable)result.Model)
+                            filter.AddProperty(propName, propertyType, v);
 
-                    // Mark as JSON array so FilterConstraintHandler generates LIKE instead of IN
-                    if (JsonArrayProperties.Contains(propName) && filter.Properties?.TryGetValue(propName, out var fp) == true)
-                        fp.IsJsonArray = true;
+                        // Mark as JSON array so FilterConstraintHandler generates LIKE instead of IN
+                        if (JsonArrayProperties.Contains(propName) && filter.Properties?.TryGetValue(propName, out var fp) == true)
+                            fp.IsJsonArray = true;
+                    }
                 }
-            }
+            } 
             else
             {
                 // think how secure it is
-                var filter = bindingContext.Model as IFilter;
-                filter?.AddProperty(propName, null);
+                var rawFilter = bindingContext.Model as IFilter;
+                rawFilter?.AddProperty(propName, null);
             }
         }
+    }
+
+    /// <summary>
+    /// Builds a DynamicLINQ half-open range expression
+    /// </summary>
+    private static string BuildDateRangeExpression(string propertyName, DateTime start, DateTime end)
+    {
+        return $"({propertyName} >= DateTime({start.Year}, {start.Month}, {start.Day}, {start.Hour}, {start.Minute}, {start.Second}) && " +
+               $"{propertyName} < DateTime({end.Year}, {end.Month}, {end.Day}, {end.Hour}, {end.Minute}, {end.Second}))";
     }
 }
