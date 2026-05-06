@@ -7,7 +7,7 @@ public class UploadFileHandler(
     IFilePathResolver pathResolver,
     IReadRepository<File, Guid> fileRepository,
     IUpdateRepository<FileUpload, Guid> fileUploadRepository,
-    IMergeRepository<File, Guid> fileMergeRepository) : IFileRequestHandler
+    IUpdateRepository<File, Guid> fileUpdateRepository) : IFileRequestHandler
 {
     public const string Method = "PATCH";
 
@@ -74,16 +74,11 @@ public class UploadFileHandler(
         ResolutionInfo updatedInfo;
         if (resInfo.S.HasValue && newOffset >= resInfo.S.Value)
         {
-            // Upload complete — clear size and uploaded
-            updatedInfo = new ResolutionInfo();
             await events.PublishAsync(new FileUploadedEvent { File = file, Resolution = res }, token);
         }
-        else
-        {
-            updatedInfo = new ResolutionInfo { S = resInfo.S, U = newOffset };
-        }
+        updatedInfo = new ResolutionInfo { S = resInfo.S, U = newOffset };
 
-        await fileMergeRepository.MergeAsync(file.Id, f => f.Res, resKey, updatedInfo, token);
+        await fileUpdateRepository.JsonMergeAsync(file.Id, f => f.Res, resKey, updatedInfo, token);
 
         context.WriteNoContentWithOffset(newOffset);
     }
