@@ -79,6 +79,19 @@ public class FilterTypeBinder : IModelBinder
                     }
                 }
             } 
+            else if (propName.EndsWith(".isNull", StringComparison.OrdinalIgnoreCase))
+            {
+                // Handle ?field.isNull=true/false → field == null / field != null
+                var baseName = propName[..^".isNull".Length];
+                var isNullProp = EntityProperties.FirstOrDefault(p => p.Key.Name.Equals(baseName, StringComparison.OrdinalIgnoreCase));
+                if (!isNullProp.Equals(default(KeyValuePair<ModelMetadata, IModelBinder>)))
+                {
+                    var actualPropName = isNullProp.Key.Name;
+                    var isNull = parameters[propName][0] != "false";
+                    var rawFilter = bindingContext.Model as IFilter;
+                    rawFilter?.AddProperty(isNull ? $"{actualPropName} == null" : $"{actualPropName} != null", null);
+                }
+            }
             else
             {
                 // think how secure it is
