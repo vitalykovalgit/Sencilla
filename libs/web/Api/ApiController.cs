@@ -32,7 +32,7 @@ public class ApiController(IServiceProvider provider) : ControllerBase
 
     protected IActionResult InternalServerError(Exception? ex = null)
     {
-        return StatusCode((int)HttpStatusCode.InternalServerError, $"{ex?.Message}\r\n{ex?.StackTrace}");
+        return StatusCode((int)HttpStatusCode.InternalServerError, ex?.ToString());
     }
 
     #endregion
@@ -65,7 +65,7 @@ public class ApiController(IServiceProvider provider) : ControllerBase
         }
         catch (Exception ex)
         {
-            provider.GetService<ILogger>()?.LogError(ex, "AjaxAction error");
+            provider.GetService<ILoggerFactory>()?.CreateLogger<ApiController>()?.LogError(ex, "AjaxAction error");
             return ExceptionToResponse(ex);
         }
     }
