@@ -102,4 +102,31 @@ public interface ICreateRepository<TEntity, TKey> : IReadRepository<TEntity, TKe
         Expression<Func<TEntity, TEntity>>? insertAction = null,
         Expression<Func<TEntity, TEntity>>? updateAction = null,
         CancellationToken token = default);
+
+    /// <summary>
+    /// Get or create entities by default key (Id). Existing entities are returned as-is from DB;
+    /// missing ones are inserted. EntityCreatingEvent fires for all, EntityCreatedEvent only for new ones.
+    /// Returns (Created, Existing) tuple — call .Concat() for the flat list.
+    /// </summary>
+    Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, CancellationToken token = default);
+
+    /// <summary>
+    /// Get or create entities matched by the provided expression key selectors.
+    /// </summary>
+    Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, params Expression<Func<TEntity, object>>[] keys);
+
+    /// <summary>
+    /// Get or create entities matched by the provided expression key selectors with cancellation support.
+    /// </summary>
+    Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, Expression<Func<TEntity, object>>[] keys, CancellationToken token);
+
+    /// <summary>
+    /// Get or create entities matched by the provided string key names (case-insensitive).
+    /// </summary>
+    Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, params string[] keys);
+
+    /// <summary>
+    /// Get or create entities matched by the provided string key names with cancellation support.
+    /// </summary>
+    Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, string[] keys, CancellationToken token);
 }

@@ -123,6 +123,28 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
         return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.MergeAsync(entities, x => x.Id, token: token));
     }
 
+    [HttpPost, Route("get-or-create/{id}")]
+    public virtual async Task<IActionResult> GetOrCreateOne(int id, [FromBody] TEntity entity, [FromQuery] string[]? key, CancellationToken token)
+    {
+        var keys = key?.Length > 0 ? key : [];
+        return await AjaxAction(async (ICreateRepository<TEntity, TKey> repo) =>
+        {
+            var result = await repo.GetOrCreateAsync([entity], keys, token);
+            return result.All;
+        });
+    }
+
+    [HttpPost, Route("get-or-create")]
+    public virtual async Task<IActionResult> GetOrCreateMany([FromBody] IEnumerable<TEntity> entities, [FromQuery] string[]? key, CancellationToken token)
+    {
+        var keys = key?.Length > 0 ? key : [];
+        return await AjaxAction(async (ICreateRepository<TEntity, TKey> repo) =>
+        {
+            var result = await repo.GetOrCreateAsync(entities, keys, token);
+            return result.All;
+        });
+    }
+
     [HttpPost, Route("remove")]
     public virtual async Task<IActionResult> Remove([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
     {

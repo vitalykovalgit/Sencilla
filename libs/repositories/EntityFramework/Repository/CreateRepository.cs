@@ -147,4 +147,46 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         // TODO: Think about returning values
         return entities;
     }
+
+    public Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, CancellationToken token = default)
+        => GetOrCreateAsync(entities, Array.Empty<string>(), token);
+
+    public Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, params Expression<Func<TEntity, object>>[] keys)
+        => GetOrCreateAsync(entities, keys.Select(ExtractMemberName).ToArray(), CancellationToken.None);
+
+    public Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, Expression<Func<TEntity, object>>[] keys, CancellationToken token)
+        => GetOrCreateAsync(entities, keys.Select(ExtractMemberName).ToArray(), token);
+
+    public Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, params string[] keys)
+        => GetOrCreateAsync(entities, keys, CancellationToken.None);
+
+    public async Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, string[] keys, CancellationToken token)
+    {
+        var entityList = entities.ToList();
+
+        var eventCreating = new EntityCreatingEvent<TEntity> { Entities = entityList.AsQueryable() };
+        await D.Events.PublishAsync(eventCreating, token);
+
+        foreach (var e in entityList)
+            if (e is IEntityCreateableTrack trackable)
+                trackable.CreatedDate = DateTime.UtcNow;
+
+        var (created, existing) = await DbContext.GetOrCreateBulkAsync(entityList, keys, token);
+
+        if (created.Any())
+        {
+            var eventCreated = new EntityCreatedEvent<TEntity> { Entities = created.AsQueryable() };
+            await D.Events.PublishAsync(eventCreated, token);
+        }
+
+        return new GetOrCreateResult<TEntity> { Created = created, Existing = existing };
+    }
+
+    private static string ExtractMemberName(Expression<Func<TEntity, object>> expr)
+    {
+        var body = expr.Body is UnaryExpression unary ? unary.Operand : expr.Body;
+        if (body is MemberExpression member)
+            return member.Member.Name;
+        throw new ArgumentException("Key selector must be a member access expression.", nameof(expr));
+    }
 }
