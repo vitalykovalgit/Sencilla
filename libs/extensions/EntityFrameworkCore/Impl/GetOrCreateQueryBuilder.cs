@@ -29,8 +29,22 @@ public class GetOrCreateQueryBuilder<TEntity>
         typeof(TEntity).GetProperties()
             .Where(p => p.GetCustomAttribute<NotMappedAttribute>() is null
                      && p.GetCustomAttribute<SkipUpsertAttribute>() is null
-                     && !p.PropertyType.IsAssignableTo(typeof(IBaseEntity)))
+                     && !IsNavigationProperty(p.PropertyType))
             .ToList();
+
+    private static bool IsNavigationProperty(Type type)
+    {
+        var underlying = Nullable.GetUnderlyingType(type) ?? type;
+        if (underlying.IsAssignableTo(typeof(IBaseEntity)))
+            return true;
+        if (underlying.IsGenericType)
+        {
+            var elementType = underlying.GetGenericArguments().FirstOrDefault();
+            if (elementType != null && elementType.IsAssignableTo(typeof(IBaseEntity)))
+                return true;
+        }
+        return false;
+    }
 
     public List<PropertyInfo> ResolveKeyProperties(List<PropertyInfo> mappedProps)
     {

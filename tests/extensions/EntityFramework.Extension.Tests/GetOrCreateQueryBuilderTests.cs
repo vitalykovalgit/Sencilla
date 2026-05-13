@@ -226,4 +226,63 @@ public class GetOrCreateQueryBuilderTests
         Assert.Contains("WHEN NOT MATCHED BY TARGET THEN", merge);
         Assert.Contains("INSERT", merge);
     }
+
+    // ── Navigation property exclusion ─────────────────────────────────────────
+
+    [Fact]
+    public void GetMappedProperties_ExcludesReferenceNavigationProperty()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntityWithNavProps>([]);
+        var props = builder.GetMappedProperties();
+
+        Assert.DoesNotContain(props, p => p.Name == nameof(TestEntityWithNavProps.Child));
+    }
+
+    [Fact]
+    public void GetMappedProperties_ExcludesCollectionNavigationProperty()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntityWithNavProps>([]);
+        var props = builder.GetMappedProperties();
+
+        Assert.DoesNotContain(props, p => p.Name == nameof(TestEntityWithNavProps.Children));
+    }
+
+    [Fact]
+    public void GetMappedProperties_ExcludesNotMappedProperty()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntityWithNavProps>([]);
+        var props = builder.GetMappedProperties();
+
+        Assert.DoesNotContain(props, p => p.Name == nameof(TestEntityWithNavProps.Computed));
+    }
+
+    [Fact]
+    public void GetMappedProperties_IncludesScalarProperties()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntityWithNavProps>([]);
+        var props = builder.GetMappedProperties();
+
+        Assert.Contains(props, p => p.Name == nameof(TestEntityWithNavProps.Id));
+        Assert.Contains(props, p => p.Name == nameof(TestEntityWithNavProps.Name));
+        Assert.Contains(props, p => p.Name == nameof(TestEntityWithNavProps.ChildId));
+    }
+
+    [Fact]
+    public void Build_WithNavigationProperties_DoesNotIncludeNavColumnInMerge()
+    {
+        var entity = new TestEntityWithNavProps
+        {
+            Id = 1,
+            Name = "test",
+            ChildId = 42,
+            Child = new TestChildEntity { Id = 42, Label = "child" },
+            Children = [new TestChildEntity { Id = 43, Label = "other" }],
+        };
+        var builder = new GetOrCreateQueryBuilder<TestEntityWithNavProps>(["Name"]);
+        var (merge, _) = builder.Build([entity]);
+
+        Assert.DoesNotContain("[Child]", merge);
+        Assert.DoesNotContain("[Children]", merge);
+        Assert.Contains("[Name]", merge);
+    }
 }
