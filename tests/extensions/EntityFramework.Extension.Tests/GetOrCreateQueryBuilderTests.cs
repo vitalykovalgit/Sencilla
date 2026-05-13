@@ -285,4 +285,80 @@ public class GetOrCreateQueryBuilderTests
         Assert.DoesNotContain("[Children]", merge);
         Assert.Contains("[Name]", merge);
     }
+
+    // ── BuildIdsOnly — used by the include path of GetOrCreate ────────────────
+
+    [Fact]
+    public void BuildIdsOnly_MergeOutputsOnlyPrimaryKey()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntity>(["Email"]);
+        var (merge, _) = builder.BuildIdsOnly([_te]);
+
+        Assert.Contains("OUTPUT INSERTED.[Id]", merge);
+        Assert.DoesNotContain("INSERTED.[Email]", merge);
+        Assert.DoesNotContain("INSERTED.[Phone]", merge);
+    }
+
+    [Fact]
+    public void BuildIdsOnly_SelectReturnsOnlyPrimaryKey()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntity>(["Email"]);
+        var (_, select) = builder.BuildIdsOnly([_te]);
+
+        Assert.Contains("SELECT t.[Id]", select);
+        Assert.DoesNotContain("SELECT t.*", select);
+    }
+
+    [Fact]
+    public void BuildIdsOnly_SelectJoinsByKeysNotPrimaryKey()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntity>(["Email"]);
+        var (_, select) = builder.BuildIdsOnly([_te]);
+
+        Assert.Contains("INNER JOIN", select);
+        Assert.Contains("t.[Email] = s.[Email]", select);
+    }
+
+    [Fact]
+    public void BuildIdsOnly_MergeStillContainsInsertClause()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntity>(["Email"]);
+        var (merge, _) = builder.BuildIdsOnly([_te]);
+
+        Assert.Contains("WHEN NOT MATCHED BY TARGET THEN", merge);
+        Assert.Contains("INSERT", merge);
+    }
+
+    [Fact]
+    public void BuildIdsOnly_MergeHasNoUpdateOrDeleteClause()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntity>(["Email"]);
+        var (merge, _) = builder.BuildIdsOnly([_te]);
+
+        Assert.DoesNotContain("WHEN MATCHED", merge);
+        Assert.DoesNotContain("NOT MATCHED BY SOURCE", merge);
+    }
+
+    [Fact]
+    public void BuildIdsOnly_MultipleEntities_AllKeyValuesInSelect()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntity>(["Email"]);
+        var (_, select) = builder.BuildIdsOnly([_te, _te2]);
+
+        Assert.Contains(_te.Email!, select);
+        Assert.Contains(_te2.Email!, select);
+    }
+
+    [Fact]
+    public void BuildIdsOnly_CompositeKey_BothKeysInOnClause()
+    {
+        var builder = new GetOrCreateQueryBuilder<TestEntity>(["Email", "Phone"]);
+        var (merge, _) = builder.BuildIdsOnly([_te]);
+
+        Assert.Contains("t.[Email] = s.[Email]", merge);
+        Assert.Contains("t.[Phone] = s.[Phone]", merge);
+        Assert.Contains("AND", merge);
+        // Output still only the PK, regardless of how many match keys
+        Assert.Contains("OUTPUT INSERTED.[Id]", merge);
+    }
 }

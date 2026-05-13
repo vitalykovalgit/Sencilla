@@ -129,4 +129,10 @@ public interface ICreateRepository<TEntity, TKey> : IReadRepository<TEntity, TKe
     /// Get or create entities matched by the provided string key names with cancellation support.
     /// </summary>
     Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, string[] keys, CancellationToken token);
+
+    /// <summary>
+    /// Get or create entities with optional filter. When filter.With is non-empty, results are
+    /// reloaded via EF Core with .Include() so navigation properties materialize.
+    /// </summary>
+    Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, string[] keys, Filter? filter, CancellationToken token = default);
 }

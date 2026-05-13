@@ -25,6 +25,42 @@ public class GetOrCreateQueryBuilder<TEntity>
         return (BuildMerge(targetTable, colVals, keyProps), BuildSelect(targetTable, entities, keyProps));
     }
 
+    /// <summary>
+    /// Variant that returns only primary-key ids in both result sets. Used by the include-path
+    /// of GetOrCreate, where the caller reloads entities via EF with .Include() — so the raw SQL
+    /// only needs to identify which rows are new (set 1) and which rows match (set 2).
+    /// </summary>
+    public (string MergeQuery, string SelectQuery) BuildIdsOnly(List<TEntity> entities)
+    {
+        var props = GetMappedProperties();
+        var keyProps = ResolveKeyProperties(props);
+        var pkProp = GetPrimaryKeyProperty(props);
+        var targetTable = GetTargetTableName();
+        var colVals = GetColumnValues(entities, props);
+
+        var merge = $"\nMERGE {targetTable} AS t" +
+                    $"\nUSING (VALUES\n{colVals[VALS]}\n)" +
+                    $"\nAS s ({colVals[COLS]})" +
+                    $"\nON {BuildCondition(keyProps)}" +
+                    $"\nWHEN NOT MATCHED BY TARGET THEN\n{_qp.ToInsertMergeQuery(colVals[COLS])}" +
+                    $"\nOUTPUT INSERTED.{ColName(pkProp)};";
+
+        var keyValues = string.Join(", ", entities.Select(e =>
+            "(" + string.Join(", ", keyProps.Select(p => _qp.ToSqlParameterValue(p, p.GetValue(e)))) + ")"));
+        var keyCols = string.Join(", ", keyProps.Select(ColName));
+
+        var select = $"\nSELECT t.{ColName(pkProp)} FROM {targetTable} t" +
+                     $"\nINNER JOIN (VALUES {keyValues}) AS s({keyCols})" +
+                     $"\nON {BuildCondition(keyProps)};";
+
+        return (merge, select);
+    }
+
+    public static PropertyInfo GetPrimaryKeyProperty(List<PropertyInfo> mappedProps) =>
+        mappedProps.FirstOrDefault(p => string.Equals(p.Name, "Id", StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException(
+                $"No 'Id' property found on {typeof(TEntity).Name}. Entity must implement IEntity<TKey>.");
+
     public List<PropertyInfo> GetMappedProperties() =>
         typeof(TEntity).GetProperties()
             .Where(p => p.GetCustomAttribute<NotMappedAttribute>() is null

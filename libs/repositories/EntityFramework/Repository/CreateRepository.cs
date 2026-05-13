@@ -160,7 +160,10 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
     public Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, params string[] keys)
         => GetOrCreateAsync(entities, keys, CancellationToken.None);
 
-    public async Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, string[] keys, CancellationToken token)
+    public Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, string[] keys, CancellationToken token)
+        => GetOrCreateAsync(entities, keys, filter: null, token);
+
+    public async Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, string[] keys, Filter? filter, CancellationToken token = default)
     {
         var entityList = entities.ToList();
 
@@ -171,7 +174,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
             if (e is IEntityCreateableTrack trackable)
                 trackable.CreatedDate = DateTime.UtcNow;
 
-        var (created, existing) = await DbContext.GetOrCreateBulkAsync(entityList, keys, token);
+        var (created, existing) = await DbContext.GetOrCreateBulkAsync(entityList, keys, filter, token);
 
         if (created.Any())
         {

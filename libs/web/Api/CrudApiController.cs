@@ -124,23 +124,23 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     }
 
     [HttpPost, Route("get-or-create/{id}")]
-    public virtual async Task<IActionResult> GetOrCreateOne(int id, [FromBody] TEntity entity, [FromQuery] string[]? key, CancellationToken token)
+    public virtual async Task<IActionResult> GetOrCreateOne(int id, [FromBody] TEntity entity, [FromQuery] string[]? key, Filter<TEntity> filter, CancellationToken token)
     {
         var keys = key?.Length > 0 ? key : [];
         return await AjaxAction(async (ICreateRepository<TEntity, TKey> repo) =>
         {
-            var result = await repo.GetOrCreateAsync([entity], keys, token);
+            var result = await repo.GetOrCreateAsync([entity], keys, filter, token);
             return result.All;
         });
     }
 
     [HttpPost, Route("get-or-create")]
-    public virtual async Task<IActionResult> GetOrCreateMany([FromBody] IEnumerable<TEntity> entities, [FromQuery] string[]? key, CancellationToken token)
+    public virtual async Task<IActionResult> GetOrCreateMany([FromBody] IEnumerable<TEntity> entities, [FromQuery] string[]? key, Filter<TEntity> filter, CancellationToken token)
     {
         var keys = key?.Length > 0 ? key : [];
         return await AjaxAction(async (ICreateRepository<TEntity, TKey> repo) =>
         {
-            var result = await repo.GetOrCreateAsync(entities, keys, token);
+            var result = await repo.GetOrCreateAsync(entities, keys, filter, token);
             return result.All;
         });
     }
