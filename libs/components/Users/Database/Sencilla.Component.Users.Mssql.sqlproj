@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <!-- SQL Server schema (.sql source) component for Sencilla "Users".
+       Owns the [sec] schema and the user identity tables
+       (User / UserAuth / UserClaim / UserContact / UserAddress and their reference tables:
+       UserType / UserStatus / UserGender / UserContactType / UserAddressType).
+       Self-contained: every FK targets another sec.* table.
+
+       This is the keystone schema component — Security (sec.Role / sec.UserRole / ...) and
+       any consumer that needs sec.User compile this package's source into their own model.
+
+       Shared SQL project config (SDK version, DSP, ModelCollation, identity, README +
+       build-asset packing, dacpac-strip target) lives in libs/Directory.Build.Sql.props,
+       imported via Database/Directory.Build.props. -->
+  <Sdk Name="Microsoft.Build.Sql" />
+  <PropertyGroup>
+    <Description>SQL Server schema (.sql source) for the Sencilla Users component: the [sec] schema and the User/UserAuth/UserClaim/UserContact/UserAddress tables (+ UserType/UserStatus/UserGender/UserContactType/UserAddressType reference tables). Compiled into the consuming database's own model (self-contained); reference data ships as seed.</Description>
+  </PropertyGroup>
+
+  <!-- Schema SOURCE shipped under sql/ — auto-compiled into the consumer's model by the
+       package's build/*.props (so sec.* lands physically in the consuming dacpac). -->
+  <ItemGroup>
+    <None Include="Schema/*.sql;Tables/*.sql" Pack="true" PackagePath="sql/" />
+  </ItemGroup>
+  <!-- Reference/seed data: shipped as package content under seed/, NOT compiled into the
+       dacpac model (it contains IDENTITY_INSERTs, not schema). Consumers run it with a
+       single :r $(Sencilla_Component_Users)/ApplyData.sql in their own post-deployment. -->
+  <ItemGroup>
+    <Build Remove="Data/**/*.sql" />
+    <None Include="Data/*.sql" Pack="true" PackagePath="seed/" />
+  </ItemGroup>
+</Project>

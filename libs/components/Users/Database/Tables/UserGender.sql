@@ -1,0 +1,8 @@
+﻿CREATE TABLE [sec].[UserGender] 
+(
+	[Id]     TINYINT IDENTITY NOT NULL,
+    [Name]   NVARCHAR(255)    NOT NULL,
+	
+	CONSTRAINT [PK_UserGender] PRIMARY KEY CLUSTERED ([Id] ASC),
+	CONSTRAINT [UC_UserGender_Name] UNIQUE ([Name])
+)

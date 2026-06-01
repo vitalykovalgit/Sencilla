@@ -1,0 +1,8 @@
+﻿CREATE TABLE [sec].[UserType] 
+(
+	[Id]     TINYINT IDENTITY NOT NULL,
+    [Name]   NVARCHAR(255)    NOT NULL,
+
+	CONSTRAINT [PK_UserType] PRIMARY KEY CLUSTERED ([Id] ASC),
+	CONSTRAINT [UC_UserType_Name] UNIQUE ([Name])
+)
