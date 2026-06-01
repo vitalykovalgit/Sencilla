@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <!-- SQL Server schema (.sql source) component for Sencilla "Security".
+       Owns the RBAC tables in the [sec] schema: Action / Area / Role / Matrix / UserRole.
+       Depends on the Users component: [sec] schema is created by Users.Mssql, and UserRole
+       carries a FK to [sec].[User]. Users.Mssql is referenced here so this project can
+       build and validate standalone (the FK and schema resolve at compile time).
+
+       Generic seed data (Action / Area / Role) ships in seed/; consumers run it via
+       :r $(Sencilla_Component_Security)/ApplyData.sql. App-specific data (Matrix rows,
+       SQL login setup) stays in each consumer project.
+
+       Shared SQL project config (SDK version, DSP, ModelCollation, identity, README +
+       build-asset packing, dacpac-strip target) lives in libs/Directory.Build.Sql.props,
+       imported via Database/Directory.Build.props. -->
+  <Sdk Name="Microsoft.Build.Sql" />
+  <PropertyGroup>
+    <Description>SQL Server schema (.sql source) for the Sencilla Security component: RBAC tables (Action / Area / Role / Matrix / UserRole) in the [sec] schema. Compiled into the consuming database's own model (self-contained); generic seed data ships separately.</Description>
+  </PropertyGroup>
+
+  <!-- Users.Mssql is referenced so [sec] schema and [sec].[User] (FK in UserRole) resolve
+       during standalone build/validation. Non-transitive: consumers that reference both
+       Users.Mssql and Security.Mssql directly do NOT get duplicate Build inclusions. -->
+  <ItemGroup>
+    <PackageReference Include="Sencilla.Component.Users.Mssql" Version="$(Version)" />
+  </ItemGroup>
+
+  <!-- Schema SOURCE shipped under sql/ — auto-compiled into the consumer's model by the
+       package's build/*.props. -->
+  <ItemGroup>
+    <None Include="Tables/*.sql" Pack="true" PackagePath="sql/" />
+  </ItemGroup>
+
+  <!-- Generic seed data: shipped as package content under seed/, NOT compiled into the
+       dacpac model. Consumers run it with :r $(Sencilla_Component_Security)/ApplyData.sql
+       in their post-deployment script. -->
+  <ItemGroup>
+    <Build Remove="Data/**/*.sql" />
+    <None Include="Data/*.sql" Pack="true" PackagePath="seed/" />
+  </ItemGroup>
+</Project>

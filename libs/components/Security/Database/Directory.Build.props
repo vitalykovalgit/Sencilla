@@ -1,0 +1,9 @@
+<Project>
+
+  <!-- Intentionally stops the upward Directory.Build.props search so this SQL (dacpac)
+       project does NOT inherit the C#-oriented libs/Directory.Build.props. Shared SQL
+       project config lives in libs/Directory.Build.Sql.props. -->
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.Sql.props', '$(MSBuildThisFileDirectory)'))" />
+
+</Project>

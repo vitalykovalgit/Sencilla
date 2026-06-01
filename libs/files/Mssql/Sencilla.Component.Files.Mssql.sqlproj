@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <!-- SQL Server schema (.sql source) component for Sencilla "Files".
+       Owns [dbo].[File] and [dbo].[FileStatus]. Self-contained: all FKs target tables
+       within this package ([File] → [FileStatus], [File] → [File] self-ref).
+       [File].[UserId] is a UNIQUEIDENTIFIER reference to the owning user; no FK constraint
+       is declared so this project compiles standalone without a Users dependency.
+
+       Generic seed data (FileStatus rows) ships in seed/; consumers run it via
+       :r $(Sencilla_Component_Files)/ApplyData.sql.
+
+       Shared SQL project config (SDK version, DSP, ModelCollation, identity, README +
+       build-asset packing, dacpac-strip target) lives in libs/Directory.Build.Sql.props,
+       imported via Database/Directory.Build.props. -->
+  <Sdk Name="Microsoft.Build.Sql" />
+  <PropertyGroup>
+    <Description>SQL Server schema (.sql source) for the Sencilla Files component: [dbo].[File] and [dbo].[FileStatus] tables. Compiled into the consuming database's own model (self-contained); reference data ships separately.</Description>
+  </PropertyGroup>
+
+  <!-- Schema SOURCE shipped under sql/ — auto-compiled into the consumer's model by the
+       package's build/*.props. -->
+  <ItemGroup>
+    <None Include="Tables/*.sql" Pack="true" PackagePath="sql/" />
+  </ItemGroup>
+
+  <!-- Reference/seed data: shipped as package content under seed/, NOT compiled into the
+       dacpac model. Consumers run it with :r $(Sencilla_Component_Files)/ApplyData.sql
+       in their post-deployment script. -->
+  <ItemGroup>
+    <Build Remove="Data/**/*.sql" />
+    <None Include="Data/*.sql" Pack="true" PackagePath="seed/" />
+  </ItemGroup>
+</Project>

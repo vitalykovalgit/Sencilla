@@ -1,0 +1,6 @@
+CREATE TABLE [FileStatus]
+(
+    [Id]    SMALLINT       IDENTITY NOT NULL,
+    [Name]  NVARCHAR(255)  NOT NULL,
+    CONSTRAINT [PK_FileStatus] PRIMARY KEY CLUSTERED ([Id] ASC),
+)

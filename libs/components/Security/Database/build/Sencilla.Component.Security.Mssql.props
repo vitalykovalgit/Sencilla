@@ -1,0 +1,30 @@
+<Project>
+
+  <!-- Auto-imported by any Microsoft.Build.Sql project that references this package
+       (NuGet imports build/<PackageId>.props at the top of the consumer's build).
+
+       It self-locates the package's restored seed/ folder via $(MSBuildThisFileDirectory)
+       (which points at this file's build/ folder) and exposes it as the
+       Sencilla_Component_Security SQLCMD variable. Consumers therefore need no
+       GeneratePathProperty and no SqlCmdVariable of their own — they just
+       :r $(Sencilla_Component_Security)/ApplyData.sql from their post-deployment script. -->
+
+  <!-- Compile this package's schema SOURCE into the consumer's own model, so the sec.*
+       RBAC objects land physically in the consuming dacpac (self-contained — no composite
+       reference, no co-located dacpac, no IncludeCompositeObjects flag at deploy). -->
+  <ItemGroup>
+    <Build Include="$(MSBuildThisFileDirectory)../sql/*.sql" />
+  </ItemGroup>
+
+  <!-- Expose this package's includable scripts folder (seed/) as a SQLCMD variable named
+       after the package: PackageId with the .Mssql provider suffix dropped and dots replaced
+       by underscores (SQLCMD variable names cannot contain dots). The consumer's
+       post-deployment then does just :r $(Sencilla_Component_Security)/ApplyData.sql. -->
+  <ItemGroup>
+    <SqlCmdVariable Include="Sencilla_Component_Security">
+      <DefaultValue>$(MSBuildThisFileDirectory)../seed</DefaultValue>
+      <Value>$(MSBuildThisFileDirectory)../seed</Value>
+    </SqlCmdVariable>
+  </ItemGroup>
+
+</Project>
