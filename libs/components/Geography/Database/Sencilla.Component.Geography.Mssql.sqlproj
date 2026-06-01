@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <!-- SQL Server schema (dacpac) component for Sencilla "Geography".
+       Owns the [geo] schema and the full administrative hierarchy
+       (Country / Language / CountryLanguage / State / Region / City / District).
+       Self-contained: every FK targets another geo.* table.
+
+       Shared SQL project config (SDK version, DSP, ModelCollation, identity, README +
+       build-asset packing, dacpac-strip target) lives in libs/Directory.Build.Sql.props,
+       imported via Database/Directory.Build.props. -->
+  <Sdk Name="Microsoft.Build.Sql" />
+  <PropertyGroup>
+    <Description>SQL Server schema (.sql source) for the Sencilla Geography component: the [geo] schema and Country/Language/CountryLanguage/State/Region/City/District tables. Compiled into the consuming database's own model (self-contained); reference data ships as seed.</Description>
+  </PropertyGroup>
+
+  <!-- Schema SOURCE shipped under sql/ — auto-compiled into the consumer's model by the
+       package's build/*.props (so geo.* lands physically in the consuming dacpac). -->
+  <ItemGroup>
+    <None Include="Schema/*.sql;Tables/*.sql" Pack="true" PackagePath="sql/" />
+  </ItemGroup>
+  <!-- Reference/seed data: shipped as package content under seed/, NOT compiled into the
+       dacpac model (it contains IDENTITY_INSERTs, not schema). Consumers run it with a
+       single :r $(GeoSeed)/ApplyData.sql in their own post-deployment. -->
+  <ItemGroup>
+    <Build Remove="Data/**/*.sql" />
+    <None Include="Data/*.sql" Pack="true" PackagePath="seed/" />
+  </ItemGroup>
+</Project>

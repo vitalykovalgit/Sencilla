@@ -30,6 +30,19 @@ jobs:
           echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
           echo "Releasing version: ${VERSION} from tag: ${TAG}"
 
+      # ── Set version in the single source of truth ─────────────────────────
+      # libs/Directory.Build.Common.props is imported by every packable library
+      # (C# via libs/Directory.Build.props, SQL via Directory.Build.Sql.props),
+      # so writing the version here versions every package from one place.
+      - name: Set version in Directory.Build.Common.props
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          FILE="libs/Directory.Build.Common.props"
+          sed -i "s|<Version>[^<]*</Version>|<Version>${VERSION}</Version>|" "$FILE"
+          grep -q "<Version>${VERSION}</Version>" "$FILE" \
+            || { echo "::error::Failed to set <Version> in ${FILE}"; exit 1; }
+          echo "Set version ${VERSION} in ${FILE}"
+
       # ── .NET SDK ──────────────────────────────────────────────────────────
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
@@ -41,7 +54,7 @@ jobs:
         run: dotnet restore Sencilla.sln
 
       # ── Build ─────────────────────────────────────────────────────────────
-      # /p:Version sets the package version for ALL projects in the solution.
+      # Version comes from Directory.Build.Common.props (set above).
       # /p:ContinuousIntegrationBuild=true enables deterministic builds.
       # /p:GeneratePackageOnBuild=false prevents packing during build (the explicit pack step handles it).
       - name: Build solution
@@ -49,7 +62,6 @@ jobs:
           dotnet build Sencilla.sln \
             --configuration Release \
             --no-restore \
-            /p:Version=${{ steps.version.outputs.VERSION }} \
             /p:ContinuousIntegrationBuild=true \
             /p:GeneratePackageOnBuild=false
 
@@ -59,8 +71,7 @@ jobs:
           dotnet test Sencilla.sln \
             --configuration Release \
             --no-build \
-            --verbosity normal \
-            /p:Version=${{ steps.version.outputs.VERSION }}
+            --verbosity normal
 
       # ── Pack ──────────────────────────────────────────────────────────────
       # Packs ALL projects that have <IsPackable>true</IsPackable> (default for library projects).
@@ -72,8 +83,24 @@ jobs:
           dotnet pack Sencilla.sln \
             --configuration Release \
             --no-build \
-            --output ./artifacts/nuget \
-            /p:Version=${{ steps.version.outputs.VERSION }}
+            --output ./artifacts/nuget
+
+      # ── Pack SQL (dacpac) packages ────────────────────────────────────────
+      # The *.sqlproj projects are NOT part of Sencilla.sln, so pack them
+      # individually into the same artifacts folder (the push step globs all
+      # *.nupkg). GeneratePackageOnBuild=false avoids the Microsoft.Build.Sql
+      # "Pack <- _PackAsBuildAfterTarget" circular dependency. Version is taken
+      # from Directory.Build.Common.props (set above).
+      - name: Pack SQL (dacpac) packages
+        run: |
+          for proj in $(find libs -name '*.sqlproj' -not -path '*/obj/*' -not -path '*/bin/*'); do
+            echo "Packing $proj"
+            dotnet pack "$proj" \
+              --configuration Release \
+              --output ./artifacts/nuget \
+              /p:ContinuousIntegrationBuild=true \
+              /p:GeneratePackageOnBuild=false
+          done
 
       # ── List packages (for debug / audit) ─────────────────────────────────
       - name: List produced packages

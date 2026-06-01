@@ -1,26 +1,19 @@
 <Project>
+
+  <!-- Shared package metadata (version, authors, URLs, license, README) — single source of
+       truth shared with the SQL build chain; see Directory.Build.Common.props. -->
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.Common.props" />
+
+  <!-- C#-specific build settings. -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>10.0.0</Version>
-    <IsPackable>true</IsPackable>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <PackageProjectUrl>https://github.com/vitalykovalgit/Sencilla</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/vitalykovalgit/Sencilla</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="/" />
-  </ItemGroup>
 </Project>

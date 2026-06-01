@@ -40,7 +40,7 @@ jobs:
       - name: Compute CI version
         id: version
         run: |
-          BASE_VERSION=$(grep '<Version>' Directory.Build.props 2>/dev/null \
+          BASE_VERSION=$(grep '<Version>' libs/Directory.Build.Common.props 2>/dev/null \
             | sed 's/.*<Version>\(.*\)<\/Version>.*/\1/' \
             | head -1 || echo "10.0.0")
           VERSION="${BASE_VERSION:-10.0.0}-ci.${{ github.run_number }}"
@@ -107,6 +107,20 @@ jobs:
             --no-build \
             --output ./artifacts/nuget \
             /p:Version=${{ steps.version.outputs.VERSION }}
+
+      # Verify the SQL (dacpac) packages pack too — they are not part of the
+      # solution, so pack them individually. GeneratePackageOnBuild=false avoids
+      # the Microsoft.Build.Sql pack circular dependency.
+      - name: Verify SQL pack
+        run: |
+          for proj in $(find libs -name '*.sqlproj' -not -path '*/obj/*' -not -path '*/bin/*'); do
+            echo "Packing $proj"
+            dotnet pack "$proj" \
+              --configuration Release \
+              --output ./artifacts/nuget \
+              /p:Version=${{ steps.version.outputs.VERSION }} \
+              /p:GeneratePackageOnBuild=false
+          done
 
       - name: List produced packages
         run: ls -lh ./artifacts/nuget/

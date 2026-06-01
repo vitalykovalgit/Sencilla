@@ -1,0 +1,27 @@
+<Project>
+
+  <!-- Single source of truth for shared NuGet package metadata across all packable Sencilla
+       libraries. Imported by both the C# build chain (Directory.Build.props) and the SQL
+       build chain (Directory.Build.Sql.props), which are otherwise independent import chains.
+       Change package version / metadata here only. NOT auto-imported (only
+       Directory.Build.props / Directory.Build.targets are) — both siblings import it
+       explicitly. -->
+  <PropertyGroup>
+    <Version>10.0.0</Version>
+    <Authors>Sencilla</Authors>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/vitalykovalgit/Sencilla</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/vitalykovalgit/Sencilla</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <!-- Every Sencilla package ships its README at the package root. -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>

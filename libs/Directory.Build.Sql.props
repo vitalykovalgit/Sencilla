@@ -1,0 +1,47 @@
+<Project>
+
+  <!-- Shared MSBuild config for SQL (dacpac / Microsoft.Build.Sql) projects across the
+       library tree (libs/components, libs/files, and other libs/* modules). This file is
+       NOT auto-imported (only Directory.Build.props / Directory.Build.targets are) — each
+       SQL project's thin Database/Directory.Build.props imports it explicitly. That stub
+       also stops the upward Directory.Build.props search so these projects do NOT inherit
+       the C#-oriented libs/Directory.Build.props chain. -->
+
+  <!-- Shared package metadata (version, authors, URLs, license, README) — single source of
+       truth shared with the C# build chain; see Directory.Build.Common.props. -->
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.Common.props" />
+
+  <!-- Target-platform / build settings shared by every Sencilla *.Mssql project. -->
+  <PropertyGroup>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.SqlAzureV12DatabaseSchemaProvider</DSP>
+    <ModelCollation>1033, CI</ModelCollation>
+  </PropertyGroup>
+
+  <!-- Identity defaults derived from the project file name (e.g.
+       Sencilla.Component.Geography.Mssql.sqlproj). A project may still override. -->
+  <PropertyGroup>
+    <Name>$(MSBuildProjectName)</Name>
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>$(MSBuildProjectName)</RootNamespace>
+    <PackageId>$(MSBuildProjectName)</PackageId>
+  </PropertyGroup>
+
+  <!-- Build asset (build/<PackageId>.props, auto-imported by consumers) that compiles this
+       package's sql/ source into the consumer's own model. The shared README pack item comes
+       from Directory.Build.Common.props. -->
+  <ItemGroup>
+    <None Include="build/$(MSBuildProjectName).props" Pack="true" PackagePath="build/" />
+  </ItemGroup>
+
+  <!-- Ship SOURCE, not the dacpac: the Microsoft.Build.Sql SDK adds the built .dacpac to the
+       package (tools/) via AddDacpacToBuiltProjectOutputGroupOutput; strip it back out so the
+       package carries only sql/ source, which consumers compile into their own model
+       (self-contained dacpac). The project still BUILDS the dacpac locally (bin/) for schema
+       validation. -->
+  <Target Name="RemoveDacpacFromPackage" AfterTargets="AddDacpacToBuiltProjectOutputGroupOutput">
+    <ItemGroup>
+      <_PackageFiles Remove="@(_PackageFiles)" Condition="'%(Extension)' == '.dacpac'" />
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
-    <Authors>Sencilla</Authors>
+    <!-- Authors / package metadata live in libs/Directory.Build.Common.props (the single
+         source for all packable Sencilla libraries). These are repo-wide C# defaults. -->
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>

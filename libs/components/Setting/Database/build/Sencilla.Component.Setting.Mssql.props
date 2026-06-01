@@ -1,0 +1,13 @@
+<Project>
+
+  <!-- Auto-imported by any Microsoft.Build.Sql project that references this package.
+       Compiles this package's schema SOURCE (sql/) into the consumer's OWN model, so
+       [dbo].[Setting] lands physically in the consuming dacpac — self-contained, with no
+       composite dacpac reference, no co-located dacpac, and no IncludeCompositeObjects
+       flag needed at deploy. -->
+
+  <ItemGroup>
+    <Build Include="$(MSBuildThisFileDirectory)../sql/*.sql" />
+  </ItemGroup>
+
+</Project>

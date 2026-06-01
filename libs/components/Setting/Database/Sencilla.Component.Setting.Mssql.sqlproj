@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <!-- SQL Server schema (.sql source) component for Sencilla "Setting".
+       Ships its source; consumers compile it into their OWN model (self-contained dacpac).
+
+       Shared SQL project config (SDK version, DSP, ModelCollation, identity, README +
+       build-asset packing, dacpac-strip target) lives in libs/Directory.Build.Sql.props,
+       imported via Database/Directory.Build.props. -->
+  <Sdk Name="Microsoft.Build.Sql" />
+  <PropertyGroup>
+    <Description>SQL Server schema (.sql source) for the Sencilla Setting component: the hierarchical [dbo].[Setting] key/value table. Compiled into the consuming database's own model (self-contained).</Description>
+  </PropertyGroup>
+
+  <!-- Schema SOURCE shipped under sql/ — auto-compiled into the consumer's model by the
+       package's build/*.props. -->
+  <ItemGroup>
+    <None Include="Tables/*.sql" Pack="true" PackagePath="sql/" />
+  </ItemGroup>
+</Project>
