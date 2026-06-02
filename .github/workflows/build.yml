@@ -114,7 +114,7 @@ jobs:
       # restores run, so version resolution never hits NuGet.org for same-repo deps.
       - name: Verify SQL pack
         run: |
-          dotnet nuget add source ./artifacts/nuget --name local-build
+          dotnet nuget add source "$(pwd)/artifacts/nuget" --name local-build
           SQLPROJS=$(find libs -name '*.sqlproj' -not -path '*/obj/*' -not -path '*/bin/*')
           pack() {
             echo "Packing $1"

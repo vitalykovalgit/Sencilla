@@ -93,7 +93,7 @@ jobs:
       # without waiting for a NuGet.org push.
       - name: Pack SQL (dacpac) packages
         run: |
-          dotnet nuget add source ./artifacts/nuget --name local-build
+          dotnet nuget add source "$(pwd)/artifacts/nuget" --name local-build
           SQLPROJS=$(find libs -name '*.sqlproj' -not -path '*/obj/*' -not -path '*/bin/*')
           pack() {
             echo "Packing $1"
