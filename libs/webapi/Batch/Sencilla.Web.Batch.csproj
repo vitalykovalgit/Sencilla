@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\web\Sencilla.Web.csproj" />
+    </ItemGroup>
+
+</Project>

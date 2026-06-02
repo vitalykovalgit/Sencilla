@@ -86,20 +86,32 @@ jobs:
             --output ./artifacts/nuget
 
       # ── Pack SQL (dacpac) packages ────────────────────────────────────────
-      # The *.sqlproj projects are NOT part of Sencilla.sln, so pack them
-      # individually into the same artifacts folder (the push step globs all
-      # *.nupkg). GeneratePackageOnBuild=false avoids the Microsoft.Build.Sql
-      # "Pack <- _PackAsBuildAfterTarget" circular dependency. Version is taken
-      # from Directory.Build.Common.props (set above).
+      # Packed in two waves so intra-repo PackageReferences resolve correctly:
+      #   Wave 1 — projects with no Sencilla PackageReferences (no local dep)
+      #   Wave 2 — projects that reference other Sencilla SQL packages
+      # The local-build source makes wave-1 packages visible to wave-2 restores
+      # without waiting for a NuGet.org push.
       - name: Pack SQL (dacpac) packages
         run: |
-          for proj in $(find libs -name '*.sqlproj' -not -path '*/obj/*' -not -path '*/bin/*'); do
-            echo "Packing $proj"
-            dotnet pack "$proj" \
+          dotnet nuget add source ./artifacts/nuget --name local-build
+          SQLPROJS=$(find libs -name '*.sqlproj' -not -path '*/obj/*' -not -path '*/bin/*')
+          pack() {
+            echo "Packing $1"
+            dotnet pack "$1" \
               --configuration Release \
               --output ./artifacts/nuget \
               /p:ContinuousIntegrationBuild=true \
               /p:GeneratePackageOnBuild=false
+          }
+          # Wave 1: no intra-repo dependencies
+          for proj in $SQLPROJS; do
+            grep -q 'PackageReference Include="Sencilla' "$proj" && continue
+            pack "$proj"
+          done
+          # Wave 2: depends on other Sencilla SQL packages (now in local-build)
+          for proj in $SQLPROJS; do
+            grep -q 'PackageReference Include="Sencilla' "$proj" || continue
+            pack "$proj"
           done
 
       # ── List packages (for debug / audit) ─────────────────────────────────

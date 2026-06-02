@@ -109,17 +109,28 @@ jobs:
             /p:Version=${{ steps.version.outputs.VERSION }}
 
       # Verify the SQL (dacpac) packages pack too — they are not part of the
-      # solution, so pack them individually. GeneratePackageOnBuild=false avoids
-      # the Microsoft.Build.Sql pack circular dependency.
+      # solution, so pack them individually. Two waves handle intra-repo
+      # PackageReferences: wave-1 packages land in local-build before wave-2
+      # restores run, so version resolution never hits NuGet.org for same-repo deps.
       - name: Verify SQL pack
         run: |
-          for proj in $(find libs -name '*.sqlproj' -not -path '*/obj/*' -not -path '*/bin/*'); do
-            echo "Packing $proj"
-            dotnet pack "$proj" \
+          dotnet nuget add source ./artifacts/nuget --name local-build
+          SQLPROJS=$(find libs -name '*.sqlproj' -not -path '*/obj/*' -not -path '*/bin/*')
+          pack() {
+            echo "Packing $1"
+            dotnet pack "$1" \
               --configuration Release \
               --output ./artifacts/nuget \
               /p:Version=${{ steps.version.outputs.VERSION }} \
               /p:GeneratePackageOnBuild=false
+          }
+          for proj in $SQLPROJS; do
+            grep -q 'PackageReference Include="Sencilla' "$proj" && continue
+            pack "$proj"
+          done
+          for proj in $SQLPROJS; do
+            grep -q 'PackageReference Include="Sencilla' "$proj" || continue
+            pack "$proj"
           done
 
       - name: List produced packages
