@@ -22,8 +22,18 @@ public interface IEntity<TKey> : IBaseEntity
 }
 
 /// <summary>
-/// Use int as default parameter for generic argument 
+/// Use int as default parameter for generic argument
 /// </summary>
 public interface IEntity : IEntity<int>
-{ 
+{
+}
+
+/// <summary>
+/// Marks an entity with a globally unique identifier for cross-service and cross-database identity.
+/// The INT primary key remains the internal join key; GlobalId is the only identity
+/// exposed in API responses, JWT tokens, and event payloads.
+/// </summary>
+public interface IEntityGlobal
+{
+    Guid GlobalId { get; set; }
 }

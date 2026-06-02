@@ -3,9 +3,12 @@
 namespace Sencilla.Component.Users;
 
 [Table(nameof(User), Schema = "sec")]
-public class User: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityRemoveable
+public class User : IEntity, IEntityGlobal, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityRemoveable
 {
     public int Id { get; set; }
+
+    [SkipUpsert]
+    public Guid GlobalId { get; set; }
 
     public long Phone { get; set; }
     public bool PhoneConf { get; set; }
