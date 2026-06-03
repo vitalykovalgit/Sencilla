@@ -8,6 +8,7 @@ global using Microsoft.AspNetCore.Http.Features;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
 
+global using Sencilla.Core;
 global using Sencilla.Web.MinimalApi;
 
 namespace Sencilla.Web.MinimalApi;
@@ -24,6 +25,10 @@ public static class Bootstrap
             .ToArray();
 
         services.TryAddEnumerable(serviceDescriptors);
+
+        // Minimal-API endpoints bind/serialize through Http.Json options (separate from MVC),
+        // so apply the same Sencilla converter set here for parity. Idempotent.
+        services.ConfigureHttpJsonOptions(o => o.SerializerOptions.AddSencillaJsonConverters());
 
         return services;
     }

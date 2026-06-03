@@ -40,7 +40,11 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 manager.FeatureProviders.Add(new CrudApiControllerFeatureProvider());
             })
-            .AddJsonOptions(o => o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+            .AddJsonOptions(o =>
+            {
+                o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+                o.JsonSerializerOptions.AddSencillaJsonConverters();
+            });
 
             return builder;
         }
