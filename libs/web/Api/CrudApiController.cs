@@ -76,7 +76,7 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     }
 
     [HttpPut, Route("{id}")]
-    public virtual async Task<IActionResult> CreateOne(int id, [FromBody] TEntity entity, CancellationToken token)
+    public virtual async Task<IActionResult> CreateOne(TKey id, [FromBody] TEntity entity, CancellationToken token)
     {
         return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.Create(entity, token));
     }
@@ -88,7 +88,7 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     }
 
     [HttpPost, Route("{id}")]
-    public virtual async Task<IActionResult> UpdateOne(int id, [FromBody] TEntity entity, CancellationToken token)
+    public virtual async Task<IActionResult> UpdateOne(TKey id, [FromBody] TEntity entity, CancellationToken token)
     {
         return await AjaxAction((IUpdateRepository<TEntity, TKey> repo) => repo.Update(entity));
     }
@@ -100,7 +100,7 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     }
 
     [HttpPost, Route("upsert/{id}")]
-    public virtual async Task<IActionResult> UpsertOne(int id, [FromBody] TEntity entity, CancellationToken token)
+    public virtual async Task<IActionResult> UpsertOne(TKey id, [FromBody] TEntity entity, CancellationToken token)
     {
         return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(entity, x => x.Id, token: token));
     }
@@ -112,7 +112,7 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     }
 
     [HttpPost, Route("merge/{id}")]
-    public virtual async Task<IActionResult> MergeOne(int id, [FromBody] TEntity entity, CancellationToken token)
+    public virtual async Task<IActionResult> MergeOne(TKey id, [FromBody] TEntity entity, CancellationToken token)
     {
         return await AjaxAction((ICreateRepository<TEntity, TKey> repo) => repo.MergeAsync(entity, x => x.Id, token: token));
     }
@@ -124,7 +124,7 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     }
 
     [HttpPost, Route("get-or-create/{id}")]
-    public virtual async Task<IActionResult> GetOrCreateOne(int id, [FromBody] TEntity entity, [FromQuery] string[]? key, Filter<TEntity> filter, CancellationToken token)
+    public virtual async Task<IActionResult> GetOrCreateOne(TKey id, [FromBody] TEntity entity, [FromQuery] string[]? key, Filter<TEntity> filter, CancellationToken token)
     {
         var keys = key?.Length > 0 ? key : [];
         return await AjaxAction(async (ICreateRepository<TEntity, TKey> repo) =>

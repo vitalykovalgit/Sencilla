@@ -85,7 +85,20 @@ public class DynamicDbContext([NotNull] DbContextOptions options) : DbContext(op
                     c.Property(p.Name).HasConversion(JsonObjectConverter<object>.CreateConverter(p.PropertyType));
             }
 
-            // check if entity map to the same table 
+            // Store-generated secondary identities (the reflection loop above maps them as plain
+            // properties; EF would otherwise try to INSERT them and collide with the DB-generated value).
+            // GlobalId: server-generated sequential GUID by default.
+            if (typeof(IEntityGlobal).IsAssignableFrom(entityType))
+                c.Property(nameof(IEntityGlobal.GlobalId)).ValueGeneratedOnAdd().HasDefaultValueSql("NEWSEQUENTIALID()");
+
+            // DisplayId: autoincrement by default. ValueGeneratedOnAdd is the provider-agnostic way to say
+            // "store generates this on insert"; the SQL Server provider realizes it as an IDENTITY column
+            // (matching the dacpac's [DisplayId] INT IDENTITY). UseIdentityColumn() is deliberately avoided —
+            // it would couple this provider-agnostic library to Microsoft.EntityFrameworkCore.SqlServer.
+            if (typeof(IEntityDisplay).IsAssignableFrom(entityType))
+                c.Property(nameof(IEntityDisplay.DisplayId)).ValueGeneratedOnAdd();
+
+            // check if entity map to the same table
             var pe = entityType.GetCustomAttribute<MainEntityAttribute>();
             if (pe != null)
                 c.HasOne(pe.Type).WithOne().HasForeignKey(entityType);

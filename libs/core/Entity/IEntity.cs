@@ -37,3 +37,14 @@ public interface IEntityGlobal
 {
     Guid GlobalId { get; set; }
 }
+
+/// <summary>
+/// Dual of <see cref="IEntityGlobal"/> for entities whose primary key is a GUID
+/// (<see cref="IEntity{TKey}"/> with TKey = <see cref="Guid"/>). The GUID Id is the internal,
+/// technical identity; DisplayId is a compact, human-facing sequential number (INT IDENTITY)
+/// shown in emails, references, and UI. Store-generated — never set by the client.
+/// </summary>
+public interface IEntityDisplay
+{
+    int DisplayId { get; set; }
+}
