@@ -313,6 +313,12 @@ public static class EntityFrameworkCoreExtensions
         where TEntity : class
         where TContext : DbContext
     {
+        // Nothing to merge — bail out. An empty source would otherwise emit a phantom
+        // VALUES row (typed [Id] = 0, which clashes with a uniqueidentifier key) AND an
+        // unscoped "WHEN NOT MATCHED BY SOURCE THEN DELETE" that would wipe the whole table.
+        if (entities is null || !entities.Any())
+            return;
+
         var cmnd = new MergeCommand<TEntity>(condition)
         {
             InsertAction = insertAction,
