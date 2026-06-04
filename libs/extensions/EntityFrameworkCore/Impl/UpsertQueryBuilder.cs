@@ -27,7 +27,10 @@ public class UpsertQueryBuilder<TEntity>
         }*/
 
         var colVals = GetColumnValues(entities);
-        query += Environment.NewLine + $"MERGE {targetTable} AS t";
+        // HOLDLOCK (SERIALIZABLE range lock) makes the upsert atomic under concurrency:
+        // a concurrent upsert of the same key blocks until this one commits, then takes the
+        // MATCHED/UPDATE path instead of racing a second INSERT (duplicate-key on a unique index).
+        query += Environment.NewLine + $"MERGE {targetTable} WITH (HOLDLOCK) AS t";
         query += Environment.NewLine + "USING (VALUES";
         query += Environment.NewLine + $"{colVals[VALS]}";
         query += Environment.NewLine + ")";

@@ -38,7 +38,7 @@ public class GetOrCreateQueryBuilder<TEntity>
         var targetTable = GetTargetTableName();
         var colVals = GetColumnValues(entities, props);
 
-        var merge = $"\nMERGE {targetTable} AS t" +
+        var merge = $"\nMERGE {targetTable} WITH (HOLDLOCK) AS t" +
                     $"\nUSING (VALUES\n{colVals[VALS]}\n)" +
                     $"\nAS s ({colVals[COLS]})" +
                     $"\nON {BuildCondition(keyProps)}" +
@@ -97,7 +97,7 @@ public class GetOrCreateQueryBuilder<TEntity>
     {
         var outputCols = string.Join(", ", keyProps.Select(p => $"INSERTED.{ColName(p)}"));
 
-        return $"\nMERGE {targetTable} AS t" +
+        return $"\nMERGE {targetTable} WITH (HOLDLOCK) AS t" +
                $"\nUSING (VALUES\n{colVals[VALS]}\n)" +
                $"\nAS s ({colVals[COLS]})" +
                $"\nON {BuildCondition(keyProps)}" +
