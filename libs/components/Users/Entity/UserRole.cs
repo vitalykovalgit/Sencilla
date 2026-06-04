@@ -6,14 +6,14 @@
 [CrudApi("api/v1/users/roles")]
 [Table(nameof(UserRole), Schema = "sec")]
 
-public class UserRole 
-    : IEntity
+public class UserRole
+    : IEntity<Guid>
     , IEntityCreateable
     , IEntityDeleteable
     , IEntityUpdateable
 {
-    public int Id { get; set; }
-    public int UserId { get; set; }
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
 
     [Column("Role")]
     public int RoleId { get; set; }

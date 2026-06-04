@@ -32,6 +32,7 @@ public class FileEntityTests
     {
         var id = Guid.NewGuid();
         var parentId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var now = DateTime.UtcNow;
 
         var file = new File
@@ -42,7 +43,7 @@ public class FileEntityTests
             MimeType = "application/pdf",
             Size = 1024,
             Uploaded = 512,
-            UserId = 42,
+            UserId = userId,
             Origin = FileOrigin.User,
             Path = "user42/test.pdf",
             Storage = 1,
@@ -61,7 +62,7 @@ public class FileEntityTests
         Assert.Equal("application/pdf", file.MimeType);
         Assert.Equal(1024, file.Size);
         Assert.Equal(512, file.Uploaded);
-        Assert.Equal(42, file.UserId);
+        Assert.Equal(userId, file.UserId);
         Assert.Equal(FileOrigin.User, file.Origin);
         Assert.Equal("user42/test.pdf", file.Path);
         Assert.Equal(1, file.Storage);

@@ -39,7 +39,7 @@ public class File
     /// <summary>
     /// User
     /// </summary>
-    public int? UserId { get; set; }
+    public Guid? UserId { get; set; }
 
     /// <summary>
     /// Where is this file from (System, User upload)

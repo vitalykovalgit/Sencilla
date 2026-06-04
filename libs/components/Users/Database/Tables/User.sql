@@ -1,8 +1,7 @@
 ﻿
 CREATE TABLE [sec].[User] 
 (
-	[Id]                INT    IDENTITY NOT NULL,
-    [GlobalId]          UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+	[Id]                UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
 
     [Phone]             BIGINT NULL,
     [PhoneConf]         BIT NOT NULL DEFAULT 0,
@@ -36,8 +35,6 @@ CREATE TABLE [sec].[User]
 	-- it can come as 0 let's disable for now
     --CONSTRAINT [UC_User_Phone] UNIQUE ([Phone]),
     CONSTRAINT [UC_User_Email]    UNIQUE ([Email]),
-    CONSTRAINT [UC_User_GlobalId] UNIQUE ([GlobalId]),
 
-    INDEX [IX_User_Email]    NONCLUSTERED ([Email]),
-    INDEX [IX_User_GlobalId] NONCLUSTERED ([GlobalId])
+    INDEX [IX_User_Email]    NONCLUSTERED ([Email])
 )

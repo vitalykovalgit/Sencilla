@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [sec].[UserContact] 
 (
-	[Id]                TINYINT  IDENTITY NOT NULL,
-	[UserId]            INT           NOT NULL,
+	[Id]                UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+	[UserId]            UNIQUEIDENTIFIER NOT NULL,
     [Type]              TINYINT       NOT NULL,
     [Contact]             NVARCHAR(255) NOT NULL,
     [Order]             TINYINT       NOT NULL DEFAULT 0,

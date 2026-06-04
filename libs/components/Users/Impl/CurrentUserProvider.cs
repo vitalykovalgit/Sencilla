@@ -4,9 +4,9 @@ public class CurrentUserProvider: ICurrentUserProvider
 {
     //ILogger Logger;
     IHttpContextAccessor ContextAccessor;
-    IReadRepository<User> ReadUserRepo;
+    IReadRepository<User, Guid> ReadUserRepo;
 
-    public CurrentUserProvider(IHttpContextAccessor accessor, IReadRepository<User> readUserRepo)
+    public CurrentUserProvider(IHttpContextAccessor accessor, IReadRepository<User, Guid> readUserRepo)
     {
         ContextAccessor = accessor;
         ReadUserRepo = readUserRepo;

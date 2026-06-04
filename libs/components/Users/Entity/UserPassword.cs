@@ -2,9 +2,9 @@
 
 [MainEntity(typeof(User))]
 [Table(nameof(User), Schema = "sec")]
-public class UserPassword: IEntity, IEntityUpdateable
+public class UserPassword: IEntity<Guid>, IEntityUpdateable
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string? Email { get; set; }
     public string PasswordHash { get; set; } = default!;
 

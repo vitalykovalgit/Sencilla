@@ -8,11 +8,11 @@ public static class PasswordHashExtensions
 
     public static string HashPassword(this string password)
     {
-        return _hasher.HashPassword(null, password);
+        return _hasher.HashPassword(null!, password);
     }
     public static bool VerifyPassword(this string hashedPassword, string providedPassword)
     {
-        var result = _hasher.VerifyHashedPassword(null, hashedPassword, providedPassword);
+        var result = _hasher.VerifyHashedPassword(null!, hashedPassword, providedPassword);
         return result == PasswordVerificationResult.Success;
     }
 }

@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [sec].[UserRefreshToken]
 (
     [Id]               INT IDENTITY NOT NULL,
-    [UserId]           INT NOT NULL,
+    [UserId]           UNIQUEIDENTIFIER NOT NULL,
     [Token]            NVARCHAR(2000) NOT NULL,
     [ExpiresAt]        DATETIME2(7) NOT NULL,
     [CreatedAt]        DATETIME2(7) NOT NULL,

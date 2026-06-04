@@ -1,8 +1,8 @@
 ﻿CREATE TABLE [sec].[UserAddress] 
 (
-	[Id]          INT IDENTITY NOT NULL,
+	[Id]          UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
 
-    [UserId]      INT NOT NULL,
+    [UserId]      UNIQUEIDENTIFIER NOT NULL,
     [Type]        TINYINT NOT NULL DEFAULT 1,
 
     [CountryId]   INT NULL, 

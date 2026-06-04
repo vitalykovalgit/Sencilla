@@ -3,10 +3,10 @@ namespace Sencilla.Component.Users;
 
 [CrudApi("api/v1/users/addresses")]
 [Table(nameof(UserAddress), Schema = "sec")]
-public class UserAddress: IEntity, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityDeleteable
+public class UserAddress: IEntity<Guid>, IEntityCreateableTrack, IEntityUpdateableTrack, IEntityDeleteable
 {
-    public int Id { get; set; }
-    public int UserId { get; set; }
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
     public byte Type { get; set; }
 
     public int? CountryId { get; set; }

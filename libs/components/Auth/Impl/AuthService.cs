@@ -5,14 +5,14 @@ public class AuthService : IAuthService
 {
     private readonly AuthOptions _authOptions; // JWT config
 
-    private readonly ICreateRepository<User> _createUserRepo;
-    private readonly IUpdateRepository<UserPassword> _updatePasswordRepo;
+    private readonly ICreateRepository<User, Guid> _createUserRepo;
+    private readonly IUpdateRepository<UserPassword, Guid> _updatePasswordRepo;
     private readonly ICreateRepository<UserRefreshToken> _createTokenRepo;
 
     public AuthService(
         IOptions<AuthOptions> authOptions,
-        ICreateRepository<User> createRepo,
-        IUpdateRepository<UserPassword> updatePasswordRepo,
+        ICreateRepository<User, Guid> createRepo,
+        IUpdateRepository<UserPassword, Guid> updatePasswordRepo,
         ICreateRepository<UserRefreshToken> createTokenRepo)
     {
         _authOptions = authOptions.Value;
@@ -40,7 +40,7 @@ public class AuthService : IAuthService
         user.AddRole((int)RoleType.User);
 
         // 3) Upsert to DB
-        var dbUser = await _createUserRepo.UpsertAsync(user, u => u.Email);
+        var dbUser = await _createUserRepo.UpsertAsync(user, u => u.Email!);
 
         // 3.1) Create password
         await _updatePasswordRepo.Update(new UserPassword

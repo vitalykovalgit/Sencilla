@@ -111,7 +111,7 @@ internal class CreateFileHandler(
             Origin = metadata.GetEnum<FileOrigin>(nameof(File.Origin)) ?? FileOrigin.User,
             Storage = storage.Type,
             ParentId = metadata.GetGuid(nameof(File.ParentId)),
-            UserId = metadata.GetInt(nameof(File.UserId)),
+            UserId = metadata.GetGuid(nameof(File.UserId)),
             Width = metadata.GetInt(nameof(File.Width)),
             Height = metadata.GetInt(nameof(File.Height)),
 

@@ -11,8 +11,8 @@ public class UserRegistrationMiddlewareTests
     private readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private readonly Mock<ICurrentUserProvider> _userProvider = new();
     private readonly Mock<ISystemVariable> _sysVars = new();
-    private readonly Mock<ICreateRepository<User>> _userRepo = new();
-    private readonly Mock<ICreateRepository<UserAuth, byte>> _userAuthRepo = new();
+    private readonly Mock<ICreateRepository<User, Guid>> _userRepo = new();
+    private readonly Mock<ICreateRepository<UserAuth, Guid>> _userAuthRepo = new();
 
     private bool _nextCalled;
 
@@ -29,8 +29,8 @@ public class UserRegistrationMiddlewareTests
         var services = new ServiceCollection();
         services.AddSingleton(_userProvider.Object);
         services.AddSingleton(_sysVars.Object);
-        services.AddSingleton<ICreateRepository<User>>(_userRepo.Object);
-        services.AddSingleton<ICreateRepository<UserAuth, byte>>(_userAuthRepo.Object);
+        services.AddSingleton<ICreateRepository<User, Guid>>(_userRepo.Object);
+        services.AddSingleton<ICreateRepository<UserAuth, Guid>>(_userAuthRepo.Object);
 
         var context = new DefaultHttpContext
         {
@@ -61,7 +61,8 @@ public class UserRegistrationMiddlewareTests
     [Fact]
     public async Task Invoke_CacheHit_SkipsDIResolution_UseCachedUser()
     {
-        var cachedUser = new User { Id = 42, Email = "cached@test.com" };
+        var userId = Guid.NewGuid();
+        var cachedUser = new User { Id = userId, Email = "cached@test.com" };
         _cache.Set("user_by_email_cached@test.com", cachedUser);
 
         _userProvider.Setup(p => p.CurrentUser).Returns(new User { Email = "cached@test.com" });
@@ -75,7 +76,7 @@ public class UserRegistrationMiddlewareTests
         // Fast path: repo should NOT be called
         _userRepo.Verify(r => r.FirstOrDefault(It.IsAny<UserFilter>(), It.IsAny<CancellationToken>()), Times.Never);
         // System variable should be set with the cached user
-        _sysVars.Verify(s => s.Set("user", It.Is<User>(u => u.Id == 42)), Times.Once);
+        _sysVars.Verify(s => s.Set("user", It.Is<User>(u => u.Id == userId)), Times.Once);
     }
 
     // ── Cache miss, user exists in DB ────────────────────────────────────────
@@ -83,8 +84,9 @@ public class UserRegistrationMiddlewareTests
     [Fact]
     public async Task Invoke_CacheMiss_UserExistsInDb_CachesAndSetsUser()
     {
+        var userId = Guid.NewGuid();
         var incomingUser = new User { Email = "db@test.com" };
-        var dbUser = new User { Id = 10, Email = "db@test.com" };
+        var dbUser = new User { Id = userId, Email = "db@test.com" };
 
         _userProvider.Setup(p => p.CurrentUser).Returns(incomingUser);
         _userRepo.Setup(r => r.FirstOrDefault(It.IsAny<UserFilter>(), It.IsAny<CancellationToken>()))
@@ -102,7 +104,7 @@ public class UserRegistrationMiddlewareTests
         _userRepo.Verify(r => r.UpsertAsync(It.IsAny<User>(), It.IsAny<System.Linq.Expressions.Expression<Func<User, object?>>>(), null, null, It.IsAny<CancellationToken>()), Times.Never);
         // User should be cached after lookup
         Assert.True(_cache.TryGetValue("user_by_email_db@test.com", out User? cached));
-        Assert.Equal(10, cached!.Id);
+        Assert.Equal(userId, cached!.Id);
     }
 
     // ── Cache miss, user not in DB (create) ──────────────────────────────────
@@ -110,8 +112,9 @@ public class UserRegistrationMiddlewareTests
     [Fact]
     public async Task Invoke_CacheMiss_UserNotInDb_CreatesAndCachesUser()
     {
+        var userId = Guid.NewGuid();
         var incomingUser = new User { Email = "new@test.com" };
-        var createdUser = new User { Id = 99, Email = "new@test.com" };
+        var createdUser = new User { Id = userId, Email = "new@test.com" };
 
         _userProvider.Setup(p => p.CurrentUser).Returns(incomingUser);
 
@@ -136,7 +139,7 @@ public class UserRegistrationMiddlewareTests
         _userRepo.Verify(r => r.UpsertAsync(It.IsAny<User>(), It.IsAny<System.Linq.Expressions.Expression<Func<User, object?>>>(), null, null, It.IsAny<CancellationToken>()), Times.Once);
         // User should be cached
         Assert.True(_cache.TryGetValue("user_by_email_new@test.com", out User? cached));
-        Assert.Equal(99, cached!.Id);
+        Assert.Equal(userId, cached!.Id);
     }
 
     // ── No user provider ─────────────────────────────────────────────────────
@@ -160,7 +163,7 @@ public class UserRegistrationMiddlewareTests
     public async Task Invoke_SecondRequest_UsesCacheFromFirstRequest()
     {
         var user = new User { Email = "repeat@test.com" };
-        var dbUser = new User { Id = 7, Email = "repeat@test.com" };
+        var dbUser = new User { Id = Guid.NewGuid(), Email = "repeat@test.com" };
 
         _userProvider.Setup(p => p.CurrentUser).Returns(user);
         _userRepo.Setup(r => r.FirstOrDefault(It.IsAny<UserFilter>(), It.IsAny<CancellationToken>()))

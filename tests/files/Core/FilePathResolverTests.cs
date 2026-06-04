@@ -12,35 +12,37 @@ public class FilePathResolverTests
     [Fact]
     public void GetFullPath_UserOrigin_IncludesUserDirectory()
     {
+        var userId = Guid.NewGuid();
         var file = new File
         {
             Id = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
             Name = "photo.jpg",
-            UserId = 5,
+            UserId = userId,
             Origin = FileOrigin.User
         };
 
         var path = _resolver.GetFullPath(file);
 
-        Assert.Contains("user5", path);
+        Assert.Contains($"user{userId}", path);
         Assert.EndsWith(".jpg", path);
     }
 
     [Fact]
     public void GetFullPath_UserOrigin_WithProjectId_IncludesProjectDirectory()
     {
+        var userId = Guid.NewGuid();
         var file = new File
         {
             Id = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
             Name = "photo.jpg",
-            UserId = 1,
+            UserId = userId,
             Origin = FileOrigin.User,
             Attrs = new Dictionary<string, string> { ["projectid"] = "42" }
         };
 
         var path = _resolver.GetFullPath(file);
 
-        Assert.Contains("user1", path);
+        Assert.Contains($"user{userId}", path);
         Assert.Contains("project42", path);
     }
 

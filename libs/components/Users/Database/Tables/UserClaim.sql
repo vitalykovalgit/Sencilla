@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [sec].[UserClaim] 
 (
-	[Id]                INT             IDENTITY NOT NULL,
-	[UserId]            INT             NOT NULL,
+	[Id]                UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+	[UserId]            UNIQUEIDENTIFIER NOT NULL,
     [Name]              NVARCHAR (255)  NOT NULL,
     [Value]             NVARCHAR (1024) NULL,
     

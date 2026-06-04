@@ -11,19 +11,11 @@ public class UserFilter: Filter
 
     public static UserFilter ByEmail(params string?[] emails) => new UserFilter().WithEmail(emails);
 
-    public UserFilter WithId(params int[] ids)
+    public UserFilter WithId(params Guid[] ids)
     {
-        AddProperty(nameof(User.Id), typeof(int), ids);
+        AddProperty(nameof(User.Id), typeof(Guid), ids.Cast<object>().ToArray());
         return this;
     }
 
-    public static UserFilter ById(params int[] ids) => new UserFilter().WithId(ids);
-
-    public UserFilter WithGlobalId(params Guid[] globalIds)
-    {
-        AddProperty(nameof(IEntityGlobal.GlobalId), typeof(Guid), globalIds.Cast<object>().ToArray());
-        return this;
-    }
-
-    public static UserFilter ByGlobalId(params Guid[] globalIds) => new UserFilter().WithGlobalId(globalIds);
+    public static UserFilter ById(params Guid[] ids) => new UserFilter().WithId(ids);
 }

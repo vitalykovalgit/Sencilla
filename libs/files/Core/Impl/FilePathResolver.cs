@@ -32,7 +32,7 @@ internal class FilePathResolver : IFilePathResolver
 
         return file.Origin switch
         {
-            FileOrigin.User => Path.Combine($"user{file.UserId ?? 0}", projectPath,/* folderPath,*/ fileName),
+            FileOrigin.User => Path.Combine($"user{file.UserId ?? Guid.Empty}", projectPath,/* folderPath,*/ fileName),
             FileOrigin.System => $"system/{fileName}",
             _ => $"none/{fileName}"
         };

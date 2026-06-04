@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [sec].[UserRole] 
 (
-	[Id]       INT  NOT NULL IDENTITY,
-	[UserId]   INT  NOT NULL,
+	[Id]       UNIQUEIDENTIFIER  NOT NULL DEFAULT NEWSEQUENTIALID(),
+	[UserId]   UNIQUEIDENTIFIER  NOT NULL,
     [Role]     NVARCHAR(255)  NULL, /*TODO: Move to FK Id*/
     
 	CONSTRAINT [PK_UserRole]        PRIMARY KEY CLUSTERED ([Id] ASC),

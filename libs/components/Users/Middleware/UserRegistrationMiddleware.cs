@@ -38,7 +38,7 @@ public class UserRegistrationMiddleware
                 else
                 {
                     // Cache miss — resolve repo and look up user in DB
-                    var userRepo = container.GetService<ICreateRepository<User>>();
+                    var userRepo = container.GetService<ICreateRepository<User, Guid>>();
                     dbUser = await userRepo!.FirstOrDefault(ByEmail(user.Email), context.RequestAborted);
 
                     if (dbUser == null)
@@ -68,7 +68,7 @@ public class UserRegistrationMiddleware
     }
 
 
-    private async Task<User> UpsertUserAsync(IServiceProvider sp, ICreateRepository<User> userRepo, User user, string? authType)
+    private async Task<User> UpsertUserAsync(IServiceProvider sp, ICreateRepository<User, Guid> userRepo, User user, string? authType)
     {
         // TODO: Think about saving this in transaction
         await userRepo.UpsertAsync(user, u => u.Email!);
@@ -82,7 +82,7 @@ public class UserRegistrationMiddleware
             CreatedDate = DateTime.UtcNow,
         };
 
-        var userAuthRepo = sp.GetService<ICreateRepository<UserAuth, byte>>();
+        var userAuthRepo = sp.GetService<ICreateRepository<UserAuth, Guid>>();
         await userAuthRepo.UpsertAsync(userAuth, u => new { u.Email, u.Auth, u.UserId, });
 
         return dbUser;

@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [sec].[UserAuth] 
 (
-	[Id]                TINYINT IDENTITY NOT NULL,
-	[UserId]            INT              NOT NULL,
+	[Id]                UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+	[UserId]            UNIQUEIDENTIFIER NOT NULL,
     [Auth]              NVARCHAR (100)   NOT NULL,
     [Email]             NVARCHAR (255)   NOT NULL,
     [PasswordHash]      NVARCHAR (MAX)   NULL,
