@@ -8,6 +8,7 @@
     <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
     <ProjectReference Include="..\..\components\Users\Sencilla.Component.Users.csproj" />
     <ProjectReference Include="..\..\webapi\MinimalApi\Sencilla.Web.MinimalApi.csproj" />
+    <ProjectReference Include="..\..\repositories\EntityFramework\Sencilla.Repository.EntityFramework.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,7 +1,7 @@
 namespace Sencilla.Authentication;
 
 [Table("RefreshToken", Schema = "sec")]
-public class RefreshTokenEntity : IEntity<string>
+public class RefreshTokenEntity : IEntity<string>, IEntityCreateable, IEntityUpdateable
 {
     public string Id { get; set; } = default!;
     public Guid UserId { get; set; }

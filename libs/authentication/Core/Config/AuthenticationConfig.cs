@@ -114,7 +114,17 @@ public sealed class AuthenticationConfig
         });
 
         if (refresh.Storage == RefreshStorage.EntityFramework)
+        {
+            // Make the EF repository layer aware of RefreshTokenEntity so DbRefreshTokenStore can
+            // resolve its ICreate/IUpdate repositories — independent of whether the host called
+            // AddSencillaRepositoryForEF before or after us. We register the CRUD repos against the
+            // dynamic context and add the entity to the model so sec.RefreshToken is mapped.
+            Services.RegisterEFRepositoriesForType(typeof(RefreshTokenEntity), out _);
+            if (!RepositoryEntityFrameworkBootstrap.Entities.Contains(typeof(RefreshTokenEntity)))
+                RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(RefreshTokenEntity));
+
             Services.AddTransient<IRefreshTokenStore, DbRefreshTokenStore>();
+        }
         else
             Services.TryAddSingleton<IRefreshTokenStore, InMemoryRefreshTokenStore>();
 
