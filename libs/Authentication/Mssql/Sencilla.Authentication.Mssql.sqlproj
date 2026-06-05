@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <!-- SQL Server schema (.sql source) component for Sencilla "Authentication".
+       Owns [sec].[RefreshToken] — the rotating refresh-token ledger used by the JWT issuer.
+       [sec] schema is created by Sencilla.Component.Users.Mssql; consumers must reference
+       that package in their own database project (same pattern as Files.Mssql).
+       [RefreshToken].[UserId] is a UNIQUEIDENTIFIER reference to the owning user; no FK
+       constraint is declared so this project compiles standalone without a Users dependency.
+
+       No seed data. The RefreshToken table is managed entirely at runtime.
+
+       Shared SQL project config lives in libs/Directory.Build.Sql.props, imported via
+       Directory.Build.props. -->
+  <Sdk Name="Microsoft.Build.Sql" />
+  <PropertyGroup>
+    <Description>SQL Server schema (.sql source) for the Sencilla Authentication component: [sec].[RefreshToken] table. Compiled into the consuming database's own model (self-contained).</Description>
+  </PropertyGroup>
+
+  <!-- Schema SOURCE shipped under sql/ — auto-compiled into the consumer's model by the
+       package's build/*.props. -->
+  <ItemGroup>
+    <None Include="Tables/*.sql" Pack="true" PackagePath="sql/" />
+  </ItemGroup>
+
+</Project>

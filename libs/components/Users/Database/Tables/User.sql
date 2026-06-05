@@ -6,7 +6,7 @@ CREATE TABLE [sec].[User]
     [Phone]             BIGINT NULL,
     [PhoneConf]         BIT NOT NULL DEFAULT 0,
 
-    [Email]             NVARCHAR (255)  NOT NULL,
+    [Email]             NVARCHAR (255)  NULL,
     [EmailConf]         BIT NOT NULL DEFAULT 0,
 
     [FirstName]         NVARCHAR (255)  NULL,
@@ -34,7 +34,8 @@ CREATE TABLE [sec].[User]
 
 	-- it can come as 0 let's disable for now
     --CONSTRAINT [UC_User_Phone] UNIQUE ([Phone]),
-    CONSTRAINT [UC_User_Email]    UNIQUE ([Email]),
 
-    INDEX [IX_User_Email]    NONCLUSTERED ([Email])
+    -- Email is optional (social-only accounts may have none / a relay); unique only when present.
+    INDEX [UX_User_Email] UNIQUE NONCLUSTERED ([Email]) WHERE [Email] IS NOT NULL,
+    INDEX [IX_User_Email] NONCLUSTERED ([Email])
 )

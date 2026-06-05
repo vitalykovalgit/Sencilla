@@ -1,0 +1,13 @@
+<Project>
+
+  <!-- Auto-imported by any Microsoft.Build.Sql project that references this package
+       (NuGet imports build/<PackageId>.props at the top of the consumer's build).
+
+       Compiles this package's schema SOURCE into the consumer's own model, so
+       [sec].[RefreshToken] lands physically in the consuming dacpac (self-contained). -->
+
+  <ItemGroup>
+    <Build Include="$(MSBuildThisFileDirectory)../sql/*.sql" />
+  </ItemGroup>
+
+</Project>

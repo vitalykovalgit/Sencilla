@@ -46,6 +46,11 @@ declare -a packagesInfo=(
     "Sencilla.Component.Geography:components/Geography"
     
     "Sencilla.Extensions.EntityFrameworkCore:extensions/EntityFrameworkCore"
+
+    "Sencilla.Authentication:Authentication/Core"
+    "Sencilla.Authentication.Google:Authentication/Google"
+    "Sencilla.Authentication.Apple:Authentication/Apple"
+    "Sencilla.Authentication.Facebook:Authentication/Facebook"
 )
 
 printf "\033[1;33mCleaning old packages...\033[0m\n"
