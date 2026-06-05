@@ -143,22 +143,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Authentication", "Authentic
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{6F33A35E-3A23-2B5A-17B0-D7DC919DFA0B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication", "libs\Authentication\Core\Sencilla.Authentication.csproj", "{833504DB-31CB-4008-8CBF-80E35AF74231}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication", "libs\authentication\Core\Sencilla.Authentication.csproj", "{833504DB-31CB-4008-8CBF-80E35AF74231}"
 EndProject
 
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{37A50292-F3AC-F0A7-1E29-95E3B1F715CE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Google", "Google", "{F06B4257-7805-DDD2-2EFE-6B35A16CCA7F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Google", "libs\Authentication\Google\Sencilla.Authentication.Google.csproj", "{4AD5A1A2-8677-4046-AB79-8F5915031AAD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Google", "libs\authentication\Google\Sencilla.Authentication.Google.csproj", "{4AD5A1A2-8677-4046-AB79-8F5915031AAD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apple", "Apple", "{1059C977-43A3-C6B8-C483-C6EA923515EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Apple", "libs\Authentication\Apple\Sencilla.Authentication.Apple.csproj", "{DC80C105-155D-4D82-9FED-8990C8BF24BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Apple", "libs\authentication\Apple\Sencilla.Authentication.Apple.csproj", "{DC80C105-155D-4D82-9FED-8990C8BF24BF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Facebook", "Facebook", "{42AE2EA9-4FA6-F660-C106-F480998CA15E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Facebook", "libs\Authentication\Facebook\Sencilla.Authentication.Facebook.csproj", "{373AF77D-7A05-45A6-BC48-0430DE37E33D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Facebook", "libs\authentication\Facebook\Sencilla.Authentication.Facebook.csproj", "{373AF77D-7A05-45A6-BC48-0430DE37E33D}"
 EndProject
 
 
@@ -166,19 +166,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Authentication", "Authentic
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{AC0E0AAB-A69A-E748-D119-01FF5F940CD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Server.Tests", "tests\Authentication\Server\Sencilla.Authentication.Server.Tests.csproj", "{88EB30DB-A33F-49C7-A18A-0F4889E18FE4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Server.Tests", "tests\authentication\Server\Sencilla.Authentication.Server.Tests.csproj", "{88EB30DB-A33F-49C7-A18A-0F4889E18FE4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Providers", "Providers", "{877FEFAC-2378-C10D-85A0-20489CCEFB5A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Providers.Tests", "tests\Authentication\Providers\Sencilla.Authentication.Providers.Tests.csproj", "{E4F5A45E-B957-48FB-B233-556F2EA98CBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Providers.Tests", "tests\authentication\Providers\Sencilla.Authentication.Providers.Tests.csproj", "{E4F5A45E-B957-48FB-B233-556F2EA98CBC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Jwt", "Jwt", "{33AA012C-4E75-547A-30B4-BEA784779668}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Jwt.Tests", "tests\Authentication\Jwt\Sencilla.Authentication.Jwt.Tests.csproj", "{01A1FF4B-51BE-45A3-8DF4-BB78DAE7A109}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Jwt.Tests", "tests\authentication\Jwt\Sencilla.Authentication.Jwt.Tests.csproj", "{01A1FF4B-51BE-45A3-8DF4-BB78DAE7A109}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{4C2BB5C0-6501-905C-4ED7-2867F92F3509}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Integration.Tests", "tests\Authentication\Integration\Sencilla.Authentication.Integration.Tests.csproj", "{65E527D8-C6F4-42FF-8705-DF4B5A5A60F9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sencilla.Authentication.Integration.Tests", "tests\authentication\Integration\Sencilla.Authentication.Integration.Tests.csproj", "{65E527D8-C6F4-42FF-8705-DF4B5A5A60F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

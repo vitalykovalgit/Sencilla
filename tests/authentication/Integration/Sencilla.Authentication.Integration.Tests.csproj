@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\libs\Authentication\Core\Sencilla.Authentication.csproj" />
+    <ProjectReference Include="..\..\..\libs\authentication\Core\Sencilla.Authentication.csproj" />
     <ProjectReference Include="..\..\..\libs\repositories\EntityFramework\Sencilla.Repository.EntityFramework.csproj" />
   </ItemGroup>
 

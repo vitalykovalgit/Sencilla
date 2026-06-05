@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libs\authentication\Google\Sencilla.Authentication.Google.csproj" />
+    <ProjectReference Include="..\..\..\libs\authentication\Apple\Sencilla.Authentication.Apple.csproj" />
+    <ProjectReference Include="..\..\..\libs\authentication\Facebook\Sencilla.Authentication.Facebook.csproj" />
+  </ItemGroup>
+
+</Project>
