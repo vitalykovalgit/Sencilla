@@ -1,7 +1,7 @@
 namespace Sencilla.Authentication;
 
 [Table("PasswordResetToken", Schema = "sec")]
-public class PasswordResetToken : IEntity<Guid>, IEntityCreateable
+public class PasswordResetToken : IEntity<Guid>, IEntityCreateable, IEntityUpdateable
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
