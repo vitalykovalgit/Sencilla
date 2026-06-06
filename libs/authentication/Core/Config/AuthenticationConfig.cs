@@ -156,6 +156,12 @@ public sealed class AuthenticationConfig
         Services.TryAddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
         Services.TryAddTransient<IClaimsPrincipalFactory, ClaimsPrincipalFactory>();
         Services.TryAddTransient<ICredentialAuthService, CredentialAuthService>();
+        Services.TryAddTransient<IAccountRecoveryService, AccountRecoveryService>();
+
+        // PasswordResetToken needs its EF repository wired just like RefreshTokenEntity.
+        Services.RegisterEFRepositoriesForType(typeof(PasswordResetToken), out _);
+        if (!RepositoryEntityFrameworkBootstrap.Entities.Contains(typeof(PasswordResetToken)))
+            RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(PasswordResetToken));
 
         if (AppAccounts.DefaultRoles.Count > 0)
             Services.AddTransient<IEventHandlerBase<UserRegistered>, DefaultRoleAssigner>();
@@ -229,7 +235,10 @@ public sealed class AuthenticationConfig
         Services.AddSingleton<IOptions<AuthApiOptions>>(Microsoft.Extensions.Options.Options.Create(Api.Options));
 
         if (AppAccounts is not null)
+        {
             Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, AppAccountsEndpoint>());
+            Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, RecoveryEndpoint>());
+        }
         if (Issuer is not null)
             Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, SessionEndpoint>());
         if (Providers.Count > 0)

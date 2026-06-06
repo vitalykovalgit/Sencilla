@@ -31,6 +31,19 @@ public sealed record RefreshRequest
     public required string RefreshToken { get; init; }
 }
 
+/// <summary>Input for the forgot-password flow — always returns 200 to prevent enumeration.</summary>
+public sealed record ForgotPasswordRequest
+{
+    public required string Email { get; init; }
+}
+
+/// <summary>Input for the reset-password flow — the raw token from the emailed link.</summary>
+public sealed record ResetPasswordRequest
+{
+    public required string Token { get; init; }
+    public required string NewPassword { get; init; }
+}
+
 /// <summary>Issued token pair for the token-API / embedded path.</summary>
 public sealed record TokenResponse
 {
