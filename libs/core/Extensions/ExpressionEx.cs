@@ -39,7 +39,7 @@ public static class ExpressionEx
         {
             var rightVisitor = new ReplaceExpressionVisitor(e.Parameters[0], parameter);
             var right = rightVisitor.Visit(e.Body);
-            body = Expression.OrElse(body, right);
+            body = Expression.AndAlso(body, right);
         }
 
         return Expression.Lambda<Func<T, bool>>(body, parameter);

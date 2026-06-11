@@ -3,6 +3,9 @@ global using System.Reflection;
 global using System.Text.Json.Serialization;
 
 global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.Diagnostics;
+global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Mvc.ApplicationParts;
 global using Microsoft.AspNetCore.Mvc.Controllers;
@@ -31,6 +34,9 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddSencillaWeb(this IServiceCollection builder, IMvcBuilder mvcBuilder)
         {
+            builder.AddExceptionHandler<SencillaExceptionHandler>();
+            builder.AddProblemDetails();
+
             mvcBuilder.AddMvcOptions(options =>
             {
                 options.ModelBinderProviders.Insert(0, new FilterTypeBinderProvider(options.InputFormatters));
@@ -47,6 +53,21 @@ namespace Microsoft.Extensions.DependencyInjection
             });
 
             return builder;
+        }
+
+        /// <summary>
+        /// Maps the SencillaException family to HTTP responses via
+        /// <see cref="SencillaExceptionHandler"/>. Handled exceptions are expected
+        /// control flow (400/403/...), so their error-level diagnostics are
+        /// suppressed; any other exception is rethrown to the host default
+        /// (developer page / generic 500).
+        /// </summary>
+        public static IApplicationBuilder UseSencillaExceptionHandler(this IApplicationBuilder app)
+        {
+            return app.UseExceptionHandler(new ExceptionHandlerOptions
+            {
+                SuppressDiagnosticsCallback = c => c.Exception is SencillaException,
+            });
         }
     }
 }
