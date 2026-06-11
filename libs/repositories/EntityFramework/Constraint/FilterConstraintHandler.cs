@@ -77,7 +77,9 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
             return $"{prop.Query} == null";
         }
 
-        if (prop.Type == typeof(Guid)) 
+        var type = Nullable.GetUnderlyingType(prop.Type) ?? prop.Type;
+
+        if (type == typeof(Guid))
         {
             var exp = new StringBuilder();
             foreach (var val in prop.Values) 
@@ -96,7 +98,7 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
             // ignore null for now 
             if (v is null) continue;
 
-            if (prop.Type == typeof(string) || prop.Type == typeof(Guid)) 
+            if (type == typeof(string) || type == typeof(Guid))
                 vals.Append($"\"{v}\",");
             else
                 vals.Append($"{v},");
