@@ -26,8 +26,16 @@ public class UserRegistrationMiddleware
                 return;
 
             var user = userProvider.CurrentUser;
+            var sysVars = container.GetService<ISystemVariable>();
             if (!user.IsAnonymous())
             {
+                // Establish the security context from the verified principal BEFORE any
+                // repo work, so first-login self-registration (the User/UserAuth insert in
+                // UpsertUserAsync) runs as the authenticated User role, not as Anonymous.
+                // Without this the entity-constraint handler sees no current user and the
+                // insert is forbidden (403). Overwritten with the persisted user below.
+                sysVars?.SetCurrentUser(user);
+
                 var cacheKey = $"user_by_email_{user.Email}";
 
                 // Fast path: if user is already cached, skip all DI/repo resolution
@@ -52,8 +60,7 @@ public class UserRegistrationMiddleware
                 }
             }
 
-            // Set current user to system variable
-            var sysVars = container.GetService<ISystemVariable>();
+            // Set current user (now the persisted record) to system variable
             sysVars?.SetCurrentUser(user);
 
         }

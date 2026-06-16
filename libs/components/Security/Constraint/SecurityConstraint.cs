@@ -127,16 +127,20 @@ public class SecurityConstraintHandler<TEntity>
     protected HashSet<int> ResolveRoleIds(User? user, IMemoryCache cache, IReadRepository<UserRole, Guid> userRoles)
     {
         var roleIds = new HashSet<int> { (int)RoleType.Anonymous };
-        if (user == null)
+        if (user == null || user.IsAnonymous())
             return roleIds;
 
         foreach (var role in user.Roles ?? [])
             roleIds.Add(role.RoleId);
 
-        if (user.IsAnonymous() || user.Id == Guid.Empty)
-            return roleIds;
-
+        // Any authenticated identity gets the User role — even before its DB record
+        // exists (first-login self-registration), so the insert is authorised as User
+        // rather than Anonymous.
         roleIds.Add((int)RoleType.User);
+
+        // Persisted role assignments (e.g. Admin in sec.UserRole) require a real Id.
+        if (user.Id == Guid.Empty)
+            return roleIds;
 
         var dbRoles = cache.GetOrCreate($"sec_user_roles_{user.Id}", entry =>
         {

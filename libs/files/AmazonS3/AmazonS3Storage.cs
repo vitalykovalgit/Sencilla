@@ -209,11 +209,11 @@ public class AmazonS3Storage : IFileStorage
     public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken token = default)
     {
         using var ms = new MemoryStream(content);
-        return await WriteStreamToS3Async(file, ms, token);
+        return await WriteStreamToS3Async(file, ms, offset, token);
     }
 
     public Task<long> WriteFileAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken token = default)
-        => WriteStreamToS3Async(file, stream, token);
+        => WriteStreamToS3Async(file, stream, offset, token);
     
     public async Task<File?> DeleteFileAsync(File? file, CancellationToken token = default)
     {
@@ -314,8 +314,19 @@ public class AmazonS3Storage : IFileStorage
         }
     }
 
-    private async Task<long> WriteStreamToS3Async(File file, Stream stream, CancellationToken token = default)
+    private async Task<long> WriteStreamToS3Async(File file, Stream stream, long offset = 0, CancellationToken token = default)
     {
+        // S3 has no append/random-write primitive, so this provider can only write a whole
+        // object in a single PutObject. A resumable/chunked TUS upload sends sequential
+        // chunks at increasing offsets; honouring that requires S3 multipart upload with the
+        // UploadId persisted across PATCH requests (and TUS's 4 MB chunks fall under S3's
+        // 5 MB minimum part size), which is not implemented here. Fail loudly on offset > 0
+        // instead of silently overwriting the object with just the latest chunk (data loss).
+        if (offset > 0)
+            throw new NotSupportedException(
+                $"AmazonS3Storage does not support resumable/chunked writes (offset={offset}). " +
+                "Files larger than a single upload chunk require an S3 multipart-upload implementation.");
+
         var (bucket, key) = GetBucketAndKey(file.Path);
 
         // ensure bucket exists
@@ -332,6 +343,17 @@ public class AmazonS3Storage : IFileStorage
             // Ignore other errors (e.g., access denied) and try to put object anyway
         }
 
+        // Buffer a non-seekable request body so PutObject has a known length and we can
+        // return the real byte count — the upload handler tracks completion by this offset,
+        // and returning 0 (the old behaviour) meant the upload never registered as complete.
+        if (!stream.CanSeek)
+        {
+            var buffer = new MemoryStream();
+            await stream.CopyToAsync(buffer, token);
+            buffer.Position = 0;
+            stream = buffer;
+        }
+
         var putReq = new PutObjectRequest
         {
             BucketName = bucket,
@@ -339,8 +361,8 @@ public class AmazonS3Storage : IFileStorage
             InputStream = stream
         };
 
-        var resp = await Client.PutObjectAsync(putReq, token);
-        return stream.CanSeek ? stream.Length : 0;
+        await Client.PutObjectAsync(putReq, token);
+        return stream.Length;
     }
 
     public Task ZipFolderAsync(string folderToArchive, string destinationFile, CancellationToken token = default)

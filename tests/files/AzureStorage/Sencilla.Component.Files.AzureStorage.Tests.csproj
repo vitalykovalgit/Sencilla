@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libs\files\AzureStorage\Sencilla.Component.Files.AzureStorage.csproj" />
+  </ItemGroup>
+
+</Project>

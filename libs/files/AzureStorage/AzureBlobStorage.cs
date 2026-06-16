@@ -370,41 +370,72 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
 
     private async Task<long> WriteStreamToBlobAsync(File file, Stream stream, long offset = 0, long length = -1, CancellationToken? token = null)
     {
+        var ct = token ?? CancellationToken.None;
         var (containerName, blobName) = GetContainerAndFileName(file);
 
         var container = GetContainerClient(containerName, blobName);
-        await container.CreateIfNotExistsAsync();
+        await container.CreateIfNotExistsAsync(cancellationToken: ct);
 
         var appendBlobClient = container.GetAppendBlobClient(blobName);
-        await appendBlobClient.CreateIfNotExistsAsync();
 
+        // A fresh upload (offset 0) must start from an empty blob: this is the
+        // chunked-TUS first chunk (or a full-file write/restart). Recreating
+        // guarantees a retried upload can never concatenate onto a stale,
+        // partially-written blob. Resumed chunks (offset > 0) require the blob
+        // to already exist and continue appending from where it left off.
+        if (offset == 0)
+            await appendBlobClient.CreateAsync(cancellationToken: ct);
+        else
+            await appendBlobClient.CreateIfNotExistsAsync(cancellationToken: ct);
+
+        // Buffer non-seekable request bodies so the length is known up front.
         using var ms = new MemoryStream();
         if (!stream.CanSeek)
         {
-            await stream.CopyToAsync(ms);
+            await stream.CopyToAsync(ms, ct);
             ms.Position = 0;
             stream = ms;
         }
 
         if (stream.Length == 0)
-            return 0;
+            return offset;
 
         var maxBlockSize = appendBlobClient.AppendBlobMaxAppendBlockBytes;
-        long commitedOffset = 0, lastBlockSize = 0, bytesLeft = stream.Length;
-        var buffer = new byte[bytesLeft];
+        long writePosition = offset, bytesLeft = stream.Length;
+        var buffer = new byte[(int)Math.Min(bytesLeft, maxBlockSize)];
 
         while (bytesLeft > 0)
         {
             int blockSize = (int)Math.Min(bytesLeft, maxBlockSize);
-            int bytesRead = await stream.ReadAsync(buffer.AsMemory(0, blockSize));
+            int bytesRead = await stream.ReadAsync(buffer.AsMemory(0, blockSize), ct);
+            if (bytesRead == 0)
+                break;
+
             await using var memoryStream = new MemoryStream(buffer, 0, bytesRead);
-            var appendResponse = await appendBlobClient.AppendBlockAsync(memoryStream, cancellationToken: token ?? CancellationToken.None);
+            try
+            {
+                // IfAppendPositionEqual makes the append idempotent: if this exact
+                // chunk was already committed on a previous attempt (a TUS retry
+                // after a dropped connection), Azure rejects it with 412 instead of
+                // appending the bytes a second time and corrupting the blob.
+                await appendBlobClient.AppendBlockAsync(
+                    memoryStream,
+                    transactionalContentHash: null,
+                    conditions: new AppendBlobRequestConditions { IfAppendPositionEqual = writePosition },
+                    progressHandler: null,
+                    cancellationToken: ct);
+            }
+            catch (Azure.RequestFailedException ex) when (ex.Status == 412)
+            {
+                // Append position already past this chunk — it was committed by an
+                // earlier attempt. Skip it rather than duplicate the data.
+            }
+
+            writePosition += bytesRead;
             bytesLeft -= bytesRead;
-            lastBlockSize = bytesRead;
-            commitedOffset = long.Parse(appendResponse.Value.BlobAppendOffset);
         }
 
-        return commitedOffset + lastBlockSize;
+        return writePosition;
     }
 
     public async Task<bool> SaveFile(string file, Stream stream)
