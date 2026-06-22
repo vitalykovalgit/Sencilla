@@ -1,4 +1,5 @@
 ﻿global using System;
+global using System.Collections.Concurrent;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Diagnostics.CodeAnalysis;
 global using System.Linq;
@@ -12,6 +13,8 @@ global using System.Text.Json.Serialization;
 global using System.Diagnostics;
 
 global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.ChangeTracking;
+global using Microsoft.EntityFrameworkCore.Diagnostics;
 global using Microsoft.EntityFrameworkCore.Metadata;
 global using Microsoft.EntityFrameworkCore.Storage;
 global using Microsoft.EntityFrameworkCore.Query;

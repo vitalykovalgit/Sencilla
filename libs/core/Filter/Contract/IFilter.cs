@@ -39,9 +39,15 @@ public interface IFilter
     public string[]? With { get; set; }
 
     /// <summary>
-    /// Search by any fields that is varchar 
+    /// Search by any fields that is varchar
     /// </summary>
     public string? Search { get; set; }
+
+    /// <summary>
+    /// Point-in-time read for append-only / valid-time entities (<see cref="IEntityAppendOnlyTrack"/>):
+    /// return the rows active as of this instant (UTC). Null = no temporal filtering (full history).
+    /// </summary>
+    DateTime? AsOf { get; set; }
 
     /// <summary>
     /// Contains list of properties by which we need to make select 

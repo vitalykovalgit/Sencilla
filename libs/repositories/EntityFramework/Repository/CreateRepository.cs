@@ -36,9 +36,9 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         return Create(entities, CancellationToken.None);
     }
 
-    public async Task<IEnumerable<TEntity>> Create(IEnumerable<TEntity> entities, CancellationToken token = default)
+    public virtual async Task<IEnumerable<TEntity>> Create(IEnumerable<TEntity> entities, CancellationToken token = default)
     {
-        // Check constraints 
+        // Check constraints
         var eventCreating = new EntityCreatingEvent<TEntity> { Entities = entities.AsQueryable() };
         await D.Events.PublishAsync(eventCreating, token);
 

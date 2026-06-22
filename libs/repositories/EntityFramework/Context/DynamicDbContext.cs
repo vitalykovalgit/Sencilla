@@ -30,6 +30,10 @@ public class DynamicDbContext([NotNull] DbContextOptions options) : DbContext(op
         {
             optionsBuilder.UseModel(_compiledModel);
         }
+
+        // Enforce IEntityAppendOnly: reject Modified/Deleted, so versioned/immutable entities
+        // (e.g. effective-dated currency rates) can only be appended.
+        optionsBuilder.AddInterceptors(AppendOnlyInterceptor.Instance);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

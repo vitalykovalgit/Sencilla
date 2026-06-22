@@ -13,6 +13,10 @@ public static class RepoEFIServiceCollectionEx
             var @interface = typeof(IEventHandlerBase<>).MakeGenericType(@event);
             var constraint = typeof(FilterConstraintHandler<>).MakeGenericType(type);
             container.AddScoped(@interface, constraint);
+
+            // Append-only valid-time entities also get the as-of (IFilter.AsOf) range narrowing.
+            if (typeof(IEntityAppendOnlyTrack).IsAssignableFrom(type))
+                container.AddScoped(@interface, typeof(AppendOnlyTrackReadingHandler<>).MakeGenericType(type));
         }
         return container;
     }
@@ -93,37 +97,55 @@ public static class RepoEFIServiceCollectionEx
 
     private static void RegisterCreateRepo(IServiceCollection container, Type type, Type context, Type key)
     {
-        // register create repo 
-        if (typeof(IEntityCreateable).IsAssignableFrom(type))
+        if (!typeof(IEntityCreateable).IsAssignableFrom(type))
+            return;
+
+        // Append-only valid-time entities get the supersede repository (create appends a new version).
+        if (typeof(IEntityAppendOnlyTrack).IsAssignableFrom(type))
         {
             container.TryAddScoped(
                 typeof(ICreateRepository<,>).MakeGenericType(type, key),
-                typeof(CreateRepository<,,>).MakeGenericType(type, context, key));
+                typeof(AppendOnlyTrackRepository<,,>).MakeGenericType(type, context, key));
+            return;
+        }
 
-            if (key == typeof(int))
-            {
-                container.TryAddScoped(
-                    typeof(ICreateRepository<>).MakeGenericType(type),
-                    typeof(CreateRepository<,>).MakeGenericType(type, context));
-            }
+        container.TryAddScoped(
+            typeof(ICreateRepository<,>).MakeGenericType(type, key),
+            typeof(CreateRepository<,,>).MakeGenericType(type, context, key));
+
+        if (key == typeof(int))
+        {
+            container.TryAddScoped(
+                typeof(ICreateRepository<>).MakeGenericType(type),
+                typeof(CreateRepository<,>).MakeGenericType(type, context));
         }
     }
 
     private static void RegisterUpdateRepo(IServiceCollection container, Type type, Type context, Type key)
     {
-        // register update repo 
-        if (typeof(IEntityUpdateable).IsAssignableFrom(type))
+        // Append-only valid-time entities expose "update" as a supersede (append a new version), even
+        // though they don't implement IEntityUpdateable — so the CRUD POST works instead of returning 501.
+        if (typeof(IEntityAppendOnlyTrack).IsAssignableFrom(type))
         {
             container.TryAddScoped(
                 typeof(IUpdateRepository<,>).MakeGenericType(type, key),
-                typeof(UpdateRepository<,,>).MakeGenericType(type, context, key));
+                typeof(AppendOnlyTrackRepository<,,>).MakeGenericType(type, context, key));
+            return;
+        }
 
-            if (key == typeof(int))
-            {
-                container.TryAddScoped(
-                    typeof(IUpdateRepository<>).MakeGenericType(type),
-                    typeof(UpdateRepository<,>).MakeGenericType(type, context));
-            }
+        // register update repo
+        if (!typeof(IEntityUpdateable).IsAssignableFrom(type))
+            return;
+
+        container.TryAddScoped(
+            typeof(IUpdateRepository<,>).MakeGenericType(type, key),
+            typeof(UpdateRepository<,,>).MakeGenericType(type, context, key));
+
+        if (key == typeof(int))
+        {
+            container.TryAddScoped(
+                typeof(IUpdateRepository<>).MakeGenericType(type),
+                typeof(UpdateRepository<,>).MakeGenericType(type, context));
         }
     }
 
