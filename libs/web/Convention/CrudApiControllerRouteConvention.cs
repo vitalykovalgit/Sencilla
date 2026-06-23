@@ -7,7 +7,7 @@ public class CrudApiControllerRouteConvention : IControllerModelConvention
         var ctrlType = controller.ControllerType;
         if (ctrlType.IsGenericType && typeof(CrudApiController<,>) == ctrlType.GetGenericTypeDefinition())
         {
-            // Check if we need to add routing 
+            // Check if we need to add routing
             var entityType = ctrlType.GenericTypeArguments[0];
             var crudApiAttr = entityType.GetCustomAttribute<CrudApiAttribute>();
             if (crudApiAttr?.Route != null)
