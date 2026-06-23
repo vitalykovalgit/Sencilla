@@ -127,9 +127,15 @@ public static class RepoEFIServiceCollectionEx
         // though they don't implement IEntityUpdateable — so the CRUD POST works instead of returning 501.
         if (typeof(IEntityAppendOnlyTrack).IsAssignableFrom(type))
         {
+            var appendOnlyRepo = typeof(AppendOnlyTrackRepository<,,>).MakeGenericType(type, context, key);
+
             container.TryAddScoped(
-                typeof(IUpdateRepository<,>).MakeGenericType(type, key),
-                typeof(AppendOnlyTrackRepository<,,>).MakeGenericType(type, context, key));
+                typeof(IUpdateRepository<,>).MakeGenericType(type, key), appendOnlyRepo);
+
+            // Cancel-scheduled (LIFO) operation for append-only valid-time entities.
+            container.TryAddScoped(
+                typeof(IAppendOnlyTrackRepository<,>).MakeGenericType(type, key), appendOnlyRepo);
+
             return;
         }
 

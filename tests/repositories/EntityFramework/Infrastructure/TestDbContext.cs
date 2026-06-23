@@ -10,4 +10,5 @@ public class TestDbContext : DbContext
     public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
 
     public DbSet<TestProduct> Products { get; set; } = null!;
+    public DbSet<TestRate> Rates { get; set; } = null!;
 }
