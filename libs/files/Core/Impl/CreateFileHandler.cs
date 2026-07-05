@@ -5,6 +5,7 @@ internal class CreateFileHandler(
     IFileStorage storage,
     IEventDispatcher events,
     IFilePathResolver pathResolver,
+    SencillaFilesOptions options,
     ICreateRepository<File, Guid> fileRepo,
     IUpdateRepository<File, Guid> fileUpdateRepo): IFileRequestHandler
 {
@@ -45,6 +46,14 @@ internal class CreateFileHandler(
             return;
         }
 
+        // Accept-gate: reject uploads whose MIME type is not in the configured allow-list.
+        // Empty allow-list (default) = allow all, so this is inert until an app configures it.
+        if (options.AllowedMimeTypes.Count > 0 && (file.MimeType is null || !options.AllowedMimeTypes.Contains(file.MimeType)))
+        {
+            await context.WriteBadRequest($"Mime type '{file.MimeType}' is not an accepted upload format.");
+            return;
+        }
+
         // check if file exists use it otherways create it
         var dbFile = await fileRepo.GetById(file.Id);
         if (dbFile == null)
@@ -52,7 +61,7 @@ internal class CreateFileHandler(
             if (res.HasValue)
                 file.Res = new Dictionary<string, ResolutionInfo>
                 {
-                    [res.Value.ToString()] = new ResolutionInfo { S = file.Size, U = 0 }
+                    [res.Value.ToString()] = new ResolutionInfo { S = file.Size, U = 0, Ct = file.MimeType }
                 };
             
             dbFile = await fileRepo.Create(file);
@@ -72,7 +81,7 @@ internal class CreateFileHandler(
         {
             // File exists, atomically add new resolution entry (no read-modify-write race)
             var resKey = res.Value.ToString();
-            var resInfo = new ResolutionInfo { S = uploadLength, U = 0 };
+            var resInfo = new ResolutionInfo { S = uploadLength, U = 0, Ct = file.MimeType };
             await fileUpdateRepo.JsonMergeAsync(dbFile.Id, f => f.Res, resKey, resInfo, token);
 
             var resPath = pathResolver.GetResolutionPath(dbFile, res.Value);

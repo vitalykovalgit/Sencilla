@@ -76,7 +76,7 @@ public class UploadFileHandler(
         {
             await events.PublishAsync(new FileUploadedEvent { File = file, Resolution = res }, token);
         }
-        updatedInfo = new ResolutionInfo { S = resInfo.S, U = newOffset };
+        updatedInfo = new ResolutionInfo { S = resInfo.S, U = newOffset, Ct = resInfo.Ct };
 
         await fileUpdateRepository.JsonMergeAsync(file.Id, f => f.Res, resKey, updatedInfo, token);
 

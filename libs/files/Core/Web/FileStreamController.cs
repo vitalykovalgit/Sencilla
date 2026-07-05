@@ -28,7 +28,7 @@ public class FileStreamController(
             {
                 Id = file.Id,
                 Name = file.Name,
-                MimeType = file.MimeType,
+                MimeType = (file.Res.TryGetValue(res.Value.ToString(), out var ri) ? ri?.Ct : null) ?? file.MimeType,
                 Path = resPath,
                 Storage = file.Storage
             };

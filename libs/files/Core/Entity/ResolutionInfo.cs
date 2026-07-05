@@ -16,4 +16,8 @@ public class ResolutionInfo
     /// Uploaded bytes (null when upload is complete)
     /// </summary>
     public long? U { get; set; }
+
+    /// <summary>Per-variant content type / format (e.g. "image/webp","image/png","image/jpeg").
+    /// Null for rows created before this field existed → callers fall back to File.MimeType.</summary>
+    public string? Ct { get; set; }
 }

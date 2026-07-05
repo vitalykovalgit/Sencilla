@@ -21,10 +21,16 @@ public abstract class BaseFilesOptions
     public bool UseAsDefault { get; set; }
 
     /// <summary>
-    /// Predefined directories that contains mapping 
+    /// Predefined directories that contains mapping
     /// type -> directory
     /// </summary>
     public Dictionary<string, string> Dirs { get; set; } = [];
+
+    /// <summary>
+    /// Allow-list of accepted upload MIME types. Empty (default) = allow all,
+    /// preserving backward compatibility for consumers that never configure it.
+    /// </summary>
+    public HashSet<string> AllowedMimeTypes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// 
