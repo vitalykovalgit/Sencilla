@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <!-- SQL Server schema (.sql source) component for Sencilla "Audit": the [audit] schema and the app-wide
+       audit.Audit change-log table. Self-contained (no cross-schema FKs). Compiled into the consuming
+       database's own model by the package's build/*.props (so audit.* lands physically in the consuming dacpac).
+
+       Shared SQL project config (SDK version, DSP, ModelCollation, identity, README + build-asset packing,
+       dacpac-strip target) lives in libs/Directory.Build.Sql.props, imported via Database/Directory.Build.props. -->
+  <Sdk Name="Microsoft.Build.Sql" />
+  <PropertyGroup>
+    <Description>SQL Server schema (.sql source) for the Sencilla Audit component: the [audit] schema, the app-wide audit.Audit change-log table, and the AuditAction/ActorType enum-lookup tables. Compiled into the consuming database's own model (self-contained); reference data ships as seed.</Description>
+  </PropertyGroup>
+
+  <!-- Schema SOURCE shipped under sql/ — auto-compiled into the consumer's model by build/*.props. -->
+  <ItemGroup>
+    <None Include="Schema/*.sql;Tables/*.sql" Pack="true" PackagePath="sql/" />
+  </ItemGroup>
+  <!-- Reference/seed data: shipped as package content under seed/, NOT compiled into the dacpac model
+       (it contains INSERTs, not schema). Consumers run it with a single
+       :r $(Sencilla_Component_Audit)/ApplyData.sql in their own post-deployment. -->
+  <ItemGroup>
+    <Build Remove="Data/**/*.sql" />
+    <None Include="Data/*.sql" Pack="true" PackagePath="seed/" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
+    <!-- Actor resolution needs the current User (GetCurrentUser + RoleType); Users transitively brings
+         Sencilla.Web / ASP.NET Core for the X-Audit-Reason middleware. -->
+    <ProjectReference Include="..\Users\Sencilla.Component.Users.csproj" />
+  </ItemGroup>
+
+</Project>

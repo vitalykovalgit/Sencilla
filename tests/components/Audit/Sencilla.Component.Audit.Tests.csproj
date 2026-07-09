@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libs\components\Audit\Sencilla.Component.Audit.csproj" />
+  </ItemGroup>
+
+</Project>
