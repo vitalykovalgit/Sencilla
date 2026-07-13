@@ -104,12 +104,12 @@ public class GetOrCreateRepositoryTests : RepositoryTestBase<TestCreateRepositor
         Assert.Empty(result.Existing);
         Assert.Empty(result.All);
 
-        // EntityCreatingEvent should still fire (all 0 entities)
+        // Per-row permission mapping: no rows to create → no create check, no event.
         EventDispatcherMock.Verify(
             x => x.PublishAsync(
                 It.IsAny<EntityCreatingEvent<TestProduct>>(),
                 It.IsAny<CancellationToken>()),
-            Times.Once);
+            Times.Never);
 
         // EntityCreatedEvent must NOT fire (nothing created)
         EventDispatcherMock.Verify(

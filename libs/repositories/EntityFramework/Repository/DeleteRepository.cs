@@ -26,24 +26,68 @@ public class DeleteRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
         return Delete(new[] { id }, token);
     }
 
-    public async Task<int> Delete(IEnumerable<TKey> ids, CancellationToken token = default)
+    public Task<int> Delete(IEnumerable<TKey> ids, CancellationToken token = default)
     {
-        var count = await DbContext.Set<TEntity>().Where(e => ids.Contains(e.Id)).ExecuteDeleteAsync(token).ConfigureAwait(false);
-        await Save(token);
-        return count;
+        return InTransaction(async () =>
+        {
+            var dbQuery = DbContext.Set<TEntity>().Where(e => ids.Contains(e.Id));
+
+            var eventDeleting = new EntityDeletingEvent<TEntity> { Entities = dbQuery };
+            await D.Events.PublishAsync(eventDeleting, token);
+            await ThrowIfNarrowed(eventDeleting.Entities, dbQuery, token);
+
+            // Delete through the narrowed query — composed constraints become part of
+            // the DELETE's WHERE, so a row can never slip past the check.
+            var count = await (eventDeleting.Entities ?? dbQuery).ExecuteDeleteAsync(token).ConfigureAwait(false);
+            await Save(token);
+
+            // No payload: the rows are gone and were never materialized.
+            await D.Events.PublishAsync(new EntityDeletedEvent<TEntity>(), token);
+
+            return count;
+        }, token);
     }
     public Task<int> Delete(TEntity entity, CancellationToken token = default)
     {
         return Delete(new[] { entity }, token);
     }
 
-    public async Task<int> Delete(IEnumerable<TEntity> entities, CancellationToken token = default)
+    public Task<int> Delete(IEnumerable<TEntity> entities, CancellationToken token = default)
     {
-        // Add events
+        return InTransaction(async () =>
+        {
+            // Constraints check the rows as they exist in the DB (pre-image),
+            // not the client-supplied objects.
+            var ids = entities.Select(e => e.Id).ToList();
+            var dbQuery = DbContext.Set<TEntity>().AsNoTracking().Where(e => ids.Contains(e.Id));
 
-        DbContext.RemoveRange(entities);
-        var count = await Save(token);
+            var eventDeleting = new EntityDeletingEvent<TEntity> { Entities = dbQuery };
+            await D.Events.PublishAsync(eventDeleting, token);
+            await ThrowIfNarrowed(eventDeleting.Entities, dbQuery, token);
 
-        return count;
+            DbContext.RemoveRange(entities);
+
+            // Idempotent delete: a row already removed (or its key never persisted) since the client
+            // loaded it surfaces as an EF concurrency violation — the DELETE affects 0 rows. Deleting
+            // a missing row is a success, not a 500: detach the missed entries and retry the rest.
+            // Terminates: every iteration detaches at least one entry.
+            while (true)
+            {
+                try
+                {
+                    var count = await Save(token);
+                    await D.Events.PublishAsync(new EntityDeletedEvent<TEntity> { Entities = entities.AsQueryable() }, token);
+                    return count;
+                }
+                catch (DbUpdateConcurrencyException e)
+                {
+                    if (!e.Entries.Any())
+                        throw;
+
+                    foreach (var entry in e.Entries)
+                        entry.State = EntityState.Detached;
+                }
+            }
+        }, token);
     }
 }

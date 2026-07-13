@@ -1,6 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <!-- Sqlite: exercises HeldGrantBuilder predicates through REAL EF translation to
+         SQL, which .Compile() unit tests cannot — guards the query-root regression. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\libs\components\Security\Sencilla.Component.Security.csproj" />
   </ItemGroup>
 

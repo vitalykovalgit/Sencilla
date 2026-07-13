@@ -8,10 +8,16 @@ global using Microsoft.Extensions.DependencyInjection;
 
 global using Sencilla.Core;
 global using Sencilla.Component.Users;
+global using Sencilla.Component.Security;
 global using Sencilla.Component.Audit;
 
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+
+// Discovered like every other component: AddSencilla()'s scan force-loads the full assembly
+// graph first, so RepositoryRegistrator sees the Audit entity (repositories + DynamicDbContext
+// model) and AuditRegistrator wires AuditHandler<T> for every IEntityAuditable type.
+[assembly: AutoDiscovery]
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -24,12 +30,9 @@ public static class Bootstrap
     /// <c>app.UseSencillaAudit()</c> (after <c>UseSencillaUser</c>) for the
     /// X-Audit-Reason header.
     ///
-    /// Registration is EXPLICIT, not discovery-based: <c>AddSencilla()</c>'s <c>[AutoDiscovery]</c> scan runs
-    /// once, up front, over the already-loaded assemblies — but this component (and the app's entity assemblies)
-    /// are typically loaded lazily AFTER that scan, so a discovery-only wiring would register nothing and the
-    /// audit log would be silently inert. Call this after the entity assemblies are loaded (i.e. after the app
-    /// registers its own components) so every <see cref="IEntityAuditable"/> type is visible here. The audit
-    /// entity's repositories come from <c>AddSencillaRepositoryForEF</c>, which must run after this.
+    /// The <c>[assembly: AutoDiscovery]</c> scan already registers the handlers when
+    /// <c>AddSencilla()</c> runs; the loop below only matters for hosts that skip the scan.
+    /// <see cref="Sencilla.Component.Audit.AuditRegistrator"/> is idempotent, so both paths may run.
     /// </summary>
     public static IServiceCollection AddSencillaAudit(this IServiceCollection services)
     {

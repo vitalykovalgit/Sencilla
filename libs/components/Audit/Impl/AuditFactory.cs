@@ -55,11 +55,21 @@ public static class AuditFactory
         return d;
     }
 
+    // Bookkeeping stamps that change on every write — a diff that ONLY touches these is a semantic
+    // no-op (e.g. re-writing an entity's status to the same value bumps UpdatedDate). Excluded from the
+    // update diff so such no-ops produce no audit row. NOT excluded from insert/delete snapshots (there
+    // the timestamp is part of the full-row record), and DeletedDate stays IN the diff (soft-delete is
+    // a real change).
+    static readonly HashSet<string> NoiseColumns = new(StringComparer.Ordinal) { "CreatedDate", "UpdatedDate" };
+
     static Dictionary<string, object?> Diff(object oldEntity, object newEntity)
     {
         var d = new Dictionary<string, object?>();
         foreach (var p in ScalarProps(oldEntity.GetType()))
         {
+            if (NoiseColumns.Contains(p.Name))
+                continue;
+
             var ov = p.GetValue(oldEntity);
             var nv = p.GetValue(newEntity);
             if (!Equals(ov, nv))

@@ -1,5 +1,12 @@
 namespace Sencilla.Component.I18n;
 
+/// <summary>
+/// Composes several localization providers; later-added providers win (list is walked in reverse).
+/// Not a DI service: AddI18nServices builds it manually with an explicit provider list —
+/// [DisableInjection] keeps auto-discovery from registering it (IList is not DI-resolvable,
+/// and auto-binding it as ILocalizationProvider would make the aggregator wrap itself).
+/// </summary>
+[DisableInjection]
 public class LocalizationProviderAggregator : ILocalizationProvider
 {
     private readonly IList<ILocalizationProvider> _providers;

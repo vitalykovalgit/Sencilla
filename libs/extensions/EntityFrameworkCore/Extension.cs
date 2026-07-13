@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
+using Microsoft.EntityFrameworkCore.Storage;
 using Sencilla.Core;
 
 namespace Microsoft.EntityFrameworkCore;
@@ -57,6 +58,9 @@ public static class EntityFrameworkCoreExtensions
         try
         {
             using var cmd = connection.CreateCommand();
+            // Enlist in the ambient repository transaction, if any — a raw command on a
+            // connection with a pending local transaction throws otherwise (SQL Server).
+            cmd.Transaction = context.Database.CurrentTransaction?.GetDbTransaction();
             cmd.CommandText = mergeQuery + "\n" + selectQuery;
 
             using var reader = await cmd.ExecuteReaderAsync(token);
@@ -120,6 +124,9 @@ public static class EntityFrameworkCoreExtensions
         try
         {
             using var cmd = connection.CreateCommand();
+            // Enlist in the ambient repository transaction, if any — a raw command on a
+            // connection with a pending local transaction throws otherwise (SQL Server).
+            cmd.Transaction = context.Database.CurrentTransaction?.GetDbTransaction();
             cmd.CommandText = mergeQuery + "\n" + selectQuery;
 
             using var reader = await cmd.ExecuteReaderAsync(token);

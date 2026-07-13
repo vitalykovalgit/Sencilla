@@ -21,6 +21,13 @@ namespace Sencilla.Component.Security
         public string Constraint { get; }
 
         /// <summary>
+        /// Placeholder names in positional order (@0, @1, ...), lower-cased — e.g.
+        /// <c>userId={user}.Id</c> yields <c>["user"]</c>. Used by startup validation
+        /// to supply representative typed values so the constraint can be parsed.
+        /// </summary>
+        public IReadOnlyList<string> Parameters => Params;
+
+        /// <summary>
         /// return array of values from system variables
         /// </summary>
         /// <param name="sysVars"></param>

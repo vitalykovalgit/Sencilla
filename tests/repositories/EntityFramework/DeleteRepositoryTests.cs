@@ -137,4 +137,30 @@ public class DeleteRepositoryTests : RepositoryTestBase<TestDeleteRepository>
 
         Assert.Equal(3, count);
     }
+
+    // ── Idempotent delete: rows already gone must not fail the batch ─────────
+    // (EF surfaces a missing row as DbUpdateConcurrencyException — the repository
+    // detaches the missed entries and persists the rest instead of throwing a 500.)
+
+    [Fact]
+    public async Task Delete_ByEntities_WithMissingRow_DeletesTheRestWithoutThrowing()
+    {
+        await SeedAsync(MakeProduct(1, "Existing"));
+        var existing = await DbContext.Products.FindAsync(1);
+        var phantom = MakeProduct(999); // never persisted — e.g. a stale client id
+
+        await Repository.Delete(new[] { existing!, phantom });
+
+        DbContext.ChangeTracker.Clear();
+        Assert.Null(await DbContext.Products.FindAsync(1));
+    }
+
+    [Fact]
+    public async Task Delete_ByEntities_AllMissing_DoesNotThrow()
+    {
+        await Repository.Delete(new[] { MakeProduct(998), MakeProduct(999) });
+
+        DbContext.ChangeTracker.Clear();
+        Assert.Empty(DbContext.Products.ToList());
+    }
 }

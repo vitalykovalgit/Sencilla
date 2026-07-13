@@ -201,5 +201,26 @@ public class AppendOnlyTrackRepository<TEntity, TContext, TKey>
     public void ClearChangeTracker() => DbContext.ChangeTracker.Clear();
 
     public Task<int> JsonMergeAsync<TValue>(TKey id, Expression<Func<TEntity, IDictionary<string, TValue>?>> property, string key, TValue value, CancellationToken token = default)
-        => DbContext.JsonMergeAsync(id, property, key, value, token);
+    {
+        return InTransaction(async () =>
+        {
+            // Unlike appends, a JSON patch mutates the current row in place — it is
+            // an UPDATE: pre-image constraint check, post-image re-check in the
+            // ambient transaction.
+            var ids = new[] { id };
+            var dbQuery = DbContext.Set<TEntity>().AsNoTracking().Where(e => ids.Contains(e.Id));
+
+            var eventUpdating = new EntityUpdatingEvent<TEntity> { DbEntities = dbQuery };
+            await D.Events.PublishAsync(eventUpdating, token);
+            await ThrowIfNarrowed(eventUpdating.DbEntities, dbQuery, token);
+
+            var count = await DbContext.JsonMergeAsync(id, property, key, value, token);
+
+            var eventUpdated = new EntityUpdatedEvent<TEntity> { DbEntities = dbQuery };
+            await D.Events.PublishAsync(eventUpdated, token);
+            await ThrowIfNarrowed(eventUpdated.DbEntities, dbQuery, token);
+
+            return count;
+        }, token);
+    }
 }

@@ -22,6 +22,14 @@ public class AuditTests
         public Widget? Parent { get; set; }   // navigation — must be excluded
     }
 
+    class Tracked : IEntity<Guid>, IEntityAuditable
+    {
+        public Guid Id { get; set; }
+        public int Status { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime UpdatedDate { get; set; }
+    }
+
     class Plain : IEntity<Guid>   // NOT IEntityAuditable
     {
         public Guid Id { get; set; }
@@ -99,6 +107,28 @@ public class AuditTests
         var b = new Widget { Id = id, Name = "A", Qty = 3 };
 
         Assert.Null(AuditFactory.Update(a, b, new Ctx()));
+    }
+
+    [Fact]
+    public void Update_Touching_Only_Timestamps_Produces_No_Row()
+    {
+        var id = Guid.NewGuid();
+        var old = new Tracked { Id = id, Status = 1, UpdatedDate = new DateTime(2026, 1, 1) };
+        var updated = new Tracked { Id = id, Status = 1, UpdatedDate = new DateTime(2026, 2, 2) };  // only UpdatedDate
+
+        Assert.Null(AuditFactory.Update(old, updated, new Ctx()));
+    }
+
+    [Fact]
+    public void Update_Records_Status_But_Not_The_Timestamp_Bump()
+    {
+        var id = Guid.NewGuid();
+        var old = new Tracked { Id = id, Status = 1, UpdatedDate = new DateTime(2026, 1, 1) };
+        var updated = new Tracked { Id = id, Status = 2, UpdatedDate = new DateTime(2026, 2, 2) };
+
+        var changes = Changes(AuditFactory.Update(old, updated, new Ctx())!);
+        Assert.True(changes.ContainsKey("status"));
+        Assert.False(changes.ContainsKey("updatedDate"));   // bookkeeping stamp excluded from the diff
     }
 
     // ── Delete ───────────────────────────────────────────────────────────────

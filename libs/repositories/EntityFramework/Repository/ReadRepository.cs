@@ -23,6 +23,12 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
 {
     public IQueryable<TEntity> Query => DbContext.Query<TEntity>();
 
+    /// <summary>
+    /// Composable query with the reading pipeline applied — permission constraints
+    /// and filters compose into it before it is returned.
+    /// </summary>
+    public Task<IQueryable<TEntity>> QueryAsync(CancellationToken token = default) => QueryInternal(null, token);
+
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
     public async Task<TEntity?> GetById(TKey id, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
     {

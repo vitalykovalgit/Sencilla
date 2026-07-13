@@ -21,7 +21,7 @@ public class AuditHandler<T>
     public Task HandleAsync(EntityCreatedEvent<T> @event, IAuditContext ctx, ICreateRepository<Audit, long> repo, CancellationToken token)
     {
         var rows = (@event.Entities?.ToList() ?? []).Select(e => AuditFactory.Insert(e, ctx)).ToList();
-        return rows.Count == 0 ? Task.CompletedTask : repo.Create(rows, token);
+        return WriteAsync(rows, repo, token);
     }
 
     public Task HandleAsync(EntityUpdatingEvent<T> @event, IAuditContext ctx, ICreateRepository<Audit, long> repo, CancellationToken token)
@@ -36,12 +36,28 @@ public class AuditHandler<T>
             if (olds.TryGetValue(AuditFactory.IdOf(n), out var old) && AuditFactory.Update(old, n, ctx) is { } row)
                 rows.Add(row);
 
-        return rows.Count == 0 ? Task.CompletedTask : repo.Create(rows, token);
+        return WriteAsync(rows, repo, token);
     }
 
     public Task HandleAsync(EntityDeletingEvent<T> @event, IAuditContext ctx, ICreateRepository<Audit, long> repo, CancellationToken token)
     {
         var rows = (@event.Entities?.ToList() ?? []).Select(e => AuditFactory.Delete(e, ctx)).ToList();
-        return rows.Count == 0 ? Task.CompletedTask : repo.Create(rows, token);
+        return WriteAsync(rows, repo, token);
+    }
+
+    /// <summary>
+    /// The audit insert is the component's own TRUSTED write — the audited operation was already
+    /// authorized by the caller's pipeline, and audit.Audit deliberately carries no per-user matrix
+    /// grants (nobody may write the log directly). Without root access the security constraint
+    /// fail-closes on the grantless resource and the ForbiddenException aborts the audited operation
+    /// itself (e.g. an admin's shipping update 403s because its audit row is denied).
+    /// </summary>
+    private static async Task WriteAsync(List<Audit> rows, ICreateRepository<Audit, long> repo, CancellationToken token)
+    {
+        if (rows.Count == 0)
+            return;
+
+        using var rootAccess = Access.Root();
+        await repo.Create(rows, token);
     }
 }

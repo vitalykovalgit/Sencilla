@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Sencilla.Repository.EntityFramework.Tests.Infrastructure;
 
 /// <summary>
@@ -24,4 +26,9 @@ public class TestProduct :
 
     // IEntityRemoveable
     public DateTime? DeletedDate { get; set; }
+
+    // JSON dictionary target for JsonMergeAsync enforcement tests. Not mapped —
+    // the permission check runs before the SQL, so mapping is never resolved.
+    [NotMapped]
+    public Dictionary<string, string>? Meta { get; set; }
 }

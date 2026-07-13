@@ -53,15 +53,44 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
         DbContext.ChangeTracker.Clear();
     }
 
-    public async Task<IEnumerable<TEntity>> Update(IEnumerable<TEntity> entities, CancellationToken token = default)
+    public Task<IEnumerable<TEntity>> Update(IEnumerable<TEntity> entities, CancellationToken token = default)
     {
-        // Notify before updating 
-        var query = entities.AsQueryable();
-        var eventUpdating = new EntityUpdatingEvent<TEntity> { Entities = query };
-        await D.Events.PublishAsync(eventUpdating, token);
+        return InTransaction<IEnumerable<TEntity>>(async () =>
+        {
+            var query = entities.AsQueryable();
 
-        // TODO: Move to trackable 
-        foreach (var e in query)
+            // Pre-image: constraints are evaluated against current DB state, never
+            // against the client-supplied objects (those can be forged to satisfy any
+            // rule while targeting someone else's row). Handlers narrow DbEntities;
+            // losing an existing row denies the whole batch.
+            var ids = entities.Select(e => e.Id).ToList();
+            var dbQuery = DbContext.Set<TEntity>().AsNoTracking().Where(e => ids.Contains(e.Id));
+
+            var eventUpdating = new EntityUpdatingEvent<TEntity> { Entities = query, DbEntities = dbQuery };
+            await D.Events.PublishAsync(eventUpdating, token);
+            await ThrowIfNarrowed(eventUpdating.DbEntities, dbQuery, token);
+
+            await PersistUpdate(entities, token);
+
+            // Post-image: the same constraints must still hold after the write (a row
+            // may not be moved out of the writer's permission scope). Read inside the
+            // ambient transaction; a violation throws and the write rolls back.
+            var eventUpdated = new EntityUpdatedEvent<TEntity> { Entities = query, DbEntities = dbQuery };
+            await D.Events.PublishAsync(eventUpdated, token);
+            await ThrowIfNarrowed(eventUpdated.DbEntities, dbQuery, token);
+
+            return query;
+        }, token);
+    }
+
+    /// <summary>
+    /// The persistence core of an update, shared with soft-delete (RemoveRepository),
+    /// which runs the same write under Delete-action events instead of Update ones.
+    /// </summary>
+    protected async Task PersistUpdate(IEnumerable<TEntity> entities, CancellationToken token)
+    {
+        // TODO: Move to trackable
+        foreach (var e in entities)
         {
             if (e is IEntityUpdateableTrack track)
                 track.UpdatedDate = DateTime.UtcNow;
@@ -69,7 +98,7 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
 
         //try
         //{
-            DbContext.UpdateRange(query);
+            DbContext.UpdateRange(entities);
             await Save(token);
             context.ChangeTracker.Clear();
         //}
@@ -78,17 +107,29 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
             // Do not do like this!!!
             // context.ChangeTracker.Clear();
         //}
-
-        // Notify that entity updated
-        var eventUpdated = new EntityUpdatedEvent<TEntity> { Entities = query };
-        await D.Events.PublishAsync(eventUpdated, token);
-
-        return query;
     }
 
     public Task<int> JsonMergeAsync<TValue>(TKey id,Expression<Func<TEntity, IDictionary<string, TValue>?>> property, string key, TValue value, CancellationToken token = default)
     {
-        return DbContext.JsonMergeAsync(id, property, key, value, token);
+        return InTransaction(async () =>
+        {
+            // A JSON patch is an UPDATE: pre-image constraint on the target row,
+            // post-image re-check inside the ambient transaction.
+            var ids = new[] { id };
+            var dbQuery = DbContext.Set<TEntity>().AsNoTracking().Where(e => ids.Contains(e.Id));
+
+            var eventUpdating = new EntityUpdatingEvent<TEntity> { DbEntities = dbQuery };
+            await D.Events.PublishAsync(eventUpdating, token);
+            await ThrowIfNarrowed(eventUpdating.DbEntities, dbQuery, token);
+
+            var count = await DbContext.JsonMergeAsync(id, property, key, value, token);
+
+            var eventUpdated = new EntityUpdatedEvent<TEntity> { DbEntities = dbQuery };
+            await D.Events.PublishAsync(eventUpdated, token);
+            await ThrowIfNarrowed(eventUpdated.DbEntities, dbQuery, token);
+
+            return count;
+        }, token);
     }
 }
 

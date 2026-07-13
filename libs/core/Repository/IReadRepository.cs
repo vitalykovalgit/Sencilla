@@ -17,7 +17,21 @@ public interface IReadRepository<TEntity> : IReadRepository<TEntity, int>
 public interface IReadRepository<TEntity, TKey> : IBaseRepository
     where TEntity : IEntity<TKey>
 {
+    /// <summary>
+    /// UNSAFE escape hatch: the raw store query with NO entity pipeline applied —
+    /// permission constraints and filters are bypassed. For framework internals and
+    /// deliberate system-level access only; application code should use
+    /// <see cref="QueryAsync"/>.
+    /// </summary>
     IQueryable<TEntity> Query { get; }
+
+    /// <summary>
+    /// Composable query with the entity reading pipeline applied (permission
+    /// constraints, filters). Prefer this over <see cref="Query"/>.
+    /// Default implementation falls back to the raw query for providers without
+    /// an event pipeline (enforcement is EF-only).
+    /// </summary>
+    Task<IQueryable<TEntity>> QueryAsync(CancellationToken token = default) => Task.FromResult(Query);
 
     /// <summary>
     /// 
@@ -74,7 +88,10 @@ public interface IReadRepository<TEntity, TKey> : IBaseRepository
     Task<IDbTransaction> BeginTransaction(CancellationToken token = default);
 
     /// <summary>
-    /// Filters entities based on a predicate expression
+    /// UNSAFE: filters the raw <see cref="Query"/> — NO entity pipeline applied
+    /// (permission constraints and filters are bypassed). For framework internals
+    /// and deliberate system-level access only; application code should compose
+    /// on <see cref="QueryAsync"/> instead.
     /// </summary>
     /// <param name="predicate">The filter predicate</param>
     /// <returns>Filtered queryable</returns>

@@ -145,6 +145,30 @@ dotnet pack "$SOLUTION_FILE" \
     --output "$ARTIFACTS_DIR" \
     /p:Version="$PACKAGE_VERSION"
 
+# ── Pack SQL schema (.Mssql) source packages ─────────────────────────────────
+# The Microsoft.Build.Sql projects are NOT in the solution (so `dotnet pack SOLUTION`
+# skips them) and self-recurse when packed under an explicit solution pack because of
+# their build-time GeneratePackageOnBuild wiring — pack each directly with that disabled.
+# Output straight to the local feed and pack the base Users schema FIRST: the other
+# schema packages reference Users.Mssql at $(Version), so it must resolve from the feed
+# while they build.
+echo ""
+echo -e "${YELLOW}Packing SQL schema (.Mssql) packages...${NC}"
+pack_mssql() {
+    echo -e "  ${YELLOW}pack $(basename "$1")${NC}"
+    # RestoreAdditionalProjectSources adds the local feed so a schema package can resolve
+    # the just-packed Users.Mssql (of the SAME $(Version)) it depends on.
+    dotnet pack "$1" --configuration "$CONFIGURATION" --output "$LOCAL_NUGET_DIR" \
+        /p:Version="$PACKAGE_VERSION" -p:GeneratePackageOnBuild=false \
+        -p:RestoreAdditionalProjectSources="$LOCAL_NUGET_DIR" --nologo -v q
+}
+USERS_MSSQL="$REPO_ROOT/libs/components/Users/Database/Sencilla.Component.Users.Mssql.sqlproj"
+[[ -f "$USERS_MSSQL" ]] && pack_mssql "$USERS_MSSQL"
+while IFS= read -r -d '' proj; do
+    [[ "$proj" == "$USERS_MSSQL" ]] && continue
+    pack_mssql "$proj"
+done < <(find "$REPO_ROOT/libs" -name "*.Mssql.sqlproj" -print0)
+
 # ── Copy to local feed ────────────────────────────────────────────────────────
 echo ""
 echo -e "${YELLOW}Copying packages to local feed...${NC}"

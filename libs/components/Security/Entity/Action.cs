@@ -1,24 +1,19 @@
-﻿
+
 namespace Sencilla.Component.Security;
 
-//[Flags]
-//public enum Action : ulong
-//{
-//    Read = 1,
-//    Update = 2,
-//    Create = 4,
-//    Remove = 8,
-//    Delete = 16,
-
-//    All = ulong.MaxValue
-//}
-
+/// <summary>
+/// Entity operations a permission grants. Bit flags so a single Matrix row can
+/// grant combinations (e.g. Read | Update). Values are persisted in
+/// [sec].[Matrix].[Action] and seeded in [sec].[Action]; changing them requires
+/// a data migration (see Database/Data/MigrateActionFlags.sql).
+/// </summary>
+[Flags]
 public enum Action
 {
-    Read = 1,
+    Read   = 1,
     Create = 2,
-    Update = 3,
-    Delete = 4,
+    Update = 4,
+    Delete = 8,
 
-    All = 5,
+    All = Read | Create | Update | Delete,
 }

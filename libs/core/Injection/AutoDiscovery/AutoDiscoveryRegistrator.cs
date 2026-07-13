@@ -7,7 +7,13 @@ public class AutoDiscoveryRegistrator : ITypeRegistrator
     {
         if (type.IsClass && !type.IsAbstract && !type.IsGenericType && !type.IsAssignableTo(typeof(Attribute)))
         {
-            // ignore type registrators 
+            // Nested private types (private records, compiler-generated closures/display classes)
+            // are implementation details: nothing outside the declaring type can even name them,
+            // so registering them can only break ValidateOnBuild on their unresolvable ctor args.
+            if (type.IsNestedPrivate)
+                return;
+
+            // ignore type registrators
             if (type.IsAssignableTo(typeof(ITypeRegistrator)))
                 return;
 

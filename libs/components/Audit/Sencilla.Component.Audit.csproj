@@ -5,6 +5,9 @@
     <!-- Actor resolution needs the current User (GetCurrentUser + RoleType); Users transitively brings
          Sencilla.Web / ASP.NET Core for the X-Audit-Reason middleware. -->
     <ProjectReference Include="..\Users\Sencilla.Component.Users.csproj" />
+    <!-- Access.Root(): the audit insert is the component's own trusted write — audit.Audit has no
+         per-user matrix grants, so without the bypass the constraint would 403 every audited operation. -->
+    <ProjectReference Include="..\Security\Sencilla.Component.Security.csproj" />
   </ItemGroup>
 
 </Project>

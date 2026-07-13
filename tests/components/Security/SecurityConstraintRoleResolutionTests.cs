@@ -14,7 +14,8 @@ public class SecurityConstraintRoleResolutionTests
         public HashSet<int> Resolve(User? user) => ResolveRoleIds(
             user,
             new MemoryCache(new MemoryCacheOptions()),
-            Mock.Of<IReadRepository<UserRole, Guid>>());
+            Mock.Of<IReadRepository<UserRole, Guid>>(),
+            new SecurityCacheSignal());
     }
 
     private readonly Handler _handler = new();

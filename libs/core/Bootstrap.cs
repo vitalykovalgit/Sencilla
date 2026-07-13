@@ -42,7 +42,26 @@ public static class Bootstrap
     public static IServiceCollection AddSencilla(this IServiceCollection services, IConfiguration configuration)
     {
 
-        // 0. load all types from app
+        // 0. Force-load the app's full assembly reference graph first. The CLR loads
+        // assemblies lazily, and the [AutoDiscovery] scan below can only see assemblies
+        // ALREADY in the AppDomain — without this walk, whether a component's types (its
+        // repositories, handlers, security constraints, ...) get registered depends on
+        // JIT/debugger load order and differs run to run.
+        var visited = new HashSet<string>(AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetName().FullName));
+        var pending = new Queue<Assembly>(AppDomain.CurrentDomain.GetAssemblies());
+        while (pending.Count > 0)
+        {
+            foreach (var reference in pending.Dequeue().GetReferencedAssemblies())
+            {
+                if (!visited.Add(reference.FullName))
+                    continue;
+
+                try { pending.Enqueue(Assembly.Load(reference)); }
+                catch { /* native / reference-only / trimmed assembly — nothing to scan */ }
+            }
+        }
+
+        // load all types from app
         var assemblies = AppDomain.CurrentDomain
                              .GetAssemblies()
                              .Where(a => a.GetCustomAttributes(typeof(AutoDiscoveryAttribute), false).Any());
@@ -74,7 +93,16 @@ public static class Bootstrap
                 r.Register(services, type);
         }
 
-        // 3. Add sencilla app as singleton 
+        // 3. Framework primitives that discovered components ctor-inject but bare (non-web)
+        // hosts never register — e.g. Security's RoleClosure caches the role graph via
+        // IMemoryCache, and Users' CurrentUserProvider reads IHttpContextAccessor (whose
+        // HttpContext is simply null outside a request — the correct "no current user"
+        // semantics for background hosts). TryAdd semantics inside both: an app's own
+        // AddMemoryCache(configure) still applies its options regardless of call order.
+        services.AddMemoryCache();
+        services.AddHttpContextAccessor();
+
+        // 4. Add sencilla app as singleton
         services.TryAddSingleton<SencillaApp>();
         services.TryAddSingleton<ISencillaApp>(sp => sp.GetRequiredService<SencillaApp>());
 

@@ -23,13 +23,9 @@ public class RemoveRepository<TEntity, TContext, TKey>(RepositoryDependency depe
         return (await Remove([entity], token)).FirstOrDefault();
     }
 
-    public async Task<IEnumerable<TEntity>> Remove(IEnumerable<TEntity> entities, CancellationToken token = default)
+    public Task<IEnumerable<TEntity>> Remove(IEnumerable<TEntity> entities, CancellationToken token = default)
     {
-        foreach(var e in entities)
-            e.DeletedDate = DateTime.UtcNow;
-
-        await Update(entities, token);
-        return entities;
+        return SetRemovedState(entities, DateTime.UtcNow, token);
     }
 
     public async Task<TEntity?> Undo(TEntity entity, CancellationToken token = default)
@@ -37,12 +33,36 @@ public class RemoveRepository<TEntity, TContext, TKey>(RepositoryDependency depe
         return (await Undo([entity], token)).FirstOrDefault();
     }
 
-    public async Task<IEnumerable<TEntity>> Undo(IEnumerable<TEntity> entities, CancellationToken token = default)
+    public Task<IEnumerable<TEntity>> Undo(IEnumerable<TEntity> entities, CancellationToken token = default)
     {
-        foreach (var e in entities)
-            e.DeletedDate = null;
+        return SetRemovedState(entities, null, token);
+    }
 
-        await Update(entities, token);
-        return entities;
+    /// <summary>
+    /// Soft-delete and its undo are governed by the DELETE permission — mapped by
+    /// intent, not implementation. They publish deleting/deleted events (constraints
+    /// compose into the pre-image query) and persist through the update core without
+    /// firing update events, so an update-only role cannot remove or resurrect rows.
+    /// </summary>
+    private Task<IEnumerable<TEntity>> SetRemovedState(IEnumerable<TEntity> entities, DateTime? deletedDate, CancellationToken token)
+    {
+        return InTransaction<IEnumerable<TEntity>>(async () =>
+        {
+            var ids = entities.Select(e => e.Id).ToList();
+            var dbQuery = DbContext.Set<TEntity>().AsNoTracking().Where(e => ids.Contains(e.Id));
+
+            var eventDeleting = new EntityDeletingEvent<TEntity> { Entities = dbQuery };
+            await D.Events.PublishAsync(eventDeleting, token);
+            await ThrowIfNarrowed(eventDeleting.Entities, dbQuery, token);
+
+            foreach (var e in entities)
+                e.DeletedDate = deletedDate;
+
+            await PersistUpdate(entities, token);
+
+            await D.Events.PublishAsync(new EntityDeletedEvent<TEntity> { Entities = entities.AsQueryable() }, token);
+
+            return entities;
+        }, token);
     }
 }
