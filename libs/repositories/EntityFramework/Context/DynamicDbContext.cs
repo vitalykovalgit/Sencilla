@@ -99,8 +99,16 @@ public class DynamicDbContext([NotNull] DbContextOptions options) : DbContext(op
             // "store generates this on insert"; the SQL Server provider realizes it as an IDENTITY column
             // (matching the dacpac's [DisplayId] INT IDENTITY). UseIdentityColumn() is deliberately avoided —
             // it would couple this provider-agnostic library to Microsoft.EntityFrameworkCore.SqlServer.
+            // Before/AfterSave = Ignore: ValueGeneratedOnAdd alone still writes the column when an INSERTed
+            // entity carries a non-zero DisplayId (clone flows copy it → SQL 544) or when an update path
+            // marks it modified (PATCH round-trip with 0/stale value → SQL 8102). The column is DB-owned;
+            // EF must never write it in either direction.
             if (typeof(IEntityDisplay).IsAssignableFrom(entityType))
-                c.Property(nameof(IEntityDisplay.DisplayId)).ValueGeneratedOnAdd();
+            {
+                var displayId = c.Property(nameof(IEntityDisplay.DisplayId)).ValueGeneratedOnAdd();
+                displayId.Metadata.SetBeforeSaveBehavior(PropertySaveBehavior.Ignore);
+                displayId.Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+            }
 
             // check if entity map to the same table
             var pe = entityType.GetCustomAttribute<MainEntityAttribute>();
