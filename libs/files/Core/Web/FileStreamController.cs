@@ -14,12 +14,19 @@ public class FileStreamController(
     [ResponseCache(Duration = 172000, Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetFileStream(Guid fileId, int? dim, int? res, CancellationToken token)
     {
+        // Dimension-based lookup (existing behavior)
+        if (dim.HasValue)
+        {
+            var dimFile = await fileRepo.FirstOrDefault(new FileFilter().ByParentId(fileId).ByDimmension(dim), token);
+            return await RetriveFileStream(dimFile, token);
+        }
+
+        var file = await fileRepo.GetById(fileId, token);
+        if (file == null) return NotFound();
+
         // Resolution-based lookup
         if (res.HasValue)
         {
-            var file = await fileRepo.GetById(fileId, token);
-            if (file == null) return NotFound();
-
             if (file.Res == null || !file.Res.ContainsKey(res.Value.ToString()))
                 return BadRequest($"File with resolution {res.Value} does not exist.");
 
@@ -34,18 +41,16 @@ public class FileStreamController(
             };
             return await RetriveFileStream(resFile, token);
         }
-
-        // Dimension-based lookup (existing behavior)
-        var dimFile = await fileRepo.FirstOrDefault(new FileFilter().ByParentId(fileId).ByDimmension(dim), token);
-        return await RetriveFileStream(dimFile, token);
-    }
-
-    [HttpGet, Route("{fileId}/stream")]
-    public async Task<IActionResult> GetStream(Guid fileId, CancellationToken token)
-    {
-        var file = await fileRepo.GetById(fileId);
+        
         return await RetriveFileStream(file, token);
     }
+
+    // [HttpGet, Route("{fileId}/stream")]
+    // public async Task<IActionResult> GetStream(Guid fileId, CancellationToken token)
+    // {
+    //     var file = await fileRepo.GetById(fileId);
+    //     return await RetriveFileStream(file, token);
+    // }
 
     [HttpDelete, Route("{fileId}")]
     public async Task<IActionResult> DeleteFile(Guid fileId, CancellationToken token)
