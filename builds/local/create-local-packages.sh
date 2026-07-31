@@ -66,7 +66,7 @@ done
 # ── Resolve repo root ─────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SOLUTION_FILE="$REPO_ROOT/Sencilla.sln"
+SOLUTION_FILE="$REPO_ROOT/Sencilla.slnx"
 ARTIFACTS_DIR="$REPO_ROOT/artifacts/nuget-local"
 
 # ── Detect version from Directory.Build.props ─────────────────────────────────

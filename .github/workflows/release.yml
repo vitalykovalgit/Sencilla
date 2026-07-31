@@ -51,7 +51,7 @@ jobs:
 
       # ── Restore ───────────────────────────────────────────────────────────
       - name: Restore NuGet packages
-        run: dotnet restore Sencilla.sln
+        run: dotnet restore Sencilla.slnx
 
       # ── Build ─────────────────────────────────────────────────────────────
       # Version comes from Directory.Build.Common.props (set above).
@@ -59,7 +59,7 @@ jobs:
       # /p:GeneratePackageOnBuild=false prevents packing during build (the explicit pack step handles it).
       - name: Build solution
         run: |
-          dotnet build Sencilla.sln \
+          dotnet build Sencilla.slnx \
             --configuration Release \
             --no-restore \
             /p:ContinuousIntegrationBuild=true \
@@ -68,7 +68,7 @@ jobs:
       # ── Test ──────────────────────────────────────────────────────────────
       - name: Run tests
         run: |
-          dotnet test Sencilla.sln \
+          dotnet test Sencilla.slnx \
             --configuration Release \
             --no-build \
             --verbosity normal
@@ -80,7 +80,7 @@ jobs:
       # (e.g. Source Generator projects that set <IncludeSymbols>false</IncludeSymbols>).
       - name: Pack NuGet packages
         run: |
-          dotnet pack Sencilla.sln \
+          dotnet pack Sencilla.slnx \
             --configuration Release \
             --no-build \
             --output ./artifacts/nuget

@@ -93,7 +93,7 @@ Before the release workflow can push to NuGet.org, you must add your API key as 
 
 ## Adding New Projects
 
-When you add a new library project to the solution, no workflow changes are needed. The `dotnet pack Sencilla.sln` command automatically picks up all packable projects.
+When you add a new library project to the solution, no workflow changes are needed. The `dotnet pack Sencilla.slnx` command automatically picks up all packable projects.
 
 To **exclude** a project from packaging, add this to its `.csproj`:
 

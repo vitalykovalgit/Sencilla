@@ -62,14 +62,14 @@ stages:
             displayName: 'Restore NuGet packages'
             inputs:
               command: 'restore'
-              projects: 'Sencilla.sln'
+              projects: 'Sencilla.slnx'
               feedsToUse: 'select'
 
           - task: DotNetCoreCLI@2
             displayName: 'Build solution'
             inputs:
               command: 'build'
-              projects: 'Sencilla.sln'
+              projects: 'Sencilla.slnx'
               arguments: '--configuration $(buildConfiguration) --no-restore /p:Version=$(packageVersion)'
 
           # Collect .nupkg and .snupkg files produced by build (GeneratePackageOnBuild=true)

@@ -1,0 +1,151 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/libs/" />
+  <Folder Name="/libs/Authentication/" />
+  <Folder Name="/libs/Authentication/Apple/">
+    <Project Path="libs/authentication/Apple/Sencilla.Authentication.Apple.csproj" />
+  </Folder>
+  <Folder Name="/libs/Authentication/Core/">
+    <Project Path="libs/authentication/Core/Sencilla.Authentication.csproj" />
+  </Folder>
+  <Folder Name="/libs/Authentication/Facebook/">
+    <Project Path="libs/authentication/Facebook/Sencilla.Authentication.Facebook.csproj" />
+  </Folder>
+  <Folder Name="/libs/Authentication/Google/">
+    <Project Path="libs/authentication/Google/Sencilla.Authentication.Google.csproj" />
+  </Folder>
+  <Folder Name="/libs/Authentication/Server/" />
+  <Folder Name="/libs/components/">
+    <Project Path="libs/components/Config/Sencilla.Component.Config.csproj" />
+    <Project Path="libs/components/Geography/Sencilla.Component.Geography.csproj" />
+    <Project Path="libs/components/I18n/Sencilla.Component.I18n.csproj" />
+    <Project Path="libs/components/Security/Sencilla.Component.Security.csproj" />
+    <Project Path="libs/components/Users/Sencilla.Component.Users.csproj" />
+    <Project Path="libs/components/Validation/Sencilla.Component.Validation.csproj" />
+  </Folder>
+  <Folder Name="/libs/components/Audit/">
+    <Project Path="libs/components/Audit/Sencilla.Component.Audit.csproj" />
+  </Folder>
+  <Folder Name="/libs/components/Notifications/">
+    <Project Path="libs/components/Notifications/Sencilla.Component.Notifications.csproj" />
+  </Folder>
+  <Folder Name="/libs/components/Tags/">
+    <Project Path="libs/components/Tags/Sencilla.Component.Tags.csproj" />
+  </Folder>
+  <Folder Name="/libs/components/Tasks/">
+    <Project Path="libs/components/Tasks/Sencilla.Component.Tasks.csproj" />
+  </Folder>
+  <Folder Name="/libs/components/Users/" />
+  <Folder Name="/libs/core/" />
+  <Folder Name="/libs/extensions/">
+    <Project Path="libs/extensions/EntityFrameworkCore/Sencilla.Extensions.EntityFrameworkCore.csproj" />
+  </Folder>
+  <Folder Name="/libs/files/">
+    <Project Path="libs/files/AmazonS3/Sencilla.Component.Files.AmazonS3.csproj" />
+    <Project Path="libs/files/AzureStorage/Sencilla.Component.Files.AzureStorage.csproj" />
+    <Project Path="libs/files/Core/Sencilla.Component.Files.csproj" />
+    <Project Path="libs/files/Database/Sencilla.Component.Files.Database.csproj" />
+    <Project Path="libs/files/GoogleStorage/Sencilla.Component.Files.GoogleStorage.csproj" />
+    <Project Path="libs/files/LocalDrive/Sencilla.Component.Files.LocalDrive.csproj" />
+  </Folder>
+  <Folder Name="/libs/mappers/">
+    <Project Path="libs/mappers/Entity/Sencilla.Mapper.Entity.csproj" />
+    <Project Path="libs/mappers/Excel/Sencilla.Mapper.Excel.csproj" />
+    <Project Path="libs/mappers/Sql/Sencilla.Mapper.Sql.csproj" />
+  </Folder>
+  <Folder Name="/libs/messaging/">
+    <Project Path="libs/messaging/Core/Sencilla.Messaging.csproj" />
+    <Project Path="libs/messaging/EntityFramework/Sencilla.Messaging.EntityFramework.csproj" />
+    <Project Path="libs/messaging/InMemoryQueue/Sencilla.Messaging.InMemoryQueue.csproj" />
+    <Project Path="libs/messaging/Kafka/Sencilla.Messaging.Kafka.csproj" />
+    <Project Path="libs/messaging/Mediator/Sencilla.Messaging.Mediator.csproj" />
+    <Project Path="libs/messaging/RabbitMQ/Sencilla.Messaging.RabbitMQ.csproj" />
+    <Project Path="libs/messaging/Redis/Sencilla.Messaging.Redis.csproj" />
+    <Project Path="libs/messaging/Scheduler/Sencilla.Messaging.Scheduler.csproj" />
+    <Project Path="libs/messaging/ServiceBus/Sencilla.Messaging.ServiceBus.csproj" />
+    <Project Path="libs/messaging/SignalR/Sencilla.Messaging.SignalR.csproj" />
+    <Project Path="libs/messaging/SourceGenerator/Sencilla.Messaging.SourceGenerator.csproj" />
+  </Folder>
+  <Folder Name="/libs/messaging/Core/" />
+  <Folder Name="/libs/mobile/">
+    <Project Path="libs/mobile/Core/Sencilla.Mobile.Core.csproj" />
+  </Folder>
+  <Folder Name="/libs/repositories/">
+    <Project Path="libs/repositories/EntityFramework/Sencilla.Repository.EntityFramework.csproj" />
+    <Project Path="libs/repositories/HttpClient/Sencilla.Repository.HttpClient.csproj" />
+    <Project Path="libs/repositories/SqlMapper/Sencilla.Repository.SqlMapper.csproj" />
+  </Folder>
+  <Folder Name="/libs/repositories/EntityFramework/" />
+  <Folder Name="/libs/scheduler/">
+    <Project Path="libs/scheduler/Core/Sencilla.Scheduler.csproj" />
+    <Project Path="libs/scheduler/EntityFramework/Sencilla.Scheduler.EntityFramework.csproj" />
+    <Project Path="libs/scheduler/SourceGenerator/Sencilla.Scheduler.SourceGenerator.csproj" />
+  </Folder>
+  <Folder Name="/libs/web/" />
+  <Folder Name="/libs/webapi/">
+    <Project Path="libs/web/Sencilla.Web.csproj" />
+    <Project Path="libs/webapi/ApiControllers/Sencilla.Web.ApiControllers.csproj" />
+    <Project Path="libs/webapi/MinimalApi/Sencilla.Web.MinimalApi.csproj" />
+  </Folder>
+  <Folder Name="/libs/webapi/Batch/">
+    <Project Path="libs/webapi/Batch/Sencilla.Web.Batch.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/cores/Sencilla.Core.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Authentication/" />
+  <Folder Name="/tests/Authentication/Integration/">
+    <Project Path="tests/authentication/Integration/Sencilla.Authentication.Integration.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Authentication/Jwt/">
+    <Project Path="tests/authentication/Jwt/Sencilla.Authentication.Jwt.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Authentication/Providers/">
+    <Project Path="tests/authentication/Providers/Sencilla.Authentication.Providers.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Authentication/Server/">
+    <Project Path="tests/authentication/Server/Sencilla.Authentication.Server.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/components/">
+    <Project Path="tests/components/Security/Sencilla.Component.Security.Tests.csproj" />
+    <Project Path="tests/components/Users/Sencilla.Component.Users.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/components/Audit/">
+    <Project Path="tests/components/Audit/Sencilla.Component.Audit.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/components/Tags/">
+    <Project Path="tests/components/Tags/Sencilla.Component.Tags.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/extensions/">
+    <Project Path="tests/extensions/EntityFramework.Extension.Tests/Sencilla.Repository.EntityFramework.Extension.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/messaging/" />
+  <Folder Name="/tests/messaging/Core/">
+    <Project Path="tests/messaging/Core/Sencilla.Messaging.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/messaging/InMemoryQueue/">
+    <Project Path="tests/messaging/InMemoryQueue/Sencilla.Messaging.InMemoryQueue.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/messaging/Mediator/">
+    <Project Path="tests/messaging/Mediator/Sencilla.Messaging.Mediator.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/messaging/RabbitMQ/">
+    <Project Path="tests/messaging/RabbitMQ/Sencilla.Messaging.RabbitMQ.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/repositories/">
+    <Project Path="tests/repositories/EntityFramework/Sencilla.Repository.EntityFramework.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/web/">
+    <Project Path="tests/web/Sencilla.Web.Tests.csproj" />
+  </Folder>
+  <Project Path="libs/core/Sencilla.Core.csproj" />
+  <Properties Name="MonoDevelopProperties">
+    <Property Name="$0.DotNetNamingPolicy" Value="$1" />
+    <Property Name="$1.DirectoryNamespaceAssociation" Value="PrefixedHierarchical" />
+    <Property Name="Policies" Value="$0" />
+  </Properties>
+</Solution>

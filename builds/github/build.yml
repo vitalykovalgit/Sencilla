@@ -54,12 +54,12 @@ jobs:
 
       # ── Restore ───────────────────────────────────────────────────────────
       - name: Restore NuGet packages
-        run: dotnet restore Sencilla.sln
+        run: dotnet restore Sencilla.slnx
 
       # ── Build ─────────────────────────────────────────────────────────────
       - name: Build solution
         run: |
-          dotnet build Sencilla.sln \
+          dotnet build Sencilla.slnx \
             --configuration Release \
             --no-restore \
             /p:Version=${{ steps.version.outputs.VERSION }}
@@ -71,7 +71,7 @@ jobs:
         id: tests
         continue-on-error: true
         run: |
-          dotnet test Sencilla.sln \
+          dotnet test Sencilla.slnx \
             --configuration Release \
             --no-build \
             --verbosity normal \
@@ -101,7 +101,7 @@ jobs:
       # Packages are NOT published from this workflow.
       - name: Verify pack
         run: |
-          dotnet pack Sencilla.sln \
+          dotnet pack Sencilla.slnx \
             --configuration Release \
             --no-build \
             --output ./artifacts/nuget \

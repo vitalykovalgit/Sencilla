@@ -62,7 +62,7 @@ $ErrorActionPreference = "Stop"
 # ── Resolve paths ─────────────────────────────────────────────────────────────
 $ScriptDir  = $PSScriptRoot
 $RepoRoot   = Resolve-Path (Join-Path $ScriptDir "../..")
-$SolutionFile = Join-Path $RepoRoot "Sencilla.sln"
+$SolutionFile = Join-Path $RepoRoot "Sencilla.slnx"
 $ArtifactsDir = Join-Path $RepoRoot "artifacts/nuget-local"
 
 # ── Determine version ─────────────────────────────────────────────────────────

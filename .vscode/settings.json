@@ -1,7 +1,7 @@
 {
     "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
     "dotnet.server.useOmnisharp": false,
-    "dotnet.defaultSolution": "Sencilla.sln",
+    "dotnet.defaultSolution": "Sencilla.slnx",
     "dotnet.build.verbosity": "normal",
     "dotnet.build.options": [
         "--consoleLoggerParameters:ForceConsoleColor"
