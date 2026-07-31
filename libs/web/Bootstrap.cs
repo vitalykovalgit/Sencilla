@@ -40,11 +40,11 @@ namespace Microsoft.Extensions.DependencyInjection
             mvcBuilder.AddMvcOptions(options =>
             {
                 options.ModelBinderProviders.Insert(0, new FilterTypeBinderProvider(options.InputFormatters));
-                options.Conventions.Add(new CrudApiControllerRouteConvention());
+                options.Conventions.Add(new EntityApiControllerRouteConvention());
             })
             .ConfigureApplicationPartManager(manager =>
             {
-                manager.FeatureProviders.Add(new CrudApiControllerFeatureProvider());
+                manager.FeatureProviders.Add(new EntityApiControllerFeatureProvider());
             })
             .AddJsonOptions(o =>
             {

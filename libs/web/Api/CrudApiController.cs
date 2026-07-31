@@ -9,10 +9,11 @@ public class CrudApiController<TEntity>(IServiceProvider resolver) : CrudApiCont
 }
 
 /// <summary>
-/// 
+///
 /// </summary>
 /// <typeparam name="TEntity"></typeparam>
 /// <typeparam name="TKey"></typeparam>
+[EntityApi]
 public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiController(resolver) where TEntity : class, IEntity<TKey>, new()
 {
     private static readonly UseCachingAttribute? CachingAttribute = typeof(TEntity).GetCustomAttribute<UseCachingAttribute>();

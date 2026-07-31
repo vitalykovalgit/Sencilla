@@ -38,7 +38,7 @@ public static class Bootstrap
         services.TryAddSingleton(options);
 
         // Entity registry is built lazily on first resolve so every entity assembly
-        // is guaranteed loaded by then (mirrors CrudApiControllerFeatureProvider's
+        // is guaranteed loaded by then (mirrors EntityApiControllerFeatureProvider's
         // AppDomain scan timing).
         services.TryAddSingleton<IBatchEntityRegistry>(_ => BatchEntityRegistry.BuildFromAppDomain());
 
