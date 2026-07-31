@@ -12,20 +12,20 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class Bootstrap
 {
-    public static SencillaFilesOptions UseAzureStorage(this SencillaFilesOptions root, Action<AzureBlobStorageOptions> configure)
+    public static SencillaFilesOptions AddAzureStorage(this SencillaFilesOptions root, Action<AzureBlobStorageOptions> configure)
     {
         var options = new AzureBlobStorageOptions { ConnectionString = "" };
         configure(options);
         return root.AddStorageInternal<AzureBlobStorage, AzureBlobStorageOptions>(options, null);
     }
 
-    public static SencillaFilesOptions UseAzureStorage(this SencillaFilesOptions root, IConfigurationSection section)
+    public static SencillaFilesOptions AddAzureStorage(this SencillaFilesOptions root, IConfigurationSection section)
     {
         var options = new AzureBlobStorageOptions { ConnectionString = "" };
         return root.AddStorageInternal<AzureBlobStorage, AzureBlobStorageOptions>(options, section: section);
     }
 
-    public static SencillaFilesOptions UseAzureStorage(this SencillaFilesOptions root, IConfiguration configuration, string? section = null)
+    public static SencillaFilesOptions AddAzureStorage(this SencillaFilesOptions root, IConfiguration configuration, string? section = null)
     {
         var options = new AzureBlobStorageOptions { ConnectionString = "" };
         return root.AddStorageInternal<AzureBlobStorage, AzureBlobStorageOptions>(options, configuration: configuration);

@@ -3,6 +3,8 @@ global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
+global using Microsoft.Extensions.Options;
+global using Microsoft.Extensions.Primitives;
 global using Sencilla.Component.Files;
 global using Sencilla.Core;
 global using Sencilla.Web;
@@ -77,6 +79,23 @@ public static class Bootstrap
 
         return root;
     }
+
+    /// <summary>
+    /// ETag + immutable freshness for the file stream endpoint, bound from
+    /// <c>SencillaFiles:StreamCache</c>. Pipeline side: <see cref="UseSencillaFiles"/>.
+    /// </summary>
+    public static SencillaFilesOptions AddStreamCache(this SencillaFilesOptions root, IConfiguration configuration)
+    {
+        root.Services.Configure<FileStreamCacheOptions>(configuration.GetSection($"{root.Section}:{FileStreamCacheOptions.Section}"));
+        return root;
+    }
+
+    /// <summary>
+    /// The component's request pipeline — the stream cache for now. Place BEFORE UseEndpoints so the
+    /// 304 short-circuit can skip the blob read.
+    /// </summary>
+    public static IApplicationBuilder UseSencillaFiles(this IApplicationBuilder app)
+        => app.UseMiddleware<FileStreamCacheMiddleware>();
 
     public static IApplicationBuilder UseTusResumableUpload(this IApplicationBuilder builder, Action<FileUploadOptions> configure)
     {
