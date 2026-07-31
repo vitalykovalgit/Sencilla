@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Generic entity tagging for Sencilla: IEntityTaggable plus three interchangeable tag repositories (inline column, per-entity link table, shared tag.EntityTag table), ?tag= filtering and tags[] hydration.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
+    <!-- For IEntityModelConfigurator ONLY — the seam through which TagsModelConfigurator tells DynamicDbContext
+         how to map a tag column, so that knowledge lives here instead of in the repository library. The tag
+         repositories themselves stay provider-agnostic: they read through IFilter and the repository
+         abstractions, never through EF's async LINQ, so a non-EF repository host still works. -->
+    <ProjectReference Include="..\..\repositories\EntityFramework\Sencilla.Repository.EntityFramework.csproj" />
+    <!-- For TagApiController: the tag endpoints ship with the feature rather than with the CRUD controller,
+         and mount themselves onto every [CrudApi] entity through Sencilla.Web's [EntityApi] seam. -->
+    <ProjectReference Include="..\..\web\Sencilla.Web.csproj" />
+  </ItemGroup>
+
+</Project>

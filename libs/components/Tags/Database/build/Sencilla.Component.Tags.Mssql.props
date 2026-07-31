@@ -1,0 +1,13 @@
+<Project>
+
+  <!-- Auto-imported by any Microsoft.Build.Sql project that references this package (NuGet imports
+       build/<PackageId>.props at the top of the consumer's build). Compiles this package's schema SOURCE
+       into the consumer's own model, so tag.* objects land physically in the consuming dacpac
+       (self-contained — no composite reference, no co-located dacpac). -->
+  <ItemGroup>
+    <Build Include="$(MSBuildThisFileDirectory)../sql/*.sql" />
+  </ItemGroup>
+
+  <!-- No seed/ folder: the tag vocabulary is free text, so this component ships no reference data. -->
+
+</Project>

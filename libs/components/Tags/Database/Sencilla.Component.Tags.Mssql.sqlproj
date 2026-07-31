@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <!-- SQL Server schema (.sql source) component for Sencilla "Tags": the [tag] schema and the shared
+       tag.EntityTag table behind IEntityTaggableShared. Self-contained (no cross-schema FKs, by design — the
+       shared table is deliberately FK-less so any entity can be tagged with no DDL of its own). Compiled into
+       the consuming database's own model by the package's build/*.props.
+
+       Only the SHARED store needs this package. Inline tagging is a column on the adopter's own table, and
+       linked tagging is the adopter's own {Entity}Tag table — neither ships here. Referencing the package while
+       using only inline/linked storage leaves an empty tag.EntityTag behind, which is free and makes adopting
+       shared storage later a code change rather than a database-package change.
+
+       Shared SQL project config (SDK version, DSP, ModelCollation, identity, README + build-asset packing,
+       dacpac-strip target) lives in libs/Directory.Build.Sql.props, imported via Database/Directory.Build.props. -->
+  <Sdk Name="Microsoft.Build.Sql" />
+  <PropertyGroup>
+    <Description>SQL Server schema (.sql source) for the Sencilla Tags component: the [tag] schema and the shared tag.EntityTag table used by IEntityTaggableShared. Compiled into the consuming database's own model (self-contained); no seed data.</Description>
+  </PropertyGroup>
+
+  <!-- Schema SOURCE shipped under sql/ — auto-compiled into the consumer's model by build/*.props. -->
+  <ItemGroup>
+    <None Include="Schema/*.sql;Tables/*.sql" Pack="true" PackagePath="sql/" />
+  </ItemGroup>
+</Project>

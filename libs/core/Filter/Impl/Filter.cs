@@ -19,6 +19,8 @@ public class Filter : IFilter
 
     public string? Search { get; set; }
 
+    public string[]? Tag { get; set; }
+
     public DateTime? AsOf { get; set; }
 
     public string[]? OrderBy { get; set; }

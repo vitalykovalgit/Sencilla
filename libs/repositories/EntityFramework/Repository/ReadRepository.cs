@@ -38,7 +38,8 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
             foreach (var prop in with)
                 query = query.Include(prop);
 
-        return await query.AsNoTracking().FirstOrDefaultAsync(e => e.Id.Equals(id), token).ConfigureAwait(false);
+        var entity = await query.AsNoTracking().FirstOrDefaultAsync(e => e.Id.Equals(id), token).ConfigureAwait(false);
+        return await PublishRead(entity, null, token);
     }
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
 
@@ -50,7 +51,8 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
             foreach (var prop in with)
                 query = query.Include(prop);
 
-        return await query.AsNoTracking().Where(e => ids.Contains(e.Id)).ToListAsync(token).ConfigureAwait(false);
+        var entities = await query.AsNoTracking().Where(e => ids.Contains(e.Id)).ToListAsync(token).ConfigureAwait(false);
+        return await PublishRead(entities, null, token);
     }
 
     public async Task<IEnumerable<TEntity>> GetAll(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
@@ -61,7 +63,8 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
             foreach (var prop in with)
                 query = query.Include(prop);
 
-        return await query.AsNoTracking().ToListAsync(token).ConfigureAwait(false);
+        var entities = await query.AsNoTracking().ToListAsync(token).ConfigureAwait(false);
+        return await PublishRead(entities, filter, token);
     }
 
     public async Task<TEntity?> FirstOrDefault(IFilter? filter = null, CancellationToken token = default, params Expression<Func<TEntity, object>>[]? with)
@@ -72,7 +75,8 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
             foreach (var prop in with)
                 query = query.Include(prop);
 
-        return await query.AsNoTracking().FirstOrDefaultAsync(token).ConfigureAwait(false);
+        var entity = await query.AsNoTracking().FirstOrDefaultAsync(token).ConfigureAwait(false);
+        return await PublishRead(entity, filter, token);
     }
 
 
@@ -117,6 +121,30 @@ public class ReadRepository<TEntity, TContext, TKey>(RepositoryDependency depend
         return Query.Where(predicate);
     }
 
+
+    /// <summary>
+    /// Publishes <see cref="EntityReadEvent{TEntity}"/> for materialised rows — the post-read half of the
+    /// reading pipeline, where handlers that need a second query (tag hydration, derived fields) run once for
+    /// the whole page instead of once per row. Handlers mutate the entities in place, so the same list is
+    /// returned.
+    /// </summary>
+    protected async Task<IList<TEntity>> PublishRead(IList<TEntity> entities, IFilter? filter, CancellationToken token)
+    {
+        if (entities.Count == 0)
+            return entities;
+
+        await D.Events.PublishAsync(new EntityReadEvent<TEntity> { Filter = filter, Entities = entities }, token).ConfigureAwait(false);
+        return entities;
+    }
+
+    /// <summary>Single-row overload — a miss publishes nothing.</summary>
+    protected async Task<TEntity?> PublishRead(TEntity? entity, IFilter? filter, CancellationToken token)
+    {
+        if (entity != null)
+            await PublishRead(new List<TEntity> { entity }, filter, token);
+
+        return entity;
+    }
 
     protected async Task<IQueryable<TEntity>> QueryInternal(IFilter? filter, CancellationToken token)
     {

@@ -39,6 +39,12 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
         @event.Entities = query;
     }
 
+    /// <summary>
+    /// Resolves one <c>?with=</c> value to an EF include path, or null when it isn't one.
+    ///
+    /// <para>All-or-nothing per value: a path whose first segment resolves and whose second does not used to
+    /// yield the truncated prefix, silently including something the caller never asked for.</para>
+    /// </summary>
     private static string? ToIncludePath(Type entityType, string with)
     {
         var properties = new List<string>();
@@ -47,14 +53,41 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
         {
             var property = entityType?.GetProperty(w, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 
-            if (property != null)
-            {
-                properties.Add(property.Name);
-                entityType = property?.PropertyType;
-            }
+            if (property == null || !CanBeIncluded(property.PropertyType))
+                return null;
+
+            properties.Add(property.Name);
+            entityType = Target(property.PropertyType);
         }
 
         return string.Join(".", properties);
+    }
+
+    /// <summary>
+    /// Where a navigation leads: the element type for a collection, the property type otherwise. Walking to the
+    /// ELEMENT is what lets a nested path through a collection (<c>?with=items.product</c>) resolve at all.
+    /// </summary>
+    private static Type Target(Type type)
+        => type.GetInterfaces()
+               .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+               ?.GetGenericArguments()[0] ?? type;
+
+    /// <summary>
+    /// Whether a CLR property could be an EF navigation at all. <c>Include</c> accepts nothing else and fails at
+    /// query-COMPILE time, not at the <c>Include</c> call — so handing it a scalar turns a <c>?with=</c> typo
+    /// into a 500 from a query string. A collection of scalars is not a navigation either, which is what makes
+    /// <c>?with=tags</c> (<c>List&lt;string&gt;</c>, whether mapped as a primitive collection or ignored
+    /// outright) a no-op here rather than a crash.
+    ///
+    /// <para>ponytail: CLR shape only. A property that IS entity-shaped but which EF is configured to ignore
+    /// still gets through; consult <c>DbContext.Model</c> here if that ever bites.</para>
+    /// </summary>
+    private static bool CanBeIncluded(Type type)
+    {
+        var target = Target(type);
+        target = Nullable.GetUnderlyingType(target) ?? target;
+
+        return target.IsClass && target != typeof(string);
     }
 
     /// <summary>

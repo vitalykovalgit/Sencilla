@@ -1,10 +1,23 @@
 ﻿namespace Sencilla.Repository.EntityFramework;
 
+/// <summary>
+/// The shared, convention-built context: every registered entity is mapped by reflection, with no per-entity
+/// configuration class. Anything a COMPONENT needs on top of the conventions arrives through
+/// <see cref="IEntityModelConfigurator"/> — this context never learns what a component's marker interfaces mean,
+/// and no component has to be referenced here for its entities to map correctly.
+/// </summary>
 [DisableInjection]
-public class DynamicDbContext([NotNull] DbContextOptions options) : DbContext(options)
+public class DynamicDbContext([NotNull] DbContextOptions options, IEnumerable<IEntityModelConfigurator>? configurators = null) : DbContext(options)
 {
     private static IModel? _compiledModel;
     private static readonly object _modelLock = new();
+
+    /// <summary>
+    /// Component-supplied model configuration, resolved from DI (empty when the context is constructed by hand,
+    /// e.g. in tests). Materialised once: the model is built a single time per process, but the collection is
+    /// walked for every entity in it.
+    /// </summary>
+    private readonly IReadOnlyList<IEntityModelConfigurator> _configurators = [.. configurators ?? []];
 
     /// <summary>
     /// Pre-compiles and caches the EF Core model at startup,
@@ -114,6 +127,11 @@ public class DynamicDbContext([NotNull] DbContextOptions options) : DbContext(op
             var pe = entityType.GetCustomAttribute<MainEntityAttribute>();
             if (pe != null)
                 c.HasOne(pe.Type).WithOne().HasForeignKey(entityType);
+
+            // Component-supplied configuration LAST, so a component can override anything above (and so this
+            // context needs no knowledge of, or reference to, the components whose entities it maps).
+            foreach (var configurator in _configurators)
+                configurator.Configure(c, entityType);
         });
 
     }

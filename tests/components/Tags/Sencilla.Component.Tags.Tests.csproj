@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <!-- Sqlite gives the repository tests a real relational provider: what they exist to prove (generic
+         EF.Property access, projections, DISTINCT push-down, bulk delete) only shows up in translated SQL. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libs\components\Tags\Sencilla.Component.Tags.csproj" />
+  </ItemGroup>
+
+</Project>

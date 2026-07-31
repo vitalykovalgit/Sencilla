@@ -34,7 +34,10 @@ public interface IFilter
     string? Aggregate { get; set; }
 
     /// <summary>
-    /// Retrieve entity with navigation property
+    /// Retrieve entity with navigation property. Values that are not navigations are ignored rather than
+    /// rejected — this is client input, and <c>Include</c> fails at query-compile time, so a typo must not be a
+    /// 500. Components may claim a non-navigation name and give it their own meaning: <c>?with=tags</c> is
+    /// Sencilla.Component.Tags asking for a side-table hydration pass.
     /// </summary>
     public string[]? With { get; set; }
 
@@ -42,6 +45,17 @@ public interface IFilter
     /// Search by any fields that is varchar
     /// </summary>
     public string? Search { get; set; }
+
+    /// <summary>
+    /// Tags to filter by, for entities implementing <c>IEntityTaggable</c> (Sencilla.Component.Tags): ANY of
+    /// them matches (<c>?tag=a&amp;tag=b</c>), which is the same OR semantic every other filter property uses.
+    /// Singular deliberately — a plural <c>tags</c> would collide with the tag navigation property on linked
+    /// entities. Ignored by entities that are not taggable, and by hosts without the component.
+    ///
+    /// <para>The property stays here, in the framework's one filter contract, precisely so that the binder and
+    /// every repository can carry it without depending on the component that gives it meaning.</para>
+    /// </summary>
+    string[]? Tag { get; set; }
 
     /// <summary>
     /// Point-in-time read for append-only / valid-time entities (<see cref="IEntityAppendOnlyTrack"/>):
