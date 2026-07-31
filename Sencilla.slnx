@@ -31,13 +31,13 @@
     <Project Path="libs/components/Audit/Sencilla.Component.Audit.csproj" />
   </Folder>
   <Folder Name="/libs/components/Notifications/">
-    <Project Path="libs/components/Notifications/Sencilla.Component.Notifications.csproj" />
+    <!-- <Project Path="libs/components/Notifications/Sencilla.Component.Notifications.csproj" /> -->
   </Folder>
   <Folder Name="/libs/components/Tags/">
     <Project Path="libs/components/Tags/Sencilla.Component.Tags.csproj" />
   </Folder>
   <Folder Name="/libs/components/Tasks/">
-    <Project Path="libs/components/Tasks/Sencilla.Component.Tasks.csproj" />
+    <!-- <Project Path="libs/components/Tasks/Sencilla.Component.Tasks.csproj" /> -->
   </Folder>
   <Folder Name="/libs/components/Users/" />
   <Folder Name="/libs/core/" />
