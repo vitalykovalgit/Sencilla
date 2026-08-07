@@ -162,4 +162,29 @@ public class UpdateRepositoryTests : RepositoryTestBase<TestUpdateRepository>
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    // ── Missing row: the mirror image of the delete path ─────────────────────
+    // A delete absorbs a row that is already gone (DeleteRepositoryTests); an update must NOT — the
+    // caller's change would vanish. EF surfaces it as DbUpdateConcurrencyException, which is a 500;
+    // the caller can fix it by re-reading, so it has to arrive as a 409.
+
+    [Fact]
+    public async Task Update_WithMissingRow_ThrowsConflictNotConcurrency()
+    {
+        var phantom = MakeProduct(999, "Never persisted"); // e.g. a stale client id
+
+        var e = await Assert.ThrowsAsync<ConflictException>(() => Repository.Update(phantom));
+
+        Assert.Contains(nameof(TestProduct), e.Message);
+        Assert.Contains("no longer exists", e.Message);
+    }
+
+    [Fact]
+    public async Task Update_WithMissingRow_LeavesTheRowUncreated()
+    {
+        await Assert.ThrowsAsync<ConflictException>(() => Repository.Update(MakeProduct(999)));
+
+        DbContext.ChangeTracker.Clear();
+        Assert.Null(await DbContext.Products.FindAsync(999));
+    }
 }

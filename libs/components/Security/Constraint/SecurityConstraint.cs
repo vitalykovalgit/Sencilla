@@ -29,15 +29,13 @@ public class SecurityConstraintHandler<TEntity>
     , IEventHandlerBase<EntityUpdatedEvent<TEntity>>
     , IEventHandlerBase<EntityDeletingEvent<TEntity>>
 {
-    private static readonly TimeSpan UserRolesCacheExpiration = TimeSpan.FromMinutes(5);
-
-    public async Task HandleAsync(EntityReadingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IMemoryCache cache, IReadRepository<UserRole, Guid> userRoles, SecurityCacheSignal signal, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
+    public async Task HandleAsync(EntityReadingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IUserRoleResolver roleResolver, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
     {
         if (@event != null)
-            @event.Entities = await ApplyConstraint(@event.Entities, Action.Read, sysVars, provider, cache, userRoles, signal, roleClosure, codeRules, services, token);
+            @event.Entities = await ApplyConstraint(@event.Entities, Action.Read, sysVars, provider, roleResolver, roleClosure, codeRules, services, token);
     }
 
-    public async Task HandleAsync(EntityCreatingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IMemoryCache cache, IReadRepository<UserRole, Guid> userRoles, SecurityCacheSignal signal, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
+    public async Task HandleAsync(EntityCreatingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IUserRoleResolver roleResolver, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
     {
         if (@event?.Entities == null)
             return;
@@ -47,10 +45,10 @@ public class SecurityConstraintHandler<TEntity>
         // check on the created event: the in-memory objects here cannot answer
         // held-role or navigation constraints (role rows and parents live in the DB),
         // and client-supplied values must not be trusted anyway.
-        await ApplyConstraint(@event.Entities, Action.Create, sysVars, provider, cache, userRoles, signal, roleClosure, codeRules, services, token);
+        await ApplyConstraint(@event.Entities, Action.Create, sysVars, provider, roleResolver, roleClosure, codeRules, services, token);
     }
 
-    public async Task HandleAsync(EntityCreatedEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IMemoryCache cache, IReadRepository<UserRole, Guid> userRoles, SecurityCacheSignal signal, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
+    public async Task HandleAsync(EntityCreatedEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IUserRoleResolver roleResolver, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
     {
         if (@event == null)
             return;
@@ -68,7 +66,7 @@ public class SecurityConstraintHandler<TEntity>
         // insert back when the narrowed query loses rows.
         if (@event.DbEntities != null)
         {
-            @event.DbEntities = await ApplyConstraint(@event.DbEntities, Action.Create, sysVars, provider, cache, userRoles, signal, roleClosure, codeRules, services, token, excludeSelfKeys);
+            @event.DbEntities = await ApplyConstraint(@event.DbEntities, Action.Create, sysVars, provider, roleResolver, roleClosure, codeRules, services, token, excludeSelfKeys);
             return;
         }
 
@@ -78,7 +76,7 @@ public class SecurityConstraintHandler<TEntity>
         // constraints cannot and remain an EF-only feature.
         if (@event.Entities != null)
         {
-            var safeEntities = await ApplyConstraint(@event.Entities, Action.Create, sysVars, provider, cache, userRoles, signal, roleClosure, codeRules, services, token, excludeSelfKeys);
+            var safeEntities = await ApplyConstraint(@event.Entities, Action.Create, sysVars, provider, roleResolver, roleClosure, codeRules, services, token, excludeSelfKeys);
             if (@event.Entities.Count() != safeEntities.Count())
                 throw new ForbiddenException("Does not met criteria to create object");
         }
@@ -98,7 +96,7 @@ public class SecurityConstraintHandler<TEntity>
         return id == null ? null : entities.AsEnumerable().Select(e => id.GetValue(e)!).ToList();
     }
 
-    public async Task HandleAsync(EntityUpdatingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IMemoryCache cache, IReadRepository<UserRole, Guid> userRoles, SecurityCacheSignal signal, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
+    public async Task HandleAsync(EntityUpdatingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IUserRoleResolver roleResolver, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
     {
         if (@event == null)
             return;
@@ -109,7 +107,7 @@ public class SecurityConstraintHandler<TEntity>
         // batch when the narrowed query loses existing rows.
         if (@event.DbEntities != null)
         {
-            @event.DbEntities = await ApplyConstraint(@event.DbEntities, Action.Update, sysVars, provider, cache, userRoles, signal, roleClosure, codeRules, services, token);
+            @event.DbEntities = await ApplyConstraint(@event.DbEntities, Action.Update, sysVars, provider, roleResolver, roleClosure, codeRules, services, token);
             return;
         }
 
@@ -117,7 +115,7 @@ public class SecurityConstraintHandler<TEntity>
         // validating the in-memory set.
         if (@event.Entities != null)
         {
-            var safeEntities = await ApplyConstraint(@event.Entities, Action.Update, sysVars, provider, cache, userRoles, signal, roleClosure, codeRules, services, token);
+            var safeEntities = await ApplyConstraint(@event.Entities, Action.Update, sysVars, provider, roleResolver, roleClosure, codeRules, services, token);
             var countBefore = @event.Entities.Count();
             var countAfter = safeEntities.Count();
             if (countBefore != countAfter)
@@ -130,23 +128,23 @@ public class SecurityConstraintHandler<TEntity>
         }
     }
 
-    public async Task HandleAsync(EntityUpdatedEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IMemoryCache cache, IReadRepository<UserRole, Guid> userRoles, SecurityCacheSignal signal, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
+    public async Task HandleAsync(EntityUpdatedEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IUserRoleResolver roleResolver, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
     {
         // Post-image: the same constraint must still hold on the rows after the write
         // (a row may not be moved out of the writer's own permission scope — including
         // re-parenting under a [SecureWith] hop). Runs inside the ambient transaction —
         // the repository rolls the write back when the narrowed query loses rows.
         if (@event?.DbEntities != null)
-            @event.DbEntities = await ApplyConstraint(@event.DbEntities, Action.Update, sysVars, provider, cache, userRoles, signal, roleClosure, codeRules, services, token);
+            @event.DbEntities = await ApplyConstraint(@event.DbEntities, Action.Update, sysVars, provider, roleResolver, roleClosure, codeRules, services, token);
     }
 
-    public async Task HandleAsync(EntityDeletingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IMemoryCache cache, IReadRepository<UserRole, Guid> userRoles, SecurityCacheSignal signal, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
+    public async Task HandleAsync(EntityDeletingEvent<TEntity> @event, ISystemVariable sysVars, ISecurityProvider provider, IUserRoleResolver roleResolver, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token)
     {
         if (@event != null)
-            @event.Entities = await ApplyConstraint(@event.Entities, Action.Delete, sysVars, provider, cache, userRoles, signal, roleClosure, codeRules, services, token);
+            @event.Entities = await ApplyConstraint(@event.Entities, Action.Delete, sysVars, provider, roleResolver, roleClosure, codeRules, services, token);
     }
 
-    protected async Task<IQueryable<TEntity>> ApplyConstraint(IQueryable<TEntity> query, Action action, ISystemVariable sysVars, ISecurityProvider provider, IMemoryCache cache, IReadRepository<UserRole, Guid> userRoles, SecurityCacheSignal signal, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token, IReadOnlyCollection<object>? excludeSelfKeys = null)
+    protected async Task<IQueryable<TEntity>> ApplyConstraint(IQueryable<TEntity> query, Action action, ISystemVariable sysVars, ISecurityProvider provider, IUserRoleResolver roleResolver, IRoleClosure roleClosure, IEnumerable<IPermissionRule<TEntity>> codeRules, IServiceProvider services, CancellationToken token, IReadOnlyCollection<object>? excludeSelfKeys = null)
     {
         if (query == null)
             return query;
@@ -163,7 +161,7 @@ public class SecurityConstraintHandler<TEntity>
             // (Anonymous always, User when authenticated) + persisted sec.UserRole
             // assignments (e.g. Admin), cached briefly.
             var user = sysVars.GetCurrentUser();
-            var roleIds = ResolveRoleIds(user, cache, userRoles, signal);
+            var roleIds = roleResolver.Resolve(user);
 
             // Root is break-glass: hard-coded bypass before any matrix lookup —
             // immune to matrix misconfiguration, cache staleness and admin lockout.
@@ -260,40 +258,4 @@ public class SecurityConstraintHandler<TEntity>
         return (Expression<Func<TEntity, bool>>)DynamicExpressionParser.ParseLambda(typeof(TEntity), typeof(bool), c.Constraint, c.Vars(sysVars));
     }
 
-    /// <summary>
-    /// Roles of the current user: Anonymous for everyone, User for any
-    /// authenticated user, plus roles assigned in sec.UserRole (e.g. Admin).
-    /// DB roles are cached briefly — assignments take effect within minutes.
-    /// </summary>
-    protected HashSet<int> ResolveRoleIds(User? user, IMemoryCache cache, IReadRepository<UserRole, Guid> userRoles, SecurityCacheSignal signal)
-    {
-        var roleIds = new HashSet<int> { (int)RoleType.Anonymous };
-        if (user == null || user.IsAnonymous())
-            return roleIds;
-
-        foreach (var role in user.Roles ?? [])
-            roleIds.Add(role.RoleId);
-
-        // Any authenticated identity gets the User role — even before its DB record
-        // exists (first-login self-registration), so the insert is authorised as User
-        // rather than Anonymous.
-        roleIds.Add((int)RoleType.User);
-
-        // Persisted role assignments (e.g. Admin in sec.UserRole) require a real Id.
-        if (user.Id == Guid.Empty)
-            return roleIds;
-
-        var dbRoles = cache.GetOrCreate($"sec_user_roles_{user.Id}", entry =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = UserRolesCacheExpiration;
-            entry.AddExpirationToken(signal.Token);
-            // raw Query via Where — no entity events, no matrix recursion
-            return userRoles.Where(r => r.UserId == user.Id).Select(r => r.RoleId).ToList();
-        });
-
-        foreach (var roleId in dbRoles ?? [])
-            roleIds.Add(roleId);
-
-        return roleIds;
-    }
 }

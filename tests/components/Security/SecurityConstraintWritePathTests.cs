@@ -21,7 +21,14 @@ public class SecurityConstraintWritePathTests
     private readonly IReadRepository<UserRole, Guid> _userRoles = Mock.Of<IReadRepository<UserRole, Guid>>();
     private readonly SecurityCacheSignal _signal = new();
     private readonly IRoleClosure _closure = IdentityClosure();
+
+    /// <summary>The real resolver, not a stub: role resolution is the thing under test here, and a mock of it
+    /// would assert only that the handler calls something.</summary>
+    private readonly IUserRoleResolver _roleResolver;
     private readonly List<IPermissionRule<TestOrder>> _rules = [];
+
+    public SecurityConstraintWritePathTests() =>
+        _roleResolver = new UserRoleResolver(_sysVars, _cache, _userRoles, _signal, _closure);
 
     private static IRoleClosure IdentityClosure()
     {
@@ -45,16 +52,16 @@ public class SecurityConstraintWritePathTests
     private readonly IServiceProvider _services = Mock.Of<IServiceProvider>();
 
     private Task Handle(EntityUpdatingEvent<TestOrder> e) =>
-        _handler.HandleAsync(e, _sysVars, _provider.Object, _cache, _userRoles, _signal, _closure, _rules, _services, CancellationToken.None);
+        _handler.HandleAsync(e, _sysVars, _provider.Object, _roleResolver, _closure, _rules, _services, CancellationToken.None);
 
     private Task Handle(EntityUpdatedEvent<TestOrder> e) =>
-        _handler.HandleAsync(e, _sysVars, _provider.Object, _cache, _userRoles, _signal, _closure, _rules, _services, CancellationToken.None);
+        _handler.HandleAsync(e, _sysVars, _provider.Object, _roleResolver, _closure, _rules, _services, CancellationToken.None);
 
     private Task Handle(EntityCreatingEvent<TestOrder> e) =>
-        _handler.HandleAsync(e, _sysVars, _provider.Object, _cache, _userRoles, _signal, _closure, _rules, _services, CancellationToken.None);
+        _handler.HandleAsync(e, _sysVars, _provider.Object, _roleResolver, _closure, _rules, _services, CancellationToken.None);
 
     private Task Handle(EntityCreatedEvent<TestOrder> e) =>
-        _handler.HandleAsync(e, _sysVars, _provider.Object, _cache, _userRoles, _signal, _closure, _rules, _services, CancellationToken.None);
+        _handler.HandleAsync(e, _sysVars, _provider.Object, _roleResolver, _closure, _rules, _services, CancellationToken.None);
 
     private static IQueryable<TestOrder> Rows(params string[] names) =>
         names.Select((n, i) => new TestOrder { Id = i + 1, Name = n }).AsQueryable();
@@ -155,7 +162,7 @@ public class SecurityConstraintWritePathTests
         var query = Rows("anything");
         var e = new EntityUpdatingEvent<TestOrder> { DbEntities = query };
 
-        await _handler.HandleAsync(e, sysVars, _provider.Object, _cache, _userRoles, _signal, _closure, _rules, _services, CancellationToken.None);
+        await _handler.HandleAsync(e, sysVars, _provider.Object, new UserRoleResolver(sysVars, _cache, _userRoles, _signal, _closure), _closure, _rules, _services, CancellationToken.None);
 
         Assert.Same(query, e.DbEntities);
     }
@@ -284,7 +291,7 @@ public class SecurityConstraintWritePathTests
         var query = Rows("anything");
         var e = new EntityUpdatingEvent<TestOrder> { DbEntities = query };
 
-        await _handler.HandleAsync(e, _sysVars, _provider.Object, _cache, _userRoles, _signal, closure.Object, _rules, _services, CancellationToken.None);
+        await _handler.HandleAsync(e, _sysVars, _provider.Object, _roleResolver, closure.Object, _rules, _services, CancellationToken.None);
 
         Assert.Same(query, e.DbEntities);
     }

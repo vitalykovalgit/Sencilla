@@ -2,7 +2,7 @@ namespace Sencilla.Web;
 
 /// <summary>
 /// Central HTTP mapping for the <see cref="SencillaException"/> family
-/// (BadRequest→400, Unauthorized→401, Forbidden→403, anything else→500),
+/// (BadRequest→400, Unauthorized→401, Forbidden→403, Conflict→409, anything else→500),
 /// written as a ProblemDetails body. Registered by AddSencillaWeb; the host
 /// enables it with app.UseSencillaExceptionHandler(). Endpoints and services
 /// can throw these exceptions and need no try/catch of their own.
@@ -21,6 +21,7 @@ public class SencillaExceptionHandler : IExceptionHandler
             BadRequestException => StatusCodes.Status400BadRequest,
             UnauthorizedException => StatusCodes.Status401Unauthorized,
             ForbiddenException => StatusCodes.Status403Forbidden,
+            ConflictException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status500InternalServerError,
         };
 

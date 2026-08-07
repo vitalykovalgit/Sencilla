@@ -96,17 +96,39 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
                 track.UpdatedDate = DateTime.UtcNow;
         }
 
-        //try
-        //{
-            DbContext.UpdateRange(entities);
+        DbContext.UpdateRange(entities);
+
+        try
+        {
             await Save(token);
-            context.ChangeTracker.Clear();
-        //}
-        //finally
-        //{
-            // Do not do like this!!!
-            // context.ChangeTracker.Clear();
-        //}
+        }
+        catch (DbUpdateConcurrencyException e)
+        {
+            // "Expected 1 row, affected 0" — the entities here are the caller's own objects, attached
+            // detached and marked Modified without ever being loaded, so the UPDATE keys on whatever
+            // id arrived. Unlike a delete, where a row already gone is a SUCCESS (DeleteRepository
+            // detaches those entries and retries), an update must never absorb it: the caller's change
+            // would silently vanish. Left unhandled this is a 500 for what the caller can fix by
+            // re-reading, so it becomes a 409 instead.
+            throw Conflict(e);
+        }
+
+        context.ChangeTracker.Clear();
+    }
+
+    /// <summary>
+    /// Names which of the two causes produced the 0-row update. Only an entity that declares a
+    /// concurrency token (<c>[Timestamp]</c> / <c>IsConcurrencyToken()</c>) can lose the race on a
+    /// row that still exists; without one the predicate is the key alone, so 0 rows can only mean the
+    /// id is not in the table.
+    /// </summary>
+    private static ConflictException Conflict(DbUpdateConcurrencyException e)
+    {
+        var versioned = e.Entries.Any(entry => entry.Metadata.GetProperties().Any(p => p.IsConcurrencyToken));
+
+        return new ConflictException(versioned
+            ? $"{typeof(TEntity).Name} changed since it was read; re-read it and apply the update again."
+            : $"{typeof(TEntity).Name} no longer exists; re-read before updating it.");
     }
 
     public Task<int> JsonMergeAsync<TValue>(TKey id,Expression<Func<TEntity, IDictionary<string, TValue>?>> property, string key, TValue value, CancellationToken token = default)
