@@ -9,6 +9,11 @@ CREATE TABLE [audit].[Audit]
     [ActorType]     TINYINT          NOT NULL,          -- FK audit.ActorType: 0 System, 1 User, 2 Admin
     [ActorId]       UNIQUEIDENTIFIER NULL,              -- acting user's id (null for System)
 
+    -- Impersonation: ActorId stays the impersonated user (the data must read consistently to them), so
+    -- this is the only record that a different operator made the change. No FK — sec.User lives in a
+    -- component this one does not depend on, and an audit row must survive the actor's deletion.
+    [ImpersonatedById] UNIQUEIDENTIFIER NULL,           -- real operator behind an impersonated ActorId
+
     [Changes]       NVARCHAR(MAX)    NULL,              -- {field:{old,new}} JSON (insert: old null; delete: new null)
     [Reason]        NVARCHAR(1024)   NULL,              -- optional X-Audit-Reason
     [CorrelationId] UNIQUEIDENTIFIER NOT NULL,          -- groups one logical operation's rows
@@ -26,4 +31,7 @@ CREATE TABLE [audit].[Audit]
     -- per-entity history (EntityType, EntityId, time) and cross-entity operation lookup (CorrelationId).
     INDEX [IX_Audit_Entity]      NONCLUSTERED ([EntityType] ASC, [EntityId] ASC, [CreatedDate] ASC),
     INDEX [IX_Audit_Correlation] NONCLUSTERED ([CorrelationId] ASC),
+    -- "everything operator X did while impersonating" — filtered, because the column is null on
+    -- effectively every row.
+    INDEX [IX_Audit_Impersonated] NONCLUSTERED ([ImpersonatedById] ASC, [CreatedDate] ASC) WHERE [ImpersonatedById] IS NOT NULL,
 )

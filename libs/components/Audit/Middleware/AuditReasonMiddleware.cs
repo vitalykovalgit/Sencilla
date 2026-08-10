@@ -21,7 +21,10 @@ public class AuditReasonMiddleware(RequestDelegate next)
             var ctx = context.RequestServices.GetService<IAuditContext>();
             if (ctx != null)
             {
-                var value = reason.ToString();
+                // Header values are byte strings, so a non-ASCII reason (Cyrillic, emoji, …) cannot travel raw —
+                // browsers reject it outright at setRequestHeader/Headers. Clients percent-encode; decode here.
+                // Undecodable input is left as-is by UnescapeDataString, so a plain ASCII reason still works.
+                var value = Uri.UnescapeDataString(reason.ToString());
                 ctx.Reason = value.Length > MaxReasonLength ? value[..MaxReasonLength] : value;
             }
         }

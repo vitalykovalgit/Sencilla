@@ -39,8 +39,34 @@ public class AuditTests
     {
         public ActorType ActorType { get; init; } = ActorType.Admin;
         public Guid? ActorId { get; init; } = Guid.NewGuid();
+        public Guid? ImpersonatedById { get; init; }
         public string? Reason { get; set; } = "correction";
         public Guid CorrelationId { get; init; } = Guid.NewGuid();
+    }
+
+    // ── impersonation attribution ─────────────────────────────────────────────
+
+    [Fact]
+    public void Rows_Carry_The_Real_Operator_When_The_Actor_Is_Impersonated()
+    {
+        // The row must read as the impersonated user (ActorId) while still naming who actually acted —
+        // that column is the only trace, since stamps and ActorId deliberately show the customer.
+        var operatorId = Guid.NewGuid();
+        var ctx = new Ctx { ImpersonatedById = operatorId };
+        var w = new Widget { Id = Guid.NewGuid(), Name = "A" };
+
+        Assert.Equal(operatorId, AuditFactory.Insert(w, ctx).ImpersonatedById);
+        Assert.Equal(operatorId, AuditFactory.Delete(w, ctx).ImpersonatedById);
+        Assert.Equal(operatorId, AuditFactory.Update(w, new Widget { Id = w.Id, Name = "B" }, ctx)!.ImpersonatedById);
+        Assert.Equal(ctx.ActorId, AuditFactory.Insert(w, ctx).ActorId);
+    }
+
+    [Fact]
+    public void Rows_Leave_The_Operator_Null_On_An_Ordinary_Request()
+    {
+        var row = AuditFactory.Insert(new Widget { Id = Guid.NewGuid() }, new Ctx());
+
+        Assert.Null(row.ImpersonatedById);
     }
 
     static Dictionary<string, JsonElement> Changes(Audit a)
@@ -186,5 +212,22 @@ public class AuditTests
         new AuditRegistrator().Register(services, typeof(Plain));
 
         Assert.Empty(services);
+    }
+
+    // ── X-Audit-Reason header ──────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData("%D0%9F%D0%BE%D0%BC%D0%B8%D0%BB%D0%BA%D0%B0%20%D0%BE%D0%BF%D0%B5%D1%80%D0%B0%D1%82%D0%BE%D1%80%D0%B0", "Помилка оператора")]   // percent-encoded Cyrillic
+    [InlineData("plain ascii reason", "plain ascii reason")]                                                                                    // legacy raw value
+    [InlineData("100% wrong", "100% wrong")]                                                                                                    // malformed escape is left as-is
+    public async Task Reason_Header_Is_Percent_Decoded(string header, string expected)
+    {
+        var ctx = new Ctx { Reason = null };
+        var http = new DefaultHttpContext { RequestServices = new ServiceCollection().AddSingleton<IAuditContext>(ctx).BuildServiceProvider() };
+        http.Request.Headers["X-Audit-Reason"] = header;
+
+        await new AuditReasonMiddleware(_ => Task.CompletedTask).Invoke(http);
+
+        Assert.Equal(expected, ctx.Reason);
     }
 }

@@ -58,5 +58,6 @@
         "**/obj": true,
         "obj": true
     },
-    "explorerExclude.backup": {}
+    "explorerExclude.backup": {},
+    "explorerExcludeManager.backup": {}
 }

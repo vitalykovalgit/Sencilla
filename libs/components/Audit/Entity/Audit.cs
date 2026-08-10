@@ -22,6 +22,13 @@ public class Audit : IEntity<long>, IEntityCreateableTrack, IEntityAuditableTrac
     public ActorType ActorType { get; set; }
     public Guid? ActorId { get; set; }
 
+    /// <summary>
+    /// The real operator when <see cref="ActorId"/> was impersonated; null otherwise. Under impersonation
+    /// the rest of the row deliberately reads as the impersonated user, so this is the only trace that
+    /// someone else made the change.
+    /// </summary>
+    public Guid? ImpersonatedById { get; set; }
+
     /// <summary>Field-level change JSON: {field:{old,new}} (insert: old null; delete: new null).</summary>
     public string? Changes { get; set; }
 

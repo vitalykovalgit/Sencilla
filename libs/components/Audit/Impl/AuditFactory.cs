@@ -38,6 +38,7 @@ public static class AuditFactory
         Action = action,
         ActorType = ctx.ActorType,
         ActorId = ctx.ActorId,
+        ImpersonatedById = ctx.ImpersonatedById,
         Reason = ctx.Reason,
         CorrelationId = ctx.CorrelationId,
         Changes = JsonSerializer.Serialize(changes, JsonOptions),

@@ -4,6 +4,9 @@
     <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
     <ProjectReference Include="..\..\web\Sencilla.Web.csproj" />
     <ProjectReference Include="..\Users\Sencilla.Component.Users.csproj" />
+    <!-- IEndpoint for ImpersonationEndpoint. Acyclic: MinimalApi references only Core, and
+         Sencilla.Authentication.Core already hosts its endpoints the same way. -->
+    <ProjectReference Include="..\..\webapi\MinimalApi\Sencilla.Web.MinimalApi.csproj" />
   </ItemGroup>
 
   <ItemGroup>

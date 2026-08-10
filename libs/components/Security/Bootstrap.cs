@@ -33,6 +33,31 @@ public static class Bootstrap
         return builder;
     }
 
+    /// <summary>
+    /// Enables admin impersonation: an operator holding <see cref="ImpersonationOptions.Resource"/> may
+    /// browse as another user, with the real actor preserved for audit. Then chain
+    /// <c>app.UseSencillaImpersonation()</c> after <c>UseSencillaUser()</c>.
+    ///
+    /// The cookie attributes are the host's to set — they must match the auth cookie's scoping exactly,
+    /// or the two travel on different requests. The per-request <see cref="IImpersonationContext"/> is
+    /// registered by discovery ([PerRequestLifetime]); TryAdd here keeps hosts that skip the scan working.
+    /// </summary>
+    public static IServiceCollection AddSencillaImpersonation(this IServiceCollection container, System.Action<ImpersonationOptions>? configure = null)
+    {
+        var options = new ImpersonationOptions();
+        configure?.Invoke(options);
+
+        container.AddSingleton(options);
+        container.AddSingleton<ImpersonationCookie>();
+        container.TryAddScoped<IImpersonationContext, ImpersonationContext>();
+        // The routes ship with the feature rather than waiting for the host to scan this assembly:
+        // a middleware nothing can turn on is not a feature. TryAddEnumerable keeps it idempotent for a
+        // host that also runs AddSencillaEndpoints over Security.
+        container.TryAddEnumerable(ServiceDescriptor.Transient<Sencilla.Web.MinimalApi.IEndpoint, ImpersonationEndpoint>());
+
+        return container;
+    }
+
     public static IServiceCollection AddSencillaSecurityForType(this IServiceCollection container, Assembly? assembly)
     { 
         if (assembly == null) 

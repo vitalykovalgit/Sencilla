@@ -32,7 +32,7 @@ public class FilterTypeBinderProvider : IModelBinderProvider
             {
                 if (!property.ModelType.IsArray)
                 {
-                    var metadata = context.MetadataProvider.GetMetadataForType(property.ModelType.MakeArrayType());
+                    var metadata = context.MetadataProvider.GetMetadataForType(CollectionOf(property.ModelType));
                     arrayEntityProperties[property.ModelType.FullName] = metadata;
                 }
             }
@@ -47,7 +47,7 @@ public class FilterTypeBinderProvider : IModelBinderProvider
                 var entityPropertyBinders = new Dictionary<ModelMetadata, IModelBinder>();
                 foreach (var property in entityProperties ?? Enumerable.Empty<ModelMetadata>())
                 {
-                    var binderMetadata = context.MetadataProvider.GetMetadataForType(property.ModelType.MakeArrayType());
+                    var binderMetadata = context.MetadataProvider.GetMetadataForType(CollectionOf(property.ModelType));
                     entityPropertyBinders.Add(property, context.CreateBinder(binderMetadata));
                 }
 
@@ -72,6 +72,19 @@ public class FilterTypeBinderProvider : IModelBinderProvider
 
         return null;
     }
+
+    /// <summary>
+    /// The multi-value shape a query-string filter binds into: <c>List&lt;T&gt;</c>, never <c>T[]</c>.
+    ///
+    /// <para>For every type but one the two are interchangeable. The exception is <c>byte</c>: MVC binds
+    /// <c>byte[]</c> with <see cref="ByteArrayModelBinder"/>, which reads a single BASE64 string. So
+    /// <c>?publishStatus=3</c> against a <c>tinyint</c> column failed to parse, the binder returned no
+    /// model, and <see cref="FilterTypeBinder"/> then dropped the criterion WITHOUT a word — a
+    /// status-filtered admin page silently listed every row. <c>List&lt;byte&gt;</c> goes to the
+    /// collection binder like every other type.</para>
+    /// </summary>
+    private static Type CollectionOf(Type propertyType)
+        => typeof(List<>).MakeGenericType(propertyType);
 
     protected Type GetFilterEntityType(Type filterType)
     {
