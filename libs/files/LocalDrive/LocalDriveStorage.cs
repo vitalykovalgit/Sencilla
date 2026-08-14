@@ -302,7 +302,8 @@ public class LocalDriveStorage(LocalDriveStorageOptions options, IFilePathResolv
     private string GetResolutionFilePath(File file, string resKey)
     {
         var path = file.Path ?? pathResolver.GetFullPath(file);
-        return Path.Combine(options.RootPath, pathResolver.GetResolutionPath(path, resKey));
+        var contentType = file.Res != null && file.Res.TryGetValue(resKey, out var info) ? info?.Ct : null;
+        return Path.Combine(options.RootPath, pathResolver.GetResolutionPath(path, resKey, contentType));
     }
 
     private string GetFullPath(string relativeFilePath)

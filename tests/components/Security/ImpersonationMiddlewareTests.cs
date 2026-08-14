@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -204,5 +205,67 @@ public class ImpersonationMiddlewareTests
 
         Assert.Equal(ActorId, effective!.Id);
         Assert.False(impersonating);
+    }
+
+    // ── scale-out: the pod that starts a session is not the pod that serves it ───────────────
+    //
+    // Production runs several replicas behind a round-robin ingress with no session affinity, so the
+    // POST that starts a session and every request afterwards land on different instances. Nothing here
+    // may live in a pod's memory: the cookie has to carry the whole session, and each instance has to
+    // re-derive it from that plus the shared database.
+
+    /// <summary>The cookie value a host would put on the wire, minted by an instance of its own.</summary>
+    static string MintOnAnotherInstance(Guid targetId, TimeSpan lifetime, out DateTimeOffset expiresAt)
+    {
+        // A separate options object and a separate cookie service: this stands in for a second process,
+        // and it shares no state at all with the one the middleware resolves below.
+        var context = new DefaultHttpContext();
+        expiresAt = new ImpersonationCookie(new ImpersonationOptions { Lifetime = lifetime }).Set(context, targetId);
+
+        var header = context.Response.Headers.SetCookie.Single()!;
+
+        return header["impersonate=".Length..header.IndexOf(';', StringComparison.Ordinal)];
+    }
+
+    [Fact]
+    public async Task CookieMintedByAnotherInstance_IsAccepted()
+    {
+        // The whole scale-out story in one assertion. If anyone ever signs the cookie with a
+        // per-process key, or keeps the session in an IMemoryCache, this is the test that fails —
+        // and in production the symptom would be an impersonation that works on one pod and silently
+        // reverts on the next request.
+        var cookie = MintOnAnotherInstance(TargetId, TimeSpan.FromMinutes(30), out _);
+
+        var (effective, impersonating, _) = await RunAsync(cookie, Actor(), Target());
+
+        Assert.Equal(TargetId, effective!.Id);
+        Assert.True(impersonating);
+    }
+
+    [Fact]
+    public async Task DeadlineComesFromTheCookie_NotFromTheServingInstance()
+    {
+        // Minted with a two-minute lifetime; the serving instance's own ImpersonationOptions (30 minutes,
+        // per RunAsync) must not extend it. Otherwise a session would live for as long as it kept being
+        // re-read — and a config drift between pods would give each one a different idea of when it ends.
+        var cookie = MintOnAnotherInstance(TargetId, TimeSpan.FromMinutes(2), out var expiresAt);
+
+        var (effective, impersonating, _) = await RunAsync(cookie, Actor(), Target());
+
+        Assert.True(impersonating);
+        Assert.Equal(TargetId, effective!.Id);
+        // Unescape first: the separator goes on the wire percent-encoded (`%7C`) and the request-side
+        // parser decodes it again — which is itself part of what has to survive the trip between pods.
+        Assert.EndsWith($"|{expiresAt.ToUnixTimeSeconds()}", Uri.UnescapeDataString(cookie));
+    }
+
+    [Fact]
+    public void ImpersonationState_IsPerRequest_NotPerProcess()
+    {
+        // Both of these are written mid-request by the middleware. A singleton lifetime on either would
+        // leak one operator's swap into every concurrent request on that pod — a worse failure than
+        // anything scale-out can cause, and an easy attribute to lose in a refactor.
+        Assert.NotNull(typeof(ImpersonationContext).GetCustomAttribute<PerRequestLifetimeAttribute>());
+        Assert.NotNull(typeof(SystemVariable).GetCustomAttribute<PerRequestLifetimeAttribute>());
     }
 }

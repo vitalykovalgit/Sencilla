@@ -69,7 +69,9 @@ internal class CreateFileHandler(
 
             if (res.HasValue)
             {
-                var resPath = pathResolver.GetResolutionPath(dbFile!, res.Value);
+                // file.MimeType is THIS request's metadata — the derivative's own type, not the original's.
+                // The Res entry that would carry it is written from the same value just above.
+                var resPath = pathResolver.GetResolutionPath(dbFile!, res.Value, file.MimeType);
                 await storage.WriteFileAsync(new File { Path = resPath, Storage = dbFile!.Storage }, []);
             }
             else
@@ -84,7 +86,9 @@ internal class CreateFileHandler(
             var resInfo = new ResolutionInfo { S = uploadLength, U = 0, Ct = file.MimeType };
             await fileUpdateRepo.JsonMergeAsync(dbFile.Id, f => f.Res, resKey, resInfo, token);
 
-            var resPath = pathResolver.GetResolutionPath(dbFile, res.Value);
+            // dbFile is the original row and its in-memory Res does not yet hold the key the JsonMergeAsync
+            // above just wrote, so the derivative's type has to come from this request's metadata.
+            var resPath = pathResolver.GetResolutionPath(dbFile, res.Value, file.MimeType);
             await storage.WriteFileAsync(new File { Path = resPath, Storage = dbFile.Storage }, []);
         }
 

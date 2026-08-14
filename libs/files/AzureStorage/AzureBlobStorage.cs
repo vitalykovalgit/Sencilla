@@ -318,7 +318,7 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
     {
         foreach (var resKey in file.Res.Keys)
         {
-            var resPath = pathResolver.GetResolutionPath(file.Path ?? string.Empty, resKey);
+            var resPath = pathResolver.GetResolutionPath(file.Path ?? string.Empty, resKey, file.Res[resKey]?.Ct);
             var (resContainerName, resBlobName) = GetContainerAndFileName(resPath);
 
             if (!string.IsNullOrEmpty(resContainerName) && !string.IsNullOrEmpty(resBlobName))

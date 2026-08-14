@@ -185,7 +185,7 @@ public class CreateFileHandlerTests
         _createRepo.Setup(r => r.Create(It.IsAny<File>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((File f, CancellationToken _) => { createdFile = f; return f; });
         _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
-        _pathResolver.Setup(p => p.GetResolutionPath(It.IsAny<File>(), 600)).Returns("test/path_600.jpg");
+        _pathResolver.Setup(p => p.GetResolutionPath(It.IsAny<File>(), 600, It.IsAny<string?>())).Returns("test/path_600.jpg");
         _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<byte[]>(), 0, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0L);
 
@@ -212,7 +212,7 @@ public class CreateFileHandlerTests
         _createRepo.Setup(r => r.Create(It.IsAny<File>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((File f, CancellationToken _) => f);
         _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
-        _pathResolver.Setup(p => p.GetResolutionPath(It.IsAny<File>(), 600)).Returns("test/path_600.jpg");
+        _pathResolver.Setup(p => p.GetResolutionPath(It.IsAny<File>(), 600, It.IsAny<string?>())).Returns("test/path_600.jpg");
         _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<byte[]>(), 0, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0L);
 
@@ -244,7 +244,7 @@ public class CreateFileHandlerTests
         _createRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingFile);
         _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
-        _pathResolver.Setup(p => p.GetResolutionPath(existingFile, 100)).Returns("test/path_100.jpg");
+        _pathResolver.Setup(p => p.GetResolutionPath(existingFile, 100, It.IsAny<string?>())).Returns("test/path_100.jpg");
         _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<byte[]>(), 0, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0L);
 
@@ -272,7 +272,7 @@ public class CreateFileHandlerTests
         _createRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingFile);
         _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
-        _pathResolver.Setup(p => p.GetResolutionPath(existingFile, 500)).Returns("test/path_500.jpg");
+        _pathResolver.Setup(p => p.GetResolutionPath(existingFile, 500, It.IsAny<string?>())).Returns("test/path_500.jpg");
         _storage.Setup(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<byte[]>(), 0, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0L);
 

@@ -5,7 +5,7 @@ public class AzureBlobStorageOptions: BaseFilesOptions
     /// <summary>
     /// File content provider type. Available options defined in <see cref="FileContentProviderType "/> enum.
     /// </summary>
-    public override byte Type => 2;
+    public override byte Type { get; set; } = 2;
     public override string Section => "AzureStorage";
 
     /// <summary>

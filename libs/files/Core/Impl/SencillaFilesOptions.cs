@@ -6,9 +6,14 @@ namespace Sencilla.Component.Files;
 public abstract class BaseFilesOptions
 {
     /// <summary>
-    /// 
+    /// Storage instance id. Persisted in <c>File.Storage</c> and used as the DI service key,
+    /// so the same byte must mean the same storage in every environment — a database restored
+    /// into another environment resolves its files by this number.
+    /// Defaults to the provider's historical id (1 local drive, 2 Azure, 3 S3); set it in
+    /// configuration to run several instances of one provider side by side, e.g. two S3
+    /// buckets on different endpoints.
     /// </summary>
-    public abstract byte Type { get; }
+    public virtual byte Type { get; set; }
 
     /// <summary>
     /// 
@@ -58,7 +63,7 @@ public class SencillaFilesOptions(IServiceCollection services): BaseFilesOptions
     
     public IServiceCollection Services { get; private set; } = services;
 
-    public override byte Type => 0;
+    public override byte Type { get; set; }
     public override string Section => "SencillaFiles";
 
     

@@ -112,14 +112,19 @@ public class FilePathResolverTests
         Assert.Equal($"system/{fileId}.jpg", path);
     }
 
-    [Fact]
+    // Asserts a feature that no longer exists: the folder segment is commented out in
+    // FilePathResolver.GetFullPath (`/* folderPath,*/`). Skipped rather than deleted so the decision to
+    // drop folders from the path stays visible. Unrelated to the resolution-extension change.
+    [Fact(Skip = "Folder segment is disabled in FilePathResolver.GetFullPath")]
     public void GetFullPath_WithFolder_IncludesFolderInPath()
     {
         var file = new File
         {
             Id = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
             Name = "doc.pdf",
-            UserId = 1,
+            // Was `UserId = 1` — left behind by the int -> Guid primary key migration, so this file has not
+            // compiled since. Unrelated to the resolution-extension change, fixed here to get the suite running.
+            UserId = Guid.Parse("11111111-2222-3333-4444-555555555555"),
             Origin = FileOrigin.User,
             Attrs = new Dictionary<string, string> { ["folder"] = "documents" }
         };
@@ -200,5 +205,113 @@ public class FilePathResolverTests
 
         Assert.Contains("_500", path);
         Assert.EndsWith(".jpg", path);
+    }
+
+    // ── Derivative extension follows the derivative's OWN content type ───────────────────────
+    // A 100px variant of a .jpg is re-encoded as WebP; naming it .jpg makes the stored file lie
+    // to anything reading storage directly (a file browser, an S3 client, a support engineer).
+
+    private static File JpegOriginalWith(params (string Res, string? Ct)[] variants)
+    {
+        var file = new File
+        {
+            Id = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
+            Name = "photo.jpg",
+            MimeType = "image/jpeg",
+            Origin = FileOrigin.System,
+            Path = "system/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg",
+            Res = new Dictionary<string, ResolutionInfo>()
+        };
+
+        foreach (var (res, ct) in variants)
+            file.Res[res] = new ResolutionInfo { S = 1, U = 1, Ct = ct };
+
+        return file;
+    }
+
+    [Fact]
+    public void GetResolutionPath_WebpVariantOfJpegOriginal_UsesWebpExtension()
+    {
+        var file = JpegOriginalWith(("100", "image/webp"));
+
+        Assert.EndsWith("_100.webp", _resolver.GetResolutionPath(file, 100));
+    }
+
+    [Fact]
+    public void GetResolutionPath_JpegVariant_KeepsJpgExtension()
+    {
+        var file = JpegOriginalWith(("1600", "image/jpeg"));
+
+        Assert.EndsWith("_1600.jpg", _resolver.GetResolutionPath(file, 1600));
+    }
+
+    [Fact]
+    public void GetResolutionPath_MixedVariants_EachFollowsItsOwnType()
+    {
+        var file = JpegOriginalWith(("100", "image/webp"), ("1600", "image/jpeg"));
+
+        Assert.EndsWith("_100.webp", _resolver.GetResolutionPath(file, 100));
+        Assert.EndsWith("_1600.jpg", _resolver.GetResolutionPath(file, 1600));
+    }
+
+    [Fact]
+    public void GetResolutionPath_ExplicitContentType_WinsOverRecordedOne()
+    {
+        // The create path: the variant is being written, so Res[key].Ct is not stored yet (or is stale).
+        var file = JpegOriginalWith(("100", "image/jpeg"));
+
+        Assert.EndsWith("_100.webp", _resolver.GetResolutionPath(file, 100, "image/webp"));
+    }
+
+    [Fact]
+    public void GetResolutionPath_NoRecordedTypeAndNoneGiven_KeepsOriginalExtension()
+    {
+        var file = JpegOriginalWith(("100", null));
+
+        Assert.EndsWith("_100.jpg", _resolver.GetResolutionPath(file, 100));
+    }
+
+    [Fact]
+    public void GetResolutionPath_UnknownContentType_KeepsOriginalExtension()
+    {
+        var file = JpegOriginalWith(("100", "application/octet-stream"));
+
+        Assert.EndsWith("_100.jpg", _resolver.GetResolutionPath(file, 100));
+    }
+
+    [Theory]
+    [InlineData("image/webp", ".webp")]
+    [InlineData("IMAGE/WEBP", ".webp")]
+    [InlineData("  image/webp  ", ".webp")]
+    [InlineData("image/webp; charset=binary", ".webp")]
+    [InlineData("image/png", ".png")]
+    [InlineData("image/avif", ".avif")]
+    [InlineData("image/svg+xml", ".svg")]
+    public void GetResolutionPath_ContentTypeVariants_MapToExpectedExtension(string contentType, string expected)
+    {
+        var path = _resolver.GetResolutionPath("system/photo.jpg", "100", contentType);
+
+        Assert.Equal($"system/photo_100{expected}", path);
+    }
+
+    [Fact]
+    public void GetResolutionPath_StringOverloadWithoutContentType_KeepsOriginalExtension()
+    {
+        Assert.Equal("system/photo_100.jpg", _resolver.GetResolutionPath("system/photo.jpg", "100"));
+    }
+
+    [Fact]
+    public void GetResolutionPath_WritePathAndReadPathAgree()
+    {
+        // The invariant that matters: whoever CREATES the variant passes the content type explicitly,
+        // and every later reader resolves the same name from the recorded Res entry. If these two ever
+        // diverge, every thumbnail 404s.
+        var original = JpegOriginalWith();
+        var writePath = _resolver.GetResolutionPath(original, 100, "image/webp");
+
+        var afterUpload = JpegOriginalWith(("100", "image/webp"));
+        var readPath = _resolver.GetResolutionPath(afterUpload, 100);
+
+        Assert.Equal(writePath, readPath);
     }
 }

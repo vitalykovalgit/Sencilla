@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libs\files\AmazonS3\Sencilla.Component.Files.AmazonS3.csproj" />
+  </ItemGroup>
+
+</Project>

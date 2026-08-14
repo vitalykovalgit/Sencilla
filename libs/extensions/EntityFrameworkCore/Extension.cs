@@ -298,7 +298,7 @@ public static class EntityFrameworkCoreExtensions
 
         var query = builder.Build(entities);
 
-        await context.Database.ExecuteSqlRawAsync(query);
+        await context.Database.ExecuteSqlRawAsync(EscapeFormatBraces(query));
     }
 
     public static Task MergeAsync<TEntity, TContext>(this TContext context,
@@ -336,6 +336,14 @@ public static class EntityFrameworkCoreExtensions
 
         var query = builder.Build(entities);
 
-        await context.Database.ExecuteSqlRawAsync(query);
+        await context.Database.ExecuteSqlRawAsync(EscapeFormatBraces(query));
     }
+
+    /// <summary>
+    /// Doubles `{`/`}` so <c>ExecuteSqlRaw</c> leaves them alone. EF's <c>RawSqlCommandBuilder.Build</c>
+    /// unconditionally runs the command text through <see cref="string.Format(string, object[])"/> to
+    /// substitute parameter placeholders — even with zero parameters — so a brace inlined by the MERGE
+    /// builders (any JSON string column) throws FormatException before the command ever reaches SQL Server.
+    /// </summary>
+    public static string EscapeFormatBraces(string sql) => sql.Replace("{", "{{").Replace("}", "}}");
 }

@@ -42,8 +42,14 @@ public static class Bootstrap
         return services;
     }
 
-    public static SencillaFilesOptions AddStorageInternal<TStorage, TOptions>(this SencillaFilesOptions root, 
-        TOptions options, IConfiguration? configuration = null, IConfigurationSection? section = null)
+    /// <param name="bindOwnSection">
+    /// Bind <c>SencillaFiles:{Section}</c> over <paramref name="options"/>. False for a NAMED
+    /// instance (<c>SencillaFiles:Storages:{name}</c>), which the caller has already bound —
+    /// rebinding the shared flat section would overwrite it.
+    /// </param>
+    public static SencillaFilesOptions AddStorageInternal<TStorage, TOptions>(this SencillaFilesOptions root,
+        TOptions options, IConfiguration? configuration = null, IConfigurationSection? section = null,
+        bool bindOwnSection = true)
         where TStorage: class, IFileStorage
         where TOptions: BaseFilesOptions
     {
@@ -51,13 +57,15 @@ public static class Bootstrap
         var dirs = new Dictionary<string, string>();
         if (configuration is not null)
         {
-            configuration.GetSection($"{root.Section}:{options.Section}").Bind(options);
+            if (bindOwnSection)
+                configuration.GetSection($"{root.Section}:{options.Section}").Bind(options);
             configuration.GetSection($"{root.Section}:Dirs").Bind(dirs);
         }
 
         if (section is not null)
         {
-            section.GetSection($"{root.Section}:{options.Section}").Bind(options);
+            if (bindOwnSection)
+                section.GetSection($"{root.Section}:{options.Section}").Bind(options);
             section.GetSection($"{root.Section}:Dirs").Bind(dirs);
         }
 
@@ -71,11 +79,27 @@ public static class Bootstrap
                 options.Dirs.TryAdd(kvp.Key, kvp.Value);
         }
 
-        root.Services.TryAddKeyedTransient<IFileStorage, TStorage>(options.Type);
+        // The id is what File.Storage records, so two storages sharing one is not a duplicate
+        // registration to skip quietly — it is a bucket nobody can address, and files written
+        // under that id would come back from the wrong storage. TryAdd would drop the second
+        // silently; say so instead.
+        if (root.Services.Any(d => d.IsKeyedService && d.ServiceType == typeof(IFileStorage) && Equals(d.ServiceKey, options.Type)))
+            throw new InvalidOperationException(
+                $"Storage id {options.Type} is already registered. Give each storage its own Type " +
+                $"in configuration — it is persisted in File.Storage and must stay unique.");
+
+        // Each registration keeps its OWN options object. Two instances of one provider (say two
+        // S3 buckets) differ only by configuration, so letting DI resolve TOptions would hand
+        // both the same singleton and silently collapse them into one storage.
+        root.Services.TryAddKeyedTransient<IFileStorage>(options.Type,
+            (sp, _) => ActivatorUtilities.CreateInstance<TStorage>(sp, options));
+
+        // Kept for consumers that inject the concrete options type directly. With several
+        // instances of one provider the first registered wins here — resolve by key instead.
         root.Services.TryAddSingleton(options);
 
         if (options.UseAsDefault)
-            root.Services.TryAddTransient<IFileStorage, TStorage>();
+            root.Services.TryAddTransient<IFileStorage>(sp => ActivatorUtilities.CreateInstance<TStorage>(sp, options));
 
         return root;
     }

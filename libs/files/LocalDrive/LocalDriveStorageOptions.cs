@@ -5,7 +5,7 @@ public class LocalDriveStorageOptions: BaseFilesOptions
     /// <summary>
     /// File content provider type. Available options defined in <see cref="FileContentProviderType "/> enum.
     /// </summary>
-    public override byte Type => 1;
+    public override byte Type { get; set; } = 1;
     public override string Section => "LocalDrive";
 
     /// <summary>
