@@ -18,6 +18,28 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
 {
     private static readonly UseCachingAttribute? CachingAttribute = typeof(TEntity).GetCustomAttribute<UseCachingAttribute>();
 
+    /// <summary>
+    /// The request body, or a 400 instead of a 500.
+    ///
+    /// This controller is deliberately NOT <c>[ApiController]</c> — that attribute infers every complex
+    /// parameter as <c>[FromBody]</c>, which would bind <c>Filter&lt;TEntity&gt;</c> from the body instead of
+    /// the query string and break every read endpoint. The cost is that ASP.NET does not turn a binding
+    /// failure into an automatic 400: the parameter simply arrives null, and the first thing that touches it
+    /// (<c>entities.AsQueryable()</c> in the repository) throws ArgumentNullException — a 500 for what is
+    /// entirely the caller's mistake. A json object posted to a collection route, a wrong property type or
+    /// an empty body all land here.
+    /// </summary>
+    protected static IEnumerable<T> Many<T>(IEnumerable<T>? body)
+        => body ?? throw Malformed($"a json array of {typeof(T).Name} objects");
+
+    /// <inheritdoc cref="Many{T}"/>
+    protected static TEntity One(TEntity? body)
+        => body ?? throw Malformed($"a json {typeof(TEntity).Name} object");
+
+    private static BadRequestException Malformed(string expected)
+        => new($"Request body is missing or does not match the expected shape \u2014 expected {expected}.");
+
+
     [HttpGet, Route("")]
     public virtual async Task<IActionResult> GetAll(Filter<TEntity> filter, CancellationToken token)
     {
@@ -79,25 +101,29 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     [HttpPut, Route("{id}")]
     public virtual async Task<IActionResult> CreateOne(TKey id, [FromBody] TEntity entity, CancellationToken token)
     {
-        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.Create(entity, token));
+        var body = One(entity);
+        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.Create(body, token));
     }
 
     [HttpPut, Route("")]
     public virtual async Task<IActionResult> CreateMany([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
     {
-        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.Create(entities, token));
+        var body = Many(entities);
+        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.Create(body, token));
     }
 
     [HttpPost, Route("{id}")]
     public virtual async Task<IActionResult> UpdateOne(TKey id, [FromBody] TEntity entity, CancellationToken token)
     {
-        return await FromService((IUpdateRepository<TEntity, TKey> repo) => repo.Update(entity));
+        var body = One(entity);
+        return await FromService((IUpdateRepository<TEntity, TKey> repo) => repo.Update(body));
     }
 
     [HttpPost, Route("")]
     public virtual async Task<IActionResult> UpdateMany([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
     {
-        return await FromService((IUpdateRepository<TEntity, TKey> repo) => repo.Update(entities));
+        var body = Many(entities);
+        return await FromService((IUpdateRepository<TEntity, TKey> repo) => repo.Update(body));
     }
 
     /// <summary>
@@ -109,40 +135,46 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     [HttpPost, Route("cancel-pending")]
     public virtual async Task<IActionResult> CancelPending([FromBody] TEntity entity, CancellationToken token)
     {
-        return await FromService((IAppendOnlyTrackRepository<TEntity, TKey> repo) => repo.CancelPending(entity, token));
+        var body = One(entity);
+        return await FromService((IAppendOnlyTrackRepository<TEntity, TKey> repo) => repo.CancelPending(body, token));
     }
 
     [HttpPost, Route("upsert/{id}")]
     public virtual async Task<IActionResult> UpsertOne(TKey id, [FromBody] TEntity entity, CancellationToken token)
     {
-        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(entity, x => x.Id, token: token));
+        var body = One(entity);
+        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(body, x => x.Id, token: token));
     }
 
     [HttpPost, Route("upsert")]
     public virtual async Task<IActionResult> UpsertMany([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
     {
-        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(entities, x => x.Id, token: token));
+        var body = Many(entities);
+        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.UpsertAsync(body, x => x.Id, token: token));
     }
 
     [HttpPost, Route("merge/{id}")]
     public virtual async Task<IActionResult> MergeOne(TKey id, [FromBody] TEntity entity, CancellationToken token)
     {
-        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.MergeAsync(entity, x => x.Id, token: token));
+        var body = One(entity);
+        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.MergeAsync(body, x => x.Id, token: token));
     }
 
     [HttpPost, Route("merge")]
     public virtual async Task<IActionResult> MergeMany([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
     {
-        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.MergeAsync(entities, x => x.Id, token: token));
+        var body = Many(entities);
+        return await FromService((ICreateRepository<TEntity, TKey> repo) => repo.MergeAsync(body, x => x.Id, token: token));
     }
 
     [HttpPost, Route("get-or-create/{id}")]
     public virtual async Task<IActionResult> GetOrCreateOne(TKey id, [FromBody] TEntity entity, [FromQuery] string[]? key, Filter<TEntity> filter, CancellationToken token)
     {
+        var body = One(entity);
         var keys = key?.Length > 0 ? key : [];
         return await FromService(async (ICreateRepository<TEntity, TKey> repo) =>
         {
-            var result = await repo.GetOrCreateAsync([entity], keys, filter, token);
+            var result = await repo.GetOrCreateAsync([body], keys, filter, token);
             return result.All;
         });
     }
@@ -150,10 +182,11 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     [HttpPost, Route("get-or-create")]
     public virtual async Task<IActionResult> GetOrCreateMany([FromBody] IEnumerable<TEntity> entities, [FromQuery] string[]? key, Filter<TEntity> filter, CancellationToken token)
     {
+        var body = Many(entities);
         var keys = key?.Length > 0 ? key : [];
         return await FromService(async (ICreateRepository<TEntity, TKey> repo) =>
         {
-            var result = await repo.GetOrCreateAsync(entities, keys, filter, token);
+            var result = await repo.GetOrCreateAsync(body, keys, filter, token);
             return result.All;
         });
     }
@@ -161,13 +194,15 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     [HttpPost, Route("remove")]
     public virtual async Task<IActionResult> Remove([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
     {
-        return await FromService((IRemoveRepository<TEntity, TKey> repo) => repo.Remove(entities, token));
+        var body = Many(entities);
+        return await FromService((IRemoveRepository<TEntity, TKey> repo) => repo.Remove(body, token));
     }
 
     [HttpPost, Route("undo")]
     public virtual async Task<IActionResult> Undo([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
     {
-        return await FromService((IRemoveRepository<TEntity, TKey> repo) => repo.Undo(entities, token));
+        var body = Many(entities);
+        return await FromService((IRemoveRepository<TEntity, TKey> repo) => repo.Undo(body, token));
     }
 
     [HttpDelete, Route("{id}")]
@@ -179,12 +214,14 @@ public class CrudApiController<TEntity, TKey>(IServiceProvider resolver) : ApiCo
     [HttpDelete, Route("")]
     public virtual async Task<IActionResult> Delete([FromBody] IEnumerable<TEntity> entities, CancellationToken token)
     {
-        return await FromService((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(entities, token));
+        var body = Many(entities);
+        return await FromService((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(body, token));
     }
 
     [HttpDelete, Route("ids")]
     public virtual async Task<IActionResult> DeleteByIds([FromBody] IEnumerable<TKey> ids, CancellationToken token)
     {
-        return await FromService((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(ids, token));
+        var body = Many(ids);
+        return await FromService((IDeleteRepository<TEntity, TKey> repo) => repo.Delete(body, token));
     }
 }
