@@ -42,7 +42,7 @@ public class GetOrCreateQueryBuilder<TEntity>
                     $"\nUSING (VALUES\n{colVals[VALS]}\n)" +
                     $"\nAS s ({colVals[COLS]})" +
                     $"\nON {BuildCondition(keyProps)}" +
-                    $"\nWHEN NOT MATCHED BY TARGET THEN\n{_qp.ToInsertMergeQuery(colVals[COLS])}" +
+                    $"\nWHEN NOT MATCHED BY TARGET THEN\n{_qp.ToInsertMergeQuery(colVals[COLS], EntityColumnMap.IsDatabaseGeneratedKey(typeof(TEntity)))}" +
                     $"\nOUTPUT INSERTED.{ColName(pkProp)};";
 
         var keyValues = string.Join(", ", entities.Select(e =>
@@ -61,26 +61,7 @@ public class GetOrCreateQueryBuilder<TEntity>
             ?? throw new InvalidOperationException(
                 $"No 'Id' property found on {typeof(TEntity).Name}. Entity must implement IEntity<TKey>.");
 
-    public List<PropertyInfo> GetMappedProperties() =>
-        typeof(TEntity).GetProperties()
-            .Where(p => p.GetCustomAttribute<NotMappedAttribute>() is null
-                     && p.GetCustomAttribute<SkipUpsertAttribute>() is null
-                     && !IsNavigationProperty(p.PropertyType))
-            .ToList();
-
-    private static bool IsNavigationProperty(Type type)
-    {
-        var underlying = Nullable.GetUnderlyingType(type) ?? type;
-        if (underlying.IsAssignableTo(typeof(IBaseEntity)))
-            return true;
-        if (underlying.IsGenericType)
-        {
-            var elementType = underlying.GetGenericArguments().FirstOrDefault();
-            if (elementType != null && elementType.IsAssignableTo(typeof(IBaseEntity)))
-                return true;
-        }
-        return false;
-    }
+    public List<PropertyInfo> GetMappedProperties() => EntityColumnMap.MappedProperties(typeof(TEntity));
 
     public List<PropertyInfo> ResolveKeyProperties(List<PropertyInfo> mappedProps)
     {
@@ -101,7 +82,7 @@ public class GetOrCreateQueryBuilder<TEntity>
                $"\nUSING (VALUES\n{colVals[VALS]}\n)" +
                $"\nAS s ({colVals[COLS]})" +
                $"\nON {BuildCondition(keyProps)}" +
-               $"\nWHEN NOT MATCHED BY TARGET THEN\n{_qp.ToInsertMergeQuery(colVals[COLS])}" +
+               $"\nWHEN NOT MATCHED BY TARGET THEN\n{_qp.ToInsertMergeQuery(colVals[COLS], EntityColumnMap.IsDatabaseGeneratedKey(typeof(TEntity)))}" +
                $"\nOUTPUT {outputCols};";
     }
 

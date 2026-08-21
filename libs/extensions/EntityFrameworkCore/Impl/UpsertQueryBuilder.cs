@@ -46,7 +46,7 @@ public class UpsertQueryBuilder<TEntity>
         else
         {
             query += Environment.NewLine + "WHEN NOT MATCHED BY TARGET THEN" + Environment.NewLine
-                + _qp.ToInsertMergeQuery(colVals[COLS]);
+                + _qp.ToInsertMergeQuery(colVals[COLS], EntityColumnMap.IsDatabaseGeneratedKey(typeof(TEntity)));
         }
 
         if (_cmnd.UpdateAction != null)
@@ -91,8 +91,7 @@ public class UpsertQueryBuilder<TEntity>
 
         var props = entities.First().GetType().GetProperties().ToList();
 
-        bool canMap(PropertyInfo p) =>
-            p.GetCustomAttribute<NotMappedAttribute>() is null && p.GetCustomAttribute<SkipUpsertAttribute>() is null && !p.PropertyType.IsAssignableTo(typeof(IBaseEntity));
+        bool canMap(PropertyInfo p) => EntityColumnMap.IsColumn(p);
 
         using (var eIterator = entities.GetEnumerator())
         {

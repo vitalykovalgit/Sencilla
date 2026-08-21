@@ -200,7 +200,11 @@ public class GetOrCreateQueryBuilderTests
         var (merge, _) = builder.Build([_te]);
 
         Assert.NotEmpty(merge);
-        Assert.Contains(@"\'", merge);
+        // T-SQL escapes a quote by DOUBLING it. This assertion used to demand `\'`, which is MySQL
+        // syntax — SQL Server treats the backslash as an ordinary character, so the literal closed
+        // early and the statement was a syntax error. The test passed while the code was broken.
+        Assert.Contains("N'hack@x.com''; DROP TABLE Users;--'", merge);
+        Assert.DoesNotContain(@"\'", merge);
     }
 
     // ── Null field values ─────────────────────────────────────────────────────

@@ -166,4 +166,67 @@ public class UpsertQueryBuilderTests
         Assert.NotEmpty(query);
         Assert.True(query.ContainsAll(_te.Email, te2.Email, te3.Email));
     }
+
+    // ── Navigation property exclusion ─────────────────────────────────────────
+    //
+    // A navigation has no column behind it, so naming one in the MERGE column list makes SQL Server
+    // reject the ENTIRE statement: «Invalid column name 'Children'». The reference side was already
+    // excluded; the collection side was not, which broke upsert for every entity holding an
+    // [InverseProperty] collection — Sencilla.Component.I18n's Resource.Translations among them, so
+    // the translation manager's every save 500'd.
+
+    [Fact]
+    public void Build_ExcludesCollectionNavigationProperty()
+    {
+        var query = BuildNavPropsQuery();
+
+        Assert.DoesNotContain(nameof(TestEntityWithNavProps.Children), query);
+    }
+
+    [Fact]
+    public void Build_ExcludesReferenceNavigationProperty()
+    {
+        var query = BuildNavPropsQuery();
+
+        Assert.DoesNotContain($"[{nameof(TestEntityWithNavProps.Child)}]", query);
+    }
+
+    [Fact]
+    public void Build_ExcludesNotMappedProperty()
+    {
+        var query = BuildNavPropsQuery();
+
+        Assert.DoesNotContain(nameof(TestEntityWithNavProps.Computed), query);
+    }
+
+    [Fact]
+    public void Build_IncludesScalarColumns()
+    {
+        var query = BuildNavPropsQuery();
+
+        Assert.Contains($"[{nameof(TestEntityWithNavProps.Id)}]", query);
+        Assert.Contains($"[{nameof(TestEntityWithNavProps.Name)}]", query);
+        Assert.Contains($"[{nameof(TestEntityWithNavProps.ChildId)}]", query);
+    }
+
+    /// Populates BOTH navigations: an unset collection would pass even against the old predicate.
+    private static string BuildNavPropsQuery()
+    {
+        if (!RepositoryEntityFrameworkBootstrap.Entities.Contains(typeof(TestEntityWithNavProps)))
+            RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(TestEntityWithNavProps));
+
+        var entity = new TestEntityWithNavProps
+        {
+            Id = 1,
+            Name = test,
+            ChildId = 2,
+            Child = new TestChildEntity { Id = 2, Label = test },
+            Children = [new TestChildEntity { Id = 3, Label = test }],
+            Computed = test,
+        };
+
+        var builder = new UpsertQueryBuilder<TestEntityWithNavProps>(new UpsertCommand<TestEntityWithNavProps>(e => e.Id));
+
+        return builder.Build([entity]);
+    }
 }

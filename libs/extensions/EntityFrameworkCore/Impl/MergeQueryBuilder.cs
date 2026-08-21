@@ -46,7 +46,7 @@ public class MergeQueryBuilder<TEntity>
             else
             {
                 query += Environment.NewLine + "WHEN NOT MATCHED BY TARGET THEN" + Environment.NewLine
-                    + _qp.ToInsertMergeQuery(colVals[COLS]);
+                    + _qp.ToInsertMergeQuery(colVals[COLS], EntityColumnMap.IsDatabaseGeneratedKey(typeof(TEntity)));
             }
 
             if (_cmnd.UpdateAction != null)
