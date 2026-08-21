@@ -6,6 +6,12 @@
 [Route("api/v1/i18n")]
 public class I18nController(IServiceProvider resolver, ILocalizationProvider localizationProvider) : ApiController(resolver)
 {
+    /// <summary>
+    /// The catalog a browser loads. Anonymous by design: the strings are shipped to every visitor's
+    /// screen anyway, and requiring auth here means an anonymous visitor renders raw keys — which is
+    /// precisely the audience most likely to need the site in their own language.
+    /// </summary>
+    [AllowAnonymous]
     [HttpGet]
     [Route("{locale}.json")]
     [Route("{ns}/{locale}.json")]

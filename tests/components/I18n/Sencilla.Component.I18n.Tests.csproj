@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libs\components\I18n\Sencilla.Component.I18n.csproj" />
+  </ItemGroup>
+
+</Project>

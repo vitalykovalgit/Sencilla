@@ -54,27 +54,15 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
         return client.OpenWrite(true, null, token);
     }
 
-    public async Task<Stream?> ReadFileAsync(File file, CancellationToken token = default)
-    {
-        var (containerName, blobName) = GetContainerAndFileName(file);
+    public Task<Stream?> ReadFileAsync(File file, CancellationToken token = default) =>
+        ReadFileAsync(file.Path ?? "", token);
 
-        var blobContainerClient = GetContainerClient(containerName, blobName);
-        var blobClient = blobContainerClient.GetBlobClient(blobName);
-
-        var downloadResponse = await blobClient.DownloadStreamingAsync(null, token);
-
-        // System.NotSupportedException: Specified method is not supported.
-        //  at Azure.Core.Pipeline.RetriableStream.RetriableStreamImpl.get_Length()
-        //  at OpenCvSharp.Mat.FromStream(Stream stream, ImreadModes mode)
-        //return downloadResponse.Value.Content;
-
-        //var ms = new MemoryStream();
-        //await downloadResponse.Value.Content.CopyToAsync(ms);
-        //ms.Position = 0;
-        //return ms;
-        return downloadResponse.Value.Content;
-    }
-
+    /// <summary>
+    /// The blob's content, or null when it is not there — the same answer LocalDriveStorage gives, which is
+    /// what the nullable return type promises. Without the 404 catch, callers written against that contract
+    /// (read-then-write, "does the previous version exist") got a RequestFailedException on Azure and worked
+    /// only on local disk.
+    /// </summary>
     public async Task<Stream?> ReadFileAsync(string file, CancellationToken token = default)
     {
         var (containerName, blobName) = GetContainerAndFileName(file);
@@ -82,8 +70,16 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
         var blobContainerClient = GetContainerClient(containerName, blobName);
         var blobClient = blobContainerClient.GetBlobClient(blobName);
 
-        var downloadResponse = await blobClient.DownloadStreamingAsync(null, token);
-        return downloadResponse.Value.Content;
+        try
+        {
+            var downloadResponse = await blobClient.DownloadStreamingAsync(null, token);
+            return downloadResponse.Value.Content;
+        }
+        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        {
+            // Missing blob AND missing container both land here — neither is an error, the file is simply absent.
+            return null;
+        }
     }
 
     public async Task<long> WriteFileAsync(File file, byte[] content, long offset = 0, CancellationToken token = default)

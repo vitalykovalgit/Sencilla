@@ -9,4 +9,9 @@
     <ProjectReference Include="..\..\web\Sencilla.Web.csproj" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sencilla.Component.I18n.Tests" />
+  </ItemGroup>
+
 </Project>

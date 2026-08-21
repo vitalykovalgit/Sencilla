@@ -38,12 +38,16 @@ public static class Bootstrap
     internal static IServiceCollection AddI18nServices(this IServiceCollection services)
     {
         services.AddTransient<DbLocalizationProvider>();
-        services.AddTransient<ILocalizationProvider>((serviceProvider) =>
+
+        // SINGLETON on purpose: a transient wrapper builds an empty cache per resolution, so nothing
+        // was ever actually cached and every render round-tripped the database. `DbLocalizationProvider`
+        // opens its own DI scope per call, so there is no captive scoped dependency to leak here.
+        services.AddSingleton<ILocalizationProvider>((serviceProvider) =>
         {
-            var dbProvider = serviceProvider.GetService<DbLocalizationProvider>();
-            var localizationProviders = new List<ILocalizationProvider>() { dbProvider! };
-            var aggregator = new CacheLocalizationProvider(new LocalizationProviderAggregator(localizationProviders), cacheLevel: 2);
-            return aggregator;
+            var dbProvider = serviceProvider.GetRequiredService<DbLocalizationProvider>();
+            var localizationProviders = new List<ILocalizationProvider>() { dbProvider };
+
+            return new CacheLocalizationProvider(new LocalizationProviderAggregator(localizationProviders), cacheLevel: 2);
         });
 
         services.AddTransient<ITranslateService, TranslateService>();
