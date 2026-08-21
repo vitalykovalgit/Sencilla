@@ -55,12 +55,19 @@ internal static class EntityColumnMap
     /// key column. False when the caller supplies it, in which case omitting it inserts NULL and the
     /// statement dies on the NOT NULL constraint.
     ///
-    /// The convention mirrors EF Core's own: an integral key is an IDENTITY column, anything else
-    /// (<c>string</c>, <c>Guid</c>) is client-supplied. An explicit
-    /// <see cref="DatabaseGeneratedAttribute"/> always wins over the convention.
+    /// Only a <c>string</c> key counts as client-supplied. An explicit
+    /// <see cref="DatabaseGeneratedAttribute"/> still wins over that convention.
     ///
     /// This is why <c>Sencilla.Component.I18n</c>'s <c>Resource</c> — whose key IS the dotted
     /// translation key — could never be upserted: every attempt emitted an INSERT without [Id].
+    ///
+    /// A <c>Guid</c> key deliberately stays on the database-generated side even though the client
+    /// usually does supply one. Guid PKs here are declared <c>DEFAULT NEWSEQUENTIALID()</c> precisely
+    /// as "a fallback for non-EF inserts", and this raw MERGE *is* a non-EF insert: callers such as
+    /// the clipart and palette-colour dialogs send an EMPTY id on create and rely on the default to
+    /// allocate one. Naming [Id] would write all-zeros, and the next create would then MATCH that
+    /// zeros row on the key and silently overwrite it instead of inserting. Widening this to Guid
+    /// needs those callers changed first.
     /// </summary>
     public static bool IsDatabaseGeneratedKey(Type entityType)
     {
@@ -74,8 +81,6 @@ internal static class EntityColumnMap
         if (generated is not null)
             return generated.DatabaseGeneratedOption != DatabaseGeneratedOption.None;
 
-        var type = Nullable.GetUnderlyingType(key.PropertyType) ?? key.PropertyType;
-
-        return type == typeof(int) || type == typeof(long) || type == typeof(short) || type == typeof(byte);
+        return (Nullable.GetUnderlyingType(key.PropertyType) ?? key.PropertyType) != typeof(string);
     }
 }

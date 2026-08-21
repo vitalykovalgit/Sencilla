@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Sencilla.EntityFramework.Extension.Tests;
@@ -8,14 +9,14 @@ namespace Sencilla.EntityFramework.Extension.Tests;
 /// </summary>
 public class KeyInsertAndEscapingTests
 {
-    private static string BuildStringKeyed(string id = "pe.basket.head.title", string? description = "Кошик")
+    private static string BuildStringKeyed(string id = "pe.basket.head.title", string? description = "Кошик", StringKeyEntity? entity = null)
     {
         if (!RepositoryEntityFrameworkBootstrap.Entities.Contains(typeof(StringKeyEntity)))
             RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(StringKeyEntity));
 
         var builder = new UpsertQueryBuilder<StringKeyEntity>(new UpsertCommand<StringKeyEntity>(e => e.Id));
 
-        return builder.Build([new StringKeyEntity { Id = id, Description = description }]);
+        return builder.Build([entity ?? new StringKeyEntity { Id = id, Description = description }]);
     }
 
     private static string BuildIntKeyed()
@@ -81,6 +82,75 @@ public class KeyInsertAndEscapingTests
         // parsed as SQL. An unescaped `N'x'; DROP…` would have closed the literal after «x».
         Assert.Contains("N'x''; DROP TABLE dbo.Resource; --'", sql);
         Assert.DoesNotContain("N'x'; DROP", sql);
+    }
+
+    /// A Guid key stays on the database-generated side: these columns are DEFAULT NEWSEQUENTIALID()
+    /// and callers create with an EMPTY id, relying on the default. Naming [Id] would insert
+    /// all-zeros, and the next create would MATCH that row and overwrite it rather than insert.
+    [Fact]
+    public void Insert_OmitsIdColumn_ForGuidKey()
+    {
+        if (!RepositoryEntityFrameworkBootstrap.Entities.Contains(typeof(TestEntity)))
+            RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(TestEntity));
+
+        var builder = new UpsertQueryBuilder<TestEntity>(new UpsertCommand<TestEntity>(e => e.Id));
+        var sql = builder.Build([new TestEntity { Id = Guid.NewGuid(), Email = "a@b.c" }]);
+
+        Assert.DoesNotContain("[Id]", InsertClauseOf(sql));
+    }
+
+    /// `p.PropertyType` for a `DateTime?` is `Nullable<DateTime>`, so it matched no branch and fell
+    /// through to a bare ToString() — an unquoted date, i.e. a syntax error.
+    [Fact]
+    public void Values_QuoteNullableDateTime()
+    {
+        var sql = BuildStringKeyed(entity: Row(updated: new DateTime(2026, 8, 21, 10, 29, 40, DateTimeKind.Utc)));
+
+        Assert.Contains("'2026-08-21 10:29:40'", sql);
+    }
+
+    /// An enum fell through the same way and emitted its member NAME, which SQL Server parses as an
+    /// identifier: «Invalid column name 'Machine'».
+    [Fact]
+    public void Values_EmitEnumAsItsNumericValue()
+    {
+        var sql = BuildStringKeyed(entity: Row(origin: SampleOrigin.Machine));
+
+        Assert.DoesNotContain("Machine", sql);
+        Assert.Contains(",1,", ValuesRowOf(sql));
+    }
+
+    /// Under a comma-decimal culture `12.5m.ToString()` is «12,5», which splits one value into two
+    /// inside the VALUES list — a column-count error, or silent column shifting on money.
+    [Fact]
+    public void Values_FormatDecimalsInvariantly_UnderCommaDecimalCulture()
+    {
+        var previous = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("uk-UA");
+
+            var sql = BuildStringKeyed(entity: Row(price: 12.5m));
+
+            Assert.Contains("12.5", sql);
+            Assert.DoesNotContain("12,5", sql);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
+    }
+
+    private static StringKeyEntity Row(DateTime? updated = null, SampleOrigin origin = SampleOrigin.Unknown, decimal? price = null) =>
+        new() { Id = "pe.zzz.key", Description = "d", UpdatedDate = updated, Origin = origin, Price = price };
+
+    /// The single `(...)` row inside `USING (VALUES ... )`.
+    private static string ValuesRowOf(string sql)
+    {
+        var start = sql.IndexOf("USING (VALUES", StringComparison.Ordinal);
+        var end = sql.IndexOf("AS s (", StringComparison.Ordinal);
+
+        return sql[start..end];
     }
 
     private static string InsertClauseOf(string sql)

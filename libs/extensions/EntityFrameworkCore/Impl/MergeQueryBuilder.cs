@@ -93,7 +93,11 @@ public class MergeQueryBuilder<TEntity>
             { VALS, string.Empty },
         };
 
-        var props = typeof(TEntity).GetProperties().ToList();
+        // Same column rule as the other two builders. This one filtered on [NotMapped] alone, so it
+        // still named navigations and [SkipUpsert] properties as columns — «Invalid column name» for
+        // any entity carrying either. Both loops below iterate this list, so COLS and VALS stay
+        // aligned; their own `nma == null` guards are now redundant.
+        var props = EntityColumnMap.MappedProperties(typeof(TEntity));
 
         if (entities.Any())
         {

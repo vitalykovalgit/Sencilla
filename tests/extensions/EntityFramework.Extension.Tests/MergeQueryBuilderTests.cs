@@ -46,4 +46,32 @@ public class MergeQueryBuilderTests
 
         Assert.NotEmpty(query);
     }
+    /// This suite only ever exercised the navigation-free TestEntity and asserted Assert.NotEmpty,
+    /// which is why MergeQueryBuilder kept its own [NotMapped]-only column filter while the other two
+    /// builders moved to the shared rule — and why merging any entity with a navigation threw
+    /// «Invalid column name».
+    [Fact]
+    public void Build_ExcludesNavigationAndNotMappedColumns()
+    {
+        if (!RepositoryEntityFrameworkBootstrap.Entities.Contains(typeof(TestEntityWithNavProps)))
+            RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(TestEntityWithNavProps));
+
+        var entity = new TestEntityWithNavProps
+        {
+            Id = 1,
+            Name = test,
+            ChildId = 2,
+            Child = new TestChildEntity { Id = 2, Label = test },
+            Children = [new TestChildEntity { Id = 3, Label = test }],
+            Computed = test,
+        };
+
+        var query = new MergeQueryBuilder<TestEntityWithNavProps>(new MergeCommand<TestEntityWithNavProps>(e => e.Id))
+            .Build([entity]);
+
+        Assert.DoesNotContain("[Children]", query);
+        Assert.DoesNotContain("[Child]", query);
+        Assert.DoesNotContain("[Computed]", query);
+        Assert.Contains("[Name]", query);
+    }
 }
