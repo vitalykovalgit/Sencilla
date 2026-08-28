@@ -24,6 +24,9 @@ public static class SencillaJsonConverters
         if (!options.Converters.Any(c => c is NullableEmptyGuidConverter))
             options.Converters.Add(new NullableEmptyGuidConverter());
 
+        if (!options.Converters.Any(c => c is NullableDateTimeConverter))
+            options.Converters.Add(new NullableDateTimeConverter());
+
         return options;
     }
 }
