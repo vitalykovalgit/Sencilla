@@ -1,7 +1,7 @@
 namespace Sencilla.Component.Files;
 
 [DisableInjection]
-public class FileFilter : Filter
+public class FileFilter : Filter<File>
 {
     public FileFilter ByParentId(params Guid[] filesId)
     {
