@@ -142,6 +142,14 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
     ///
     /// An explicit <c>==</c> chain is correct for both, and for bool it is also what the values already
     /// render as — <c>$"{true}"</c> is "True", which Dynamic LINQ parses case-insensitively.
+    ///
+    /// <para>· enum — interpolating one yields its NAME, so the criterion rendered as
+    /// <c>Origin in (Upload)</c> and Dynamic LINQ tried to resolve <c>Upload</c> as an identifier:
+    /// "No property or field 'Upload' exists". The numeric value is what it can compare against.
+    /// Deliberately WITHOUT the <c>int(...)</c> cast that first accompanied this fix: an enum compares
+    /// against a numeric literal unaided, and casting breaks the nullable case — <c>int(Source)</c>
+    /// throws "Nullable object must have a value" the moment it meets a null row, where plain
+    /// <c>Source in (1)</c> is fine. All four behaviours are pinned in FilterEnumExpressionTests.</para>
     /// </summary>
     private static string ToComparison(string? query, Type type, List<object?> values)
     {
@@ -151,9 +159,9 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
             return string.Join(" || ", values.Select(v => $"{query} == {quote}{v}{quote}"));
         }
 
-        var literals = type == typeof(string)
-            ? values.Select(v => $"\"{v}\"")
-            : values.Select(v => $"{v}");
+        var literals = type == typeof(string) ? values.Select(v => $"\"{v}\"")
+                     : type.IsEnum           ? values.Select(v => $"{Convert.ToInt32(v)}")
+                     :                         values.Select(v => $"{v}");
 
         return $"{query} in ({string.Join(",", literals)})";
     }
