@@ -10,7 +10,7 @@ public class RabbitMQStreamTests
         var providerConfig = new RabbitMQProviderConfig();
         var streamConfig = new StreamConfig(providerConfig) { Name = "orders" };
 
-        var stream = new RabbitMQStream(connectionFactory.Object, streamConfig, options);
+        var stream = new RabbitMQStream(connectionFactory.Object, streamConfig, options, null, NullLogger.Instance);
 
         Assert.Equal("orders", stream.Name);
     }
@@ -24,7 +24,7 @@ public class RabbitMQStreamTests
         var streamConfig = new StreamConfig(providerConfig) { Name = null };
 
         Assert.Throws<ArgumentNullException>(() =>
-            new RabbitMQStream(connectionFactory.Object, streamConfig, options));
+            new RabbitMQStream(connectionFactory.Object, streamConfig, options, null, NullLogger.Instance));
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public class RabbitMQStreamTests
         var providerConfig = new RabbitMQProviderConfig();
         var streamConfig = new StreamConfig(providerConfig) { Name = "test" };
 
-        var stream = new RabbitMQStream(connectionFactory.Object, streamConfig, options);
+        var stream = new RabbitMQStream(connectionFactory.Object, streamConfig, options, null, NullLogger.Instance);
 
         await stream.Write<string>(null);
 
@@ -50,7 +50,7 @@ public class RabbitMQStreamTests
         var providerConfig = new RabbitMQProviderConfig();
         var streamConfig = new StreamConfig(providerConfig) { Name = "test" };
 
-        var stream = new RabbitMQStream(connectionFactory.Object, streamConfig, options);
+        var stream = new RabbitMQStream(connectionFactory.Object, streamConfig, options, null, NullLogger.Instance);
 
         await stream.DisposeAsync();
     }
@@ -103,11 +103,66 @@ public class RabbitMQStreamTests
         var providerConfig = new RabbitMQProviderConfig();
         var streamConfig = new StreamConfig(providerConfig) { Name = "test" };
 
-        var stream = new RabbitMQStream(connectionFactory.Object, streamConfig, options);
+        var stream = new RabbitMQStream(connectionFactory.Object, streamConfig, options, null, NullLogger.Instance);
 
         Assert.IsAssignableFrom<IMessageStream>(stream);
         Assert.IsAssignableFrom<IMessageStreamReader>(stream);
         Assert.IsAssignableFrom<IMessageStreamWriter>(stream);
         Assert.IsAssignableFrom<IAsyncDisposable>(stream);
     }
+
+    // ── Acknowledgement ───────────────────────────────────────────────────────
+
+    private static RabbitMQStream Stream(ConsumerConfig? consumer)
+    {
+        var providerConfig = new RabbitMQProviderConfig();
+        return new RabbitMQStream(
+            new Mock<IRabbitMQConnectionFactory>().Object,
+            new StreamConfig(providerConfig) { Name = "orders" },
+            new RabbitMQProviderOptions(),
+            consumer,
+            NullLogger.Instance);
+    }
+
+    [Fact]
+    public void Stream_ImplementsIMessageStreamAck()
+        => Assert.IsAssignableFrom<IMessageStreamAck>(Stream(null));
+
+    /// <summary>
+    /// Under autoAck the broker released the message when it dispatched it, so a failure can never be
+    /// retried. Reporting it as terminal is what lets the consumer raise MessageFailed exactly once
+    /// instead of waiting for a redelivery that will not come.
+    /// </summary>
+    [Fact]
+    public async Task Nack_UnderAutoAck_IsTerminalWithoutTouchingTheBroker()
+    {
+        var stream = Stream(new ConsumerConfig { AutoAck = true });
+
+        Assert.True(await stream.Nack(Guid.NewGuid(), "boom", retryable: true));
+    }
+
+    /// <summary>An id with no in-flight delivery cannot be rejected — say so rather than claim terminal.</summary>
+    [Fact]
+    public async Task Nack_UnknownMessage_IsNotTerminal()
+    {
+        var stream = Stream(new ConsumerConfig());
+
+        Assert.False(await stream.Nack(Guid.NewGuid(), "boom", retryable: true));
+    }
+
+    [Fact]
+    public async Task Ack_UnknownMessage_DoesNotThrow()
+        => await Stream(new ConsumerConfig()).Ack(Guid.NewGuid());
+
+    [Fact]
+    public async Task Ack_UnderAutoAck_DoesNotThrow()
+        => await Stream(new ConsumerConfig { AutoAck = true }).Ack(Guid.NewGuid());
+
+    /// <summary>
+    /// A producer-only stream is built with no consumer config at all; it must not decide it is in
+    /// autoAck mode and silently swallow acknowledgements.
+    /// </summary>
+    [Fact]
+    public async Task NoConsumerConfig_DefaultsToManualAck()
+        => Assert.False(await Stream(null).Nack(Guid.NewGuid(), "boom", retryable: false));
 }

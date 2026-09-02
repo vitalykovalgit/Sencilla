@@ -18,12 +18,37 @@ public class InMemoryTopic(string name): IMessageStream, IDisposable
         throw new NotSupportedException("Reading from a topic is not supported. Use Subscribe to create a subscription and read from it.");
     }
 
+    /// <summary>
+    /// Fan out to every subscription. A write that FAILS is contained to its own subscriber and reported
+    /// through <see cref="Failures"/> — previously Task.WhenAll surfaced it to the publisher, so one
+    /// broken subscriber turned every publish on the topic into an error.
+    ///
+    /// <para>A write that BLOCKS is not contained, and deliberately so: a bounded subscription uses
+    /// BoundedChannelFullMode.Wait, and that backpressure is the documented behaviour
+    /// (Subscribe_WithCapacity_RespectsLimit). A slow subscriber still slows the publisher; only a
+    /// failing one is isolated.</para>
+    /// </summary>
     public async Task Write<T>(Message<T>? message, CancellationToken cancellationToken = default)
     {
-        var tasks = Subscriptions.Values.Select(sub => sub.Write(message, cancellationToken));
+        var tasks = Subscriptions.Select(async entry =>
+        {
+            try
+            {
+                await entry.Value.Write(message, cancellationToken);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                Failures?.Invoke(entry.Key, ex);
+            }
+        });
+
         await Task.WhenAll(tasks);
     }
 
+    /// <summary>Raised when one subscription could not be written to; the others were unaffected.</summary>
+    public event Action<string, Exception>? Failures;
+
+    /// <summary>Capacity &lt;= 0 (the default) creates an unbounded subscription.</summary>
     public InMemoryQueue Subscribe(string subscriptionName, int capacity = -1)
     {
         var subscription = new InMemoryQueue(subscriptionName, capacity);

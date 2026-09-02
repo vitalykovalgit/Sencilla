@@ -62,9 +62,16 @@ public class ConsumerConfig
     public int PrefetchCount { get; set; } = 1;
 
     /// <summary>
-    /// Indicates whether the consumer should automatically acknowledge messages after processing.
+    /// Fire-and-forget delivery: the broker releases a message as soon as it is dispatched, before any
+    /// handler runs. Defaults to FALSE — under autoAck a handler failure or a process restart loses the
+    /// message with no redelivery, and prefetch stops bounding memory (it limits UNACKNOWLEDGED
+    /// deliveries, and nothing is ever unacknowledged). Opt in only for streams where losing a message
+    /// is cheaper than handling it twice.
+    ///
+    /// Honoured by transports that acknowledge (RabbitMQ); a stream with nothing to acknowledge — the
+    /// in-memory queue, SignalR — ignores it.
     /// </summary>
-    public bool AutoAck { get; set; } = true;
+    public bool AutoAck { get; set; } = false;
 
     /// <summary>
     /// The interval in milliseconds at which the consumer polls for new messages.
@@ -72,7 +79,8 @@ public class ConsumerConfig
     public int PoolingIntervalInMs { get; set; } = 1000;
 
     /// <summary>
-    /// Indicates whether the consumer should be exclusive to this queue.
+    /// Requests exclusive access to the queue, so the broker refuses any other consumer on it.
+    /// Honoured by RabbitMQ; ignored by transports without the concept.
     /// </summary>
     public bool Exclusive { get; set; } = false;
 

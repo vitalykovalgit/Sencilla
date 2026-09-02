@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <!-- SQL Server schema (.sql source) for the Entity Framework messaging transport: the durable
+       [Message] queue table, in [dbo]. Depends on the Users component: Message.UserId carries a FK
+       to [sec].[User]; Users.Mssql is referenced so this project builds and validates standalone.
+
+       No seed data and no lookup tables — MessageState is a code enum documented on the column,
+       and the payload type is a string rather than an app-defined lookup. That is the point of the
+       transport: adding a message type touches no SQL at all.
+
+       Shared SQL project config (SDK version, DSP, ModelCollation, identity, README +
+       build-asset packing, dacpac-strip target) lives in libs/Directory.Build.Sql.props,
+       imported via Database/Directory.Build.props. -->
+  <Sdk Name="Microsoft.Build.Sql" />
+  <PropertyGroup>
+    <Description>SQL Server schema (.sql source) for the Sencilla Entity Framework messaging transport: the durable [Message] queue table. Compiled into the consuming database's own model (self-contained).</Description>
+  </PropertyGroup>
+
+  <!-- Users.Mssql is referenced so [sec].[User] (FK on Message.UserId) resolves during standalone
+       build/validation. Non-transitive: consumers that reference both directly do NOT get
+       duplicate Build inclusions. -->
+  <ItemGroup>
+    <PackageReference Include="Sencilla.Component.Users.Mssql" Version="$(Version)" />
+  </ItemGroup>
+
+  <!-- Schema SOURCE shipped under sql/ — auto-compiled into the consumer's model by the
+       package's build/*.props. -->
+  <ItemGroup>
+    <None Include="Tables/*.sql" Pack="true" PackagePath="sql/" />
+  </ItemGroup>
+</Project>

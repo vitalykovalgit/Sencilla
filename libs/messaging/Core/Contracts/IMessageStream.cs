@@ -25,3 +25,24 @@ public interface IMessageStream : IMessageStreamReader, IMessageStreamWriter
     /// Gets the name of the message stream.
     /// </summary>
 }
+
+/// <summary>
+/// Opt-in acknowledgement for streams whose messages outlive the read — a durable queue must learn
+/// the outcome or its rows never reach a terminal state. <see cref="MessageStreamConsumer"/> calls
+/// these only when the stream implements this interface; a fire-and-forget stream simply doesn't.
+/// The message id comes from the envelope the stream itself wrote, so no read handle is needed.
+/// </summary>
+public interface IMessageStreamAck
+{
+    /// <summary>All handlers completed. Mark the message terminally succeeded.</summary>
+    Task Ack(Guid messageId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Processing failed. <paramref name="retryable"/> false means the message can never succeed
+    /// (unresolvable payload type, no registered handler) and must go terminal immediately rather
+    /// than burn attempts; true means re-queue subject to the stream's attempt/backoff policy.
+    /// Returns true when this attempt was the last one — the message is now terminally failed,
+    /// which is what lets the consumer raise <see cref="MessageFailed{T}"/> exactly once.
+    /// </summary>
+    Task<bool> Nack(Guid messageId, string error, bool retryable, CancellationToken cancellationToken = default);
+}

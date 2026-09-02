@@ -29,6 +29,13 @@ public class MessageDispatcher(
     /// </summary>
     public Task Send<T>(Message<T> message, CancellationToken cancellationToken = default)
     {
+        // The single stamping choke point: every transport serializes what it is handed, and a
+        // message that crosses a process boundary without PayloadType cannot be dispatched on the
+        // other side. Stamp here, once, rather than in each transport.
+        message.PayloadType ??= PayloadTypeRegistry.KeyOf<T>();
+        message.Namespace ??= typeof(T).FullName;
+        message.Name ??= typeof(T).Name;
+
         var pipeline = (Func<Message<T>, CancellationToken, Task>)PipelineCache.GetOrAdd(
             typeof(T),
             _ => BuildPipeline<T>());

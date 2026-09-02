@@ -31,13 +31,10 @@
     <Project Path="libs/components/Audit/Sencilla.Component.Audit.csproj" />
   </Folder>
   <Folder Name="/libs/components/Notifications/">
-    <!-- <Project Path="libs/components/Notifications/Sencilla.Component.Notifications.csproj" /> -->
+    <Project Path="libs/components/Notifications/Sencilla.Component.Notifications.csproj" />
   </Folder>
   <Folder Name="/libs/components/Tags/">
     <Project Path="libs/components/Tags/Sencilla.Component.Tags.csproj" />
-  </Folder>
-  <Folder Name="/libs/components/Tasks/">
-    <!-- <Project Path="libs/components/Tasks/Sencilla.Component.Tasks.csproj" /> -->
   </Folder>
   <Folder Name="/libs/components/Users/" />
   <Folder Name="/libs/core/" />
@@ -118,6 +115,7 @@
     <Project Path="tests/components/Audit/Sencilla.Component.Audit.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/components/Tags/">
+    <Project Path="tests/components/I18n/Sencilla.Component.I18n.Tests.csproj" />
     <Project Path="tests/components/Tags/Sencilla.Component.Tags.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/extensions/">
@@ -126,6 +124,9 @@
   <Folder Name="/tests/messaging/" />
   <Folder Name="/tests/messaging/Core/">
     <Project Path="tests/messaging/Core/Sencilla.Messaging.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/messaging/EntityFramework/">
+    <Project Path="tests/messaging/EntityFramework/Sencilla.Messaging.EntityFramework.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/messaging/InMemoryQueue/">
     <Project Path="tests/messaging/InMemoryQueue/Sencilla.Messaging.InMemoryQueue.Tests.csproj" />

@@ -14,9 +14,12 @@ public class InMemoryQueue: IMessageStream, IDisposable
     public InMemoryQueue(string name, int? capacity = null)
     {
         Name = name;
-        channel = capacity == null
+        // Non-positive capacity means unbounded. InMemoryTopic.Subscribe defaults to -1, which used to
+        // reach BoundedChannelOptions and throw ArgumentOutOfRangeException — so every call that took
+        // the default overload failed, and only the tests passing an explicit capacity ever worked.
+        channel = capacity is null or <= 0
             ? Channel.CreateUnbounded<string>()
-            : Channel.CreateBounded<string>(new BoundedChannelOptions(capacity ?? -1) {
+            : Channel.CreateBounded<string>(new BoundedChannelOptions(capacity.Value) {
                 FullMode = BoundedChannelFullMode.Wait,
                 SingleReader = false,
                 SingleWriter = false

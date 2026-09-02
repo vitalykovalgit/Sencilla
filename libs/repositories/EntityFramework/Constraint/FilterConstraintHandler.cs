@@ -91,12 +91,11 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
     }
 
     /// <summary>
-    /// If no values and type we will treat it as a query 
-    /// otherwise it will treat query as name of property in entity
-    /// and convert it to expr: name in (val1, val2) 
+    /// Renders one criterion as a Dynamic LINQ predicate string.
+    ///
+    /// <para>No type at all means the caller supplied a raw expression — pass it through. Otherwise the
+    /// property name is compared against the values, with a null among them meaning "or unset".</para>
     /// </summary>
-    /// <param name="prop"></param>
-    /// <returns></returns>
     public static string? ToExpression(FilterProperty prop)
     {
         if (prop.Type == null)
@@ -105,93 +104,59 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
         if (prop.Values == null || prop.Values.Count == 0)
             return prop.Query;
 
-        if (prop.Values.Count == 1 && prop.Values[0] == null)
-        {
-            return $"{prop.Query} == null";
-        }
-
         var type = Nullable.GetUnderlyingType(prop.Type) ?? prop.Type;
 
-        if (type == typeof(Guid))
-        {
-            var exp = new StringBuilder();
-            foreach (var val in prop.Values) 
-            {
-                if (exp.Length > 0)
-                    exp.Append(" || ");
+        // Null is split out before anything else: it cannot go inside `in (...)`, and a list that held
+        // nothing else would render `X in ()` — "Expression expected", i.e. a 500 from a query string.
+        // Mixed values used to drop the null silently, which contradicted a lone null already meaning
+        // "is null".
+        var values = prop.Values.Where(v => v is not null).ToList();
+        var nullExp = values.Count == prop.Values.Count ? null : $"{prop.Query} == null";
 
-                exp.Append($"{prop.Query} == \"{val}\"");
-            }
-            return exp.ToString();
+        if (values.Count == 0)
+            return nullExp ?? prop.Query;
+
+        var exp = ToComparison(prop.Query, type, values);
+
+        return nullExp == null ? exp : $"({exp}) || {nullExp}";
+    }
+
+    /// <summary>
+    /// Guid and bool must NOT go through <c>in (...)</c>, for two unrelated reasons — both verified
+    /// against System.Linq.Dynamic.Core 1.7.1 in FilterGuidExpressionTests / FilterBoolExpressionTests:
+    ///
+    /// <para>· Guid — <c>ParseIn</c> calls GenerateEqual on the raw operands and skips the string→Guid
+    /// promotion that <c>ParseComparisonOperator</c> performs, so <c>Id in ("…")</c> throws "Operator
+    /// '==' incompatible with operand types 'Guid' and 'String'" while the very same quoted literal
+    /// compares fine as <c>Id == "…"</c>. It fails on a single value too, and single quotes are not an
+    /// escape hatch — <c>'…'</c> is a CHAR literal there.</para>
+    ///
+    /// <para>· bool — <c>ParseIn</c> seeds its OR accumulator with the LEFT operand and then asks
+    /// <c>accumulate.Type != typeof(bool)</c> to tell "nothing accumulated yet" apart from "keep
+    /// OR-ing". For a NON-nullable bool column that seed is already a bool expression, so the column
+    /// itself is ORed into the chain: <c>test in (False)</c> compiles to <c>Test || Test == false</c>
+    /// — a tautology that silently returns EVERY row, exactly the shape a dropped criterion has.
+    /// <c>bool?</c> slips past the check, which is why a nullable flag column filters correctly while
+    /// the non-nullable one beside it does not. <c>in (True)</c> looked fine only by accident:
+    /// <c>Test || Test == true</c> is still <c>Test == true</c>.</para>
+    ///
+    /// An explicit <c>==</c> chain is correct for both, and for bool it is also what the values already
+    /// render as — <c>$"{true}"</c> is "True", which Dynamic LINQ parses case-insensitively.
+    /// </summary>
+    private static string ToComparison(string? query, Type type, List<object?> values)
+    {
+        if (type == typeof(Guid) || type == typeof(bool))
+        {
+            var quote = type == typeof(Guid) ? "\"" : "";
+            return string.Join(" || ", values.Select(v => $"{query} == {quote}{v}{quote}"));
         }
 
-        var vals = new StringBuilder();
-        foreach (var v in prop.Values)
-        {
-            // ignore null for now 
-            if (v is null) continue;
+        var literals = type == typeof(string)
+            ? values.Select(v => $"\"{v}\"")
+            : values.Select(v => $"{v}");
 
-            if (type == typeof(string) || type == typeof(Guid))
-                vals.Append($"\"{v}\",");
-            else
-                vals.Append($"{v},");
-        }
-
-        if (vals.Length > 0)
-            vals.Remove(vals.Length - 1, 1);
-
-        return $"{prop.Query} in ({vals})";
+        return $"{query} in ({string.Join(",", literals)})";
     }
 }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-
-/**
-
-    public static string? ToExpression(FilterProperty prop)
-    {
-        if (prop.Type == null)
-            return prop.Query;
-
-        if (prop.Values == null || prop.Values.Count == 0)
-            return prop.Query;
-
-
-        //if (prop.Values.Count == 1 && prop.Values[0] == null)
-        //{
-        //    return $"{prop.Query} IS NULL";
-        //}
-
-        var nullExp = "";
-    var vals = new StringBuilder();
-        foreach (var v in prop.Values)
-        {
-            // if value equals null update isNull
-            if (v == null)
-            {
-                nullExp = $"({prop.Query} IS NULL)";
-                continue;
-            }
-            
-            if (prop.Type == typeof(string))
-    vals.Append($"\"{v}\",");
-else
-    vals.Append($"{v},");
-        }
-
-        // remove last comma 
-        if (vals.Length > 0)
-    vals.Remove(vals.Length - 1, 1);
-
-// 
-var exp = vals.Length > 0 ? $"({prop.Query} in ({vals}))" : "";
-exp = exp.Length > 0 ? $"({exp} OR {nullExp})" : nullExp;
-
-if (exp.Length == 0)
-    return prop.Query;
-
-return exp;
-    }
-}
-
- */

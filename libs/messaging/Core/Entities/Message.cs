@@ -32,9 +32,9 @@ public class Message
     public MessageState State { get; set; } = MessageState.New;
 
     /// <summary>
-    /// 
+    /// Short type name of the payload, stamped by the dispatcher — diagnostics only.
     /// </summary>
-    public string? Name { get; init; }
+    public string? Name { get; set; }
 
     /// <summary>
     /// 
@@ -48,15 +48,37 @@ public class Message
 
 
     /// <summary>
-    /// Contains dot net type name including name pace
+    /// The payload's .NET type FullName, stamped by the dispatcher. Diagnostics only —
+    /// resolution goes through <see cref="PayloadType"/>, which survives renames.
     /// </summary>
-    public string? Namespace { get; init; }
+    public string? Namespace { get; set; }
+
+    /// <summary>
+    /// Resolution key for the payload type: the [PayloadType] alias when the type declares one,
+    /// otherwise its FullName. Stamped by the dispatcher, resolved by
+    /// <see cref="PayloadTypeRegistry"/> on the consuming side. Persisted transports store this
+    /// forever, so prefer an explicit alias over a FullName you may want to rename later.
+    /// </summary>
+    public string? PayloadType { get; set; }
+
+    /// <summary>
+    /// Delivery attempts made for this message, stamped by durable transports on read (0 for
+    /// fire-and-forget ones). Handlers can use it to tell a first run from a retry.
+    /// </summary>
+    public int Attempts { get; set; }
 
     /// <summary>
     /// 
     /// </summary>
     public string? Error { get; set; }
     
+    /// <summary>
+    /// The subject entity this message is about, when there is one — set explicitly by the sender.
+    /// Durable transports store it as an indexed column so callers can ask "is anything queued for
+    /// this entity?" without scanning payload JSON.
+    /// </summary>
+    public Guid? EntityId { get; set; }
+
     public Guid? UserId { get; set; }
     public string? UserEmail { get; set; }
 

@@ -7,15 +7,17 @@ public class SignalRQueue : IMessageStream, IDisposable
     private readonly ChannelReader<string> Reader;
     private readonly CancellationTokenSource CancellationTokenSource = new();
     private readonly IHubContext<MessagingHub> hubContext;
+    private readonly ILogger Logger;
     private bool Disposed = false;
     public event Action? OnDisposed;
 
     public string Name { get; }
 
-    public SignalRQueue(string name, IHubContext<MessagingHub> hubContext)
+    public SignalRQueue(string name, IHubContext<MessagingHub> hubContext, ILogger logger)
     {
         Name = name;
         this.hubContext = hubContext;
+        Logger = logger;
         channel = Channel.CreateUnbounded<string>();
         Writer = channel.Writer;
         Reader = channel.Reader;
@@ -38,14 +40,19 @@ public class SignalRQueue : IMessageStream, IDisposable
         // Write to internal queue
         await Writer.WriteAsync(json, combined.Token);
         
-        // Broadcast to SignalR clients
+        // Broadcast to SignalR clients. The message is already queued locally, so a broadcast failure
+        // is not fatal to the write — but swallowing it silently made a hub outage invisible.
         try
         {
             await hubContext.Clients.All.SendAsync("ReceiveMessage", Name, json, combined.Token);
         }
-        catch
+        catch (OperationCanceledException)
         {
-            // Ignore SignalR broadcast errors
+            // Shutting down.
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "SignalR broadcast failed for stream {Stream}; the message is still queued locally", Name);
         }
     }
 

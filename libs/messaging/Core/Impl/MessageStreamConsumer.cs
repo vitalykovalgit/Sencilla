@@ -12,7 +12,11 @@ public class MessageStreamConsumer(
     private static readonly MethodInfo BaseExecuteMethod =
         typeof(IMessageHandlerExecutor).GetMethod(nameof(IMessageHandlerExecutor.ExecuteAsync))!;
 
+    private static readonly MethodInfo BaseRaiseFailedMethod =
+        typeof(MessageStreamConsumer).GetMethod(nameof(RaiseFailedAsync), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
     private static readonly ConcurrentDictionary<Type, MethodInfo> ExecuteMethodCache = [];
+    private static readonly ConcurrentDictionary<Type, MethodInfo> RaiseFailedMethodCache = [];
 
     private readonly SemaphoreSlim Semaphore = new(consumerConfig.MaxConcurrentHandlers);
 
@@ -31,11 +35,18 @@ public class MessageStreamConsumer(
             while (!stoppingToken.IsCancellationRequested)
             {
                 var json = await reader.Read(stoppingToken);
-                if (json is null) continue;
+                if (json is null)
+                {
+                    // The contract is that Read blocks until it has something, so null means a transient
+                    // miss (two readers racing for one channel item). A stream that returned null
+                    // persistently would otherwise spin this loop at 100% CPU.
+                    await Task.Delay(1, stoppingToken);
+                    continue;
+                }
 
                 await Semaphore.WaitAsync(stoppingToken);
 
-                var task = ProcessWithSemaphoreRelease(json, stoppingToken);
+                var task = ProcessWithSemaphoreRelease(json, reader as IMessageStreamAck, stoppingToken);
                 inflightTasks.Add(task);
 
                 // Periodically clean completed tasks to avoid unbounded list growth
@@ -61,11 +72,11 @@ public class MessageStreamConsumer(
             consumerTag, consumerConfig.StreamName, DateTimeOffset.UtcNow);
     }
 
-    private async Task ProcessWithSemaphoreRelease(string json, CancellationToken cancellationToken)
+    private async Task ProcessWithSemaphoreRelease(string json, IMessageStreamAck? ack, CancellationToken cancellationToken)
     {
         try
         {
-            await ProcessMessageAsync(json, cancellationToken);
+            await ProcessMessageAsync(json, ack, cancellationToken);
         }
         finally
         {
@@ -73,47 +84,139 @@ public class MessageStreamConsumer(
         }
     }
 
-    private async Task ProcessMessageAsync(string json, CancellationToken cancellationToken)
+    private async Task ProcessMessageAsync(string json, IMessageStreamAck? ack, CancellationToken cancellationToken)
     {
+        Message? message = null;
+        Type? payloadType = null;
+        object? typedMessage = null;
+
         try
         {
-            var message = JsonSerializer.Deserialize<Message>(json);
-            if (message is null || string.IsNullOrEmpty(message.Namespace))
+            message = JsonSerializer.Deserialize<Message>(json, MessageJson.Options);
+            if (message is null)
             {
-                logger.LogWarning("Received message with empty or missing Namespace, skipping");
+                // No envelope means no id to acknowledge — nothing to do but say so.
+                logger.LogWarning("Received unparsable message on stream {Stream}, dropping", consumerConfig.StreamName);
                 return;
             }
 
-            var payloadType = Type.GetType(message.Namespace);
+            // Namespace is the legacy field and stays a fallback for messages written before
+            // PayloadType existed; new messages always carry PayloadType.
+            var key = message.PayloadType ?? message.Namespace;
+            if (string.IsNullOrEmpty(key))
+            {
+                await FailAsync(ack, message, "message.type.missing", retryable: false, cancellationToken);
+                return;
+            }
+
+            payloadType = PayloadTypeRegistry.Resolve(key);
             if (payloadType is null)
             {
-                logger.LogWarning("Unknown type {Namespace}, skipping message {MessageId}", message.Namespace, message.Id);
+                // Never a silent skip: a durable row dropped here would stay claimed forever.
+                // No T exists in this process, so no MessageFailed<T> can be raised either.
+                await FailAsync(ack, message, $"message.type.unresolved: {key}", retryable: false, cancellationToken);
                 return;
             }
 
             var genericMessageType = typeof(Message<>).MakeGenericType(payloadType);
-            var typedMessage = JsonSerializer.Deserialize(json, genericMessageType);
-            if (typedMessage is null) return;
+            typedMessage = JsonSerializer.Deserialize(json, genericMessageType, MessageJson.Options);
+            if (typedMessage is null)
+            {
+                await FailAsync(ack, message, $"message.payload.unparsable: {key}", retryable: false, cancellationToken);
+                return;
+            }
 
             using var scope = scopeFactory.CreateScope();
 
             var executeMethod = ExecuteMethodCache.GetOrAdd(payloadType, type =>
                 BaseExecuteMethod.MakeGenericMethod(type));
 
-            var task = (Task)executeMethod.Invoke(executor, [typedMessage, scope.ServiceProvider, cancellationToken])!;
-            await task;
+            var executed = await (Task<int>)executeMethod.Invoke(executor, [typedMessage, scope.ServiceProvider, cancellationToken])!;
+
+            if (executed == 0)
+            {
+                // Resolvable but unhandled in this process — acking would lose the work silently.
+                await FailAsync(ack, message, $"message.handler.missing: {key}", retryable: false, cancellationToken, payloadType, typedMessage);
+                return;
+            }
+
+            if (ack != null)
+                await ack.Ack(message.Id, CancellationToken.None);
 
             logger.LogInformation("Processed message {MessageId} of type {Type} from stream {Stream}",
                 message.Id, payloadType.Name, consumerConfig.StreamName);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            // Shutdown, not failure: leave the message unacked so it is redelivered.
             logger.LogDebug("Message processing cancelled during shutdown on stream {Stream}", consumerConfig.StreamName);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to process message from stream {Stream}", consumerConfig.StreamName);
+            if (message != null)
+                await FailAsync(ack, message, $"message.handler.failed: {ex.GetType().Name}: {ex.Message}",
+                    retryable: true, CancellationToken.None, payloadType, typedMessage);
         }
     }
-}
 
+    /// <summary>
+    /// Nack when the stream supports it; otherwise the log line is all there is. When the nack was
+    /// terminal and the payload type resolved, raise <see cref="MessageFailed{T}"/> so the app can
+    /// surface the failure — exactly once, after the row is already terminal.
+    /// </summary>
+    private async Task FailAsync(IMessageStreamAck? ack, Message message, string error, bool retryable,
+        CancellationToken cancellationToken, Type? payloadType = null, object? typedMessage = null)
+    {
+        logger.LogError("Message {MessageId} on stream {Stream} failed: {Error} (retryable: {Retryable})",
+            message.Id, consumerConfig.StreamName, error, retryable);
+
+        if (ack == null)
+            return;
+
+        bool terminal;
+        try
+        {
+            terminal = await ack.Nack(message.Id, error, retryable, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // The nack itself can fail (the durable store is the thing that just broke). Swallowing it
+            // here leaves the row claimed, which the transport's stuck-rescue re-queues by age — a
+            // delayed retry. Letting it escape instead faults an unobserved task whose exception only
+            // surfaces at shutdown, where it masks the graceful drain.
+            logger.LogError(ex, "Could not nack message {MessageId} on stream {Stream}; leaving it for stuck-recovery",
+                message.Id, consumerConfig.StreamName);
+            return;
+        }
+
+        if (!terminal || payloadType is null || typedMessage is null)
+            return;
+
+        try
+        {
+            var raise = RaiseFailedMethodCache.GetOrAdd(payloadType, type => BaseRaiseFailedMethod.MakeGenericMethod(type));
+            await (Task)raise.Invoke(this, [typedMessage, error, CancellationToken.None])!;
+        }
+        catch (Exception ex)
+        {
+            // A failing failure-handler must never mask the original failure.
+            logger.LogError(ex, "MessageFailed<{Type}> handler threw for message {MessageId}", payloadType.Name, message.Id);
+        }
+    }
+
+    private async Task RaiseFailedAsync<T>(Message<T> failedMessage, string error, CancellationToken cancellationToken)
+    {
+        using var scope = scopeFactory.CreateScope();
+        await executor.ExecuteAsync(new Message<MessageFailed<T>>
+        {
+            CorrelationId = failedMessage.Id,
+            Payload = new MessageFailed<T>
+            {
+                Message = failedMessage,
+                Error = error,
+                Attempts = failedMessage.Attempts,
+            },
+        }, scope.ServiceProvider, cancellationToken);
+    }
+}

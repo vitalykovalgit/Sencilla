@@ -201,4 +201,19 @@ public class InMemoryTopicEdgeCaseTests : IDisposable
         public int Id { get; set; }
         public string? Name { get; set; }
     }
+
+    /// <summary>
+    /// Subscribe's own default capacity (-1) reached BoundedChannelOptions and threw on every call —
+    /// invisible because every other test passes an explicit capacity.
+    /// </summary>
+    [Fact]
+    public async Task Subscribe_WithDefaultCapacity_IsUnbounded()
+    {
+        using var topic = new InMemoryTopic("defaults");
+        var sub = topic.Subscribe("unbounded");
+
+        await topic.Write(new Message<string> { Payload = "a" });
+
+        Assert.Contains("a", await sub.Read());
+    }
 }

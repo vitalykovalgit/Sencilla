@@ -1,0 +1,9 @@
+<Project>
+  <!-- Opt this SQL project out of Central Package Management.
+       CPM blocks <PackageReference Version="..."> inline; this project references
+       Sencilla.Component.Users.Mssql with Version="$(Version)" (same-repo package,
+       version set at build time) which cannot be pinned in Directory.Packages.props. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

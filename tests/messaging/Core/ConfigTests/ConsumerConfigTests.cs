@@ -12,7 +12,8 @@ public class ConsumerConfigTests
         Assert.Equal(1, config.MaxConcurrentHandlers);
         Assert.False(config.AsyncHandlers);
         Assert.Equal(1, config.PrefetchCount);
-        Assert.True(config.AutoAck);
+        // Safe by default: autoAck loses a message on any handler failure and makes prefetch inert.
+        Assert.False(config.AutoAck);
         Assert.Equal(1000, config.PoolingIntervalInMs);
         Assert.False(config.Exclusive);
     }
@@ -49,7 +50,7 @@ public class ConsumerConfigTests
         var config = new ConsumerConfig(null);
 
         Assert.Equal(1, config.MaxConcurrentHandlers);
-        Assert.True(config.AutoAck);
+        Assert.False(config.AutoAck);
     }
 
     [Fact]

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <!-- SQL Server schema (.sql source) component for Sencilla "Notifications": the Notification
+       table, its NotificationTarget audience rows, NotificationRead per-user read state, and the
+       NotificationInboxView the client reads, all in [dbo].
+
+       Depends on the Users component ([sec].[User], FK'd from NotificationRead and cross-joined
+       for system-scope notifications) and on Security ([sec].[Role] FK, [sec].[UserRole] joined
+       for role-scope notifications); both are referenced so this project builds and validates
+       standalone.
+
+       No seed data of any kind: notification types are the app's classes, not rows, and audience
+       scopes 100+ are the app's own. Consumers seed only their matrix grants.
+
+       Shared SQL project config (SDK version, DSP, ModelCollation, identity, README +
+       build-asset packing, dacpac-strip target) lives in libs/Directory.Build.Sql.props,
+       imported via Database/Directory.Build.props. -->
+  <Sdk Name="Microsoft.Build.Sql" />
+  <PropertyGroup>
+    <Description>SQL Server schema (.sql source) for the Sencilla Notifications component: Notification, NotificationTarget, NotificationRead and NotificationInboxView. Compiled into the consuming database's own model (self-contained); no seed rows.</Description>
+  </PropertyGroup>
+
+  <!-- Referenced so [sec].[User], [sec].[Role] and [sec].[UserRole] resolve during standalone
+       build/validation. Non-transitive: consumers that reference these directly do NOT get
+       duplicate Build inclusions. -->
+  <ItemGroup>
+    <PackageReference Include="Sencilla.Component.Users.Mssql" Version="$(Version)" />
+    <PackageReference Include="Sencilla.Component.Security.Mssql" Version="$(Version)" />
+  </ItemGroup>
+
+  <!-- Schema SOURCE shipped under sql/ — auto-compiled into the consumer's model by the
+       package's build/*.props. Tables and views pack to the same flat folder; the SQL project
+       system resolves inter-object dependencies itself, so file order does not matter. -->
+  <ItemGroup>
+    <None Include="Tables/*.sql" Pack="true" PackagePath="sql/" />
+    <None Include="Views/*.sql" Pack="true" PackagePath="sql/" />
+  </ItemGroup>
+</Project>

@@ -7,6 +7,8 @@ public interface IMessageHandlerExecutor
 {
     /// <summary>
     /// Resolves handlers for the message type and executes them within the provided scope.
+    /// Returns how many handlers ran — zero means nothing in this process handles the message,
+    /// which a durable consumer must surface as a failure instead of silently succeeding.
     /// </summary>
-    Task ExecuteAsync<T>(Message<T> message, IServiceProvider scopedProvider, CancellationToken cancellationToken = default);
+    Task<int> ExecuteAsync<T>(Message<T> message, IServiceProvider scopedProvider, CancellationToken cancellationToken = default);
 }

@@ -7,7 +7,7 @@ public class RabbitMQStreamProviderTests
     {
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
         var config = new RabbitMQProviderConfig();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
 
         var streamConfig = new StreamConfig(config) { Name = "test-queue" };
         var stream = provider.GetOrCreateStream(streamConfig);
@@ -21,7 +21,7 @@ public class RabbitMQStreamProviderTests
     {
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
         var config = new RabbitMQProviderConfig();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
 
         var streamConfig = new StreamConfig(config) { Name = "test-queue" };
         var stream1 = provider.GetOrCreateStream(streamConfig);
@@ -35,7 +35,7 @@ public class RabbitMQStreamProviderTests
     {
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
         var config = new RabbitMQProviderConfig();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
 
         var streamConfigA = new StreamConfig(config) { Name = "queue-a" };
         var streamConfigB = new StreamConfig(config) { Name = "queue-b" };
@@ -52,7 +52,7 @@ public class RabbitMQStreamProviderTests
     {
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
         var config = new RabbitMQProviderConfig();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
 
         var streamConfig = new StreamConfig(config) { Name = "nonexistent" };
         var stream = provider.GetStream(streamConfig);
@@ -65,7 +65,7 @@ public class RabbitMQStreamProviderTests
     {
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
         var config = new RabbitMQProviderConfig();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
 
         var streamConfig = new StreamConfig(config) { Name = null };
         var stream = provider.GetStream(streamConfig);
@@ -78,7 +78,7 @@ public class RabbitMQStreamProviderTests
     {
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
         var config = new RabbitMQProviderConfig();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
 
         var streamConfig = new StreamConfig(config) { Name = null };
 
@@ -90,7 +90,7 @@ public class RabbitMQStreamProviderTests
     {
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
         var config = new RabbitMQProviderConfig();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
 
         var streamConfig = new StreamConfig(config) { Name = "test-queue" };
 

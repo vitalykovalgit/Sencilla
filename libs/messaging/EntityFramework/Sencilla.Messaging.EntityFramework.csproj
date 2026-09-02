@@ -1,6 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\Sencilla.Core.csproj" />
+    <ProjectReference Include="..\..\web\Sencilla.Web.csproj" />
+    <ProjectReference Include="..\..\repositories\EntityFramework\Sencilla.Repository.EntityFramework.csproj" />
+    <ProjectReference Include="..\Core\Sencilla.Messaging.csproj" />
+  </ItemGroup>
 
 </Project>

@@ -9,7 +9,7 @@ public class RabbitMQMiddlewareTests
     {
         var config = new RabbitMQProviderConfig();
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
 
         var middleware = new RabbitMQMiddleware(config, provider);
         var message = new Message<string> { Payload = "test" };
@@ -22,7 +22,7 @@ public class RabbitMQMiddlewareTests
     {
         var config = new RabbitMQProviderConfig();
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
         var middleware = new RabbitMQMiddleware(config, provider);
         var nextCalled = false;
 
@@ -42,7 +42,7 @@ public class RabbitMQMiddlewareTests
         var config = new RabbitMQProviderConfig();
         config.AddRoutes(r => r.Send<string>().ToStream("nonexistent"));
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
 
         var middleware = new RabbitMQMiddleware(config, provider);
         var message = new Message<string> { Payload = "test" };
@@ -59,7 +59,7 @@ public class RabbitMQMiddlewareTests
         config.AddRoutes(r => r.Send<string>().ToStream("my-queue"));
 
         var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
-        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config);
+        var provider = new RabbitMQStreamProvider(connectionFactory.Object, config, NullLoggerFactory.Instance);
 
         var middleware = new RabbitMQMiddleware(config, provider);
         var message = new Message<string> { Payload = "routed" };

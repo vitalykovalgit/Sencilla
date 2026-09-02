@@ -3,6 +3,7 @@ global using System.Text.Json;
 global using System.Collections.Concurrent;
 global using System.Threading.Channels;
 global using Microsoft.AspNetCore.SignalR;
+global using Microsoft.Extensions.Logging;
 
 global using Sencilla.Core;
 global using Sencilla.Messaging;
