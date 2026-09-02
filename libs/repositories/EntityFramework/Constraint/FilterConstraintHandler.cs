@@ -133,6 +133,8 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
 
             if (type == typeof(string) || type == typeof(Guid))
                 vals.Append($"\"{v}\",");
+            else if (type.IsEnum)
+               vals.Append($"{Convert.ToInt32(v)},");
             else
                 vals.Append($"{v},");
         }
@@ -140,7 +142,11 @@ public class FilterConstraintHandler<TEntity> : IEventHandler<EntityReadingEvent
         if (vals.Length > 0)
             vals.Remove(vals.Length - 1, 1);
 
-        return $"{prop.Query} in ({vals})";
+        // Dynamic LINQ cannot compare an enum property with an integer literal directly;
+        // cast to int so the expression becomes e.g. "int(Origin) in (1)" which is valid.
+        var query = type.IsEnum ? $"int({prop.Query})" : prop.Query;
+
+        return $"{query} in ({vals})";
     }
 }
 
