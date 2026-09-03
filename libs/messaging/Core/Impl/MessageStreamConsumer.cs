@@ -1,4 +1,4 @@
-namespace Sencilla.Messaging;
+﻿namespace Sencilla.Messaging;
 
 public class MessageStreamConsumer(
     ILogger<MessageStreamConsumer> logger,
@@ -127,6 +127,15 @@ public class MessageStreamConsumer(
             }
 
             using var scope = scopeFactory.CreateScope();
+            using var activity = StartActivity(message, payloadType);
+
+            // Durable delivery is transactional: the handler's writes, anything it enqueues through
+            // the scoped dispatcher, and the acknowledgement itself commit as one unit or not at all.
+            // A crash after that commit cannot redeliver (the row is already terminal); a crash
+            // before it rolls everything back, so the retry starts clean. Not opened for a
+            // fire-and-forget stream (nothing to ack) nor on a host with no relational store.
+            var transactions = ack is null ? null : scope.ServiceProvider.GetService<ITransactionFactory>();
+            await using var transaction = transactions is null ? null : await transactions.Begin(cancellationToken);
 
             var executeMethod = ExecuteMethodCache.GetOrAdd(payloadType, type =>
                 BaseExecuteMethod.MakeGenericMethod(type));
@@ -136,12 +145,15 @@ public class MessageStreamConsumer(
             if (executed == 0)
             {
                 // Resolvable but unhandled in this process — acking would lose the work silently.
+                // The transaction is disposed uncommitted on the way out.
                 await FailAsync(ack, message, $"message.handler.missing: {key}", retryable: false, cancellationToken, payloadType, typedMessage);
                 return;
             }
 
             if (ack != null)
-                await ack.Ack(message.Id, CancellationToken.None);
+                await ack.Ack(message.Id, scope.ServiceProvider, CancellationToken.None);
+            if (transaction != null)
+                await transaction.CommitAsync(CancellationToken.None);
 
             logger.LogInformation("Processed message {MessageId} of type {Type} from stream {Stream}",
                 message.Id, payloadType.Name, consumerConfig.StreamName);
@@ -203,6 +215,17 @@ public class MessageStreamConsumer(
             // A failing failure-handler must never mask the original failure.
             logger.LogError(ex, "MessageFailed<{Type}> handler threw for message {MessageId}", payloadType.Name, message.Id);
         }
+    }
+
+    /// <summary>
+    /// Continue the sender's trace when the envelope carries one, so a request and the background
+    /// work it queued show up as a single trace. Null when no listener has opted into the source.
+    /// </summary>
+    private static Activity? StartActivity(Message message, Type payloadType)
+    {
+        string? parent = null;
+        message.Metadata?.TryGetValue(MessagingActivity.TraceParent, out parent);
+        return MessagingActivity.Source.StartActivity($"{payloadType.Name} handle", ActivityKind.Consumer, parent);
     }
 
     private async Task RaiseFailedAsync<T>(Message<T> failedMessage, string error, CancellationToken cancellationToken)

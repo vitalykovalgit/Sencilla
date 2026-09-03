@@ -5,6 +5,7 @@ public class MediatorConfig : ProviderConfig
     private readonly HashSet<Type> AllowedTypes = [];
     private readonly HashSet<Type> DisabledTypes = [];
     private bool AllowAllFlag = true;
+    private bool HandleDurableFlag;
 
     /// <summary>
     /// Allow all message types to be handled (default behavior).
@@ -74,13 +75,26 @@ public class MediatorConfig : ProviderConfig
     }
 
     /// <summary>
-    /// Determines whether a message of the given type should be handled.
+    /// Also handle durable commands — types that declare <c>[Stream]</c> — in this process. Off by
+    /// default: the stream's consumer runs those, so handling them here as well would execute them
+    /// twice. Turn it on for a host that deliberately wants both, and narrow it with
+    /// <see cref="Allow{T}"/> / <see cref="Disable{T}"/> like any other type.
+    /// </summary>
+    public MediatorConfig HandleDurable()
+    {
+        HandleDurableFlag = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Determines whether a message of the given type should be handled: durable types only after
+    /// <see cref="HandleDurable"/>, then the allow/disable lists.
     /// </summary>
     public bool ShouldHandle(Type type)
     {
-        if (AllowAllFlag)
-            return !DisabledTypes.Contains(type);
+        if (!HandleDurableFlag && type.IsDefined(typeof(StreamAttribute), true))
+            return false;
 
-        return AllowedTypes.Contains(type);
+        return AllowAllFlag ? !DisabledTypes.Contains(type) : AllowedTypes.Contains(type);
     }
 }

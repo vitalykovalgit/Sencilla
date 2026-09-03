@@ -1,7 +1,8 @@
 -- The client-facing read surface: every notification flattened to the users it reaches, with
 -- that user's read stamp resolved.
 --
--- Safe ONLY behind the matrix constraint userId={user}.Id on resource 'notificationinboxview' —
+-- Safe ONLY behind the matrix constraint userId={user}.Id on resource 'notificationinbox' (the
+-- ENTITY NotificationInbox, not this view's name — the matrix keys on the class, never on [Table]) —
 -- the view itself contains no authorization, exactly like the CROSS JOIN it uses for system
 -- notifications. Every query carries WHERE UserId = @me, which SQL Server pushes down into each
 -- UNION branch, so the cross join collapses to one user before anything else runs.

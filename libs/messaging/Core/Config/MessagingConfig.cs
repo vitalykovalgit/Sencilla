@@ -25,15 +25,17 @@ public class MessagingConfig : ProviderConfig
 
 
     /// <summary>
-    /// Adds a middleware to the messaging pipeline only once.
+    /// Adds a middleware to the messaging pipeline only once. Singleton by default; a middleware
+    /// that must see the caller's scope — one that writes through the caller's DbContext — is
+    /// registered scoped, and the dispatcher resolves it from the dispatching scope.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public MessagingConfig AddMiddlewareOnce<T>() where T : class, IMessageMiddleware
+    public MessagingConfig AddMiddlewareOnce<T>(ServiceLifetime lifetime = ServiceLifetime.Singleton) where T : class, IMessageMiddleware
     {
         if (Middlewares.Contains(typeof(T)))
             return this;
 
-        Services.AddSingleton<T>();
+        Services.Add(new ServiceDescriptor(typeof(T), typeof(T), lifetime));
         Middlewares.Add(typeof(T));
         return this;
     }
@@ -45,8 +47,8 @@ public class MessagingConfig : ProviderConfig
     /// <example>
     /// <code>c.UseMiddleware&lt;MyCustomMiddleware&gt;();</code>
     /// </example>
-    public MessagingConfig UseMiddleware<T>() where T : class, IMessageMiddleware
-        => AddMiddlewareOnce<T>();
+    public MessagingConfig UseMiddleware<T>(ServiceLifetime lifetime = ServiceLifetime.Singleton) where T : class, IMessageMiddleware
+        => AddMiddlewareOnce<T>(lifetime);
 
     /// <summary>
     /// Add stream provider to the messaging pipeline only once.

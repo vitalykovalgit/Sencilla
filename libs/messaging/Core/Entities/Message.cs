@@ -86,7 +86,7 @@ public class Message
     /// Set or retrieve metadata for the message.
     /// </summary>
     /// <value></value>
-    public Dictionary<string, string>? Metadata { get; init; }
+    public Dictionary<string, string>? Metadata { get; set; }
 }
 
 /// <summary>

@@ -1,10 +1,10 @@
-namespace Sencilla.Messaging.EntityFramework;
+﻿namespace Sencilla.Messaging.EntityFramework;
 
 /// <summary>
 /// Durable enqueue. Scoped on purpose: it writes through the caller's DbContext, so a message
-/// inserted inside <c>repo.BeginTransaction()</c> commits or rolls back with everything else in
-/// that transaction — the reason enqueueing does not go through <see cref="IMessageDispatcher"/>,
-/// which is a singleton and cannot reach the caller's scope.
+/// inserted inside an open transaction commits or rolls back with everything else in it.
+/// Application code does not call this directly — it dispatches through the scoped
+/// <see cref="IMessageDispatcher"/>, and <see cref="EfQueueMiddleware"/> lands routed messages here.
 ///
 /// The [Message] table carries no user grants, so callers acting outside a request identity wrap
 /// the enqueue in <c>Access.Root()</c> — their own endpoint or worker is the authorization.

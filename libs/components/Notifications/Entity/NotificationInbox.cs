@@ -6,7 +6,9 @@ namespace Sencilla.Component.Notifications;
 /// component ships — EF maps an entity onto a view exactly as onto a table.
 ///
 /// Read-only by construction (no create/update markers) and, more importantly, by grant: scope it
-/// with a matrix row on resource <c>notificationinboxview</c>, Read with <c>userId={user}.Id</c>.
+/// with a matrix row on resource <c>notificationinbox</c> — the ENTITY name, NOT the table name;
+/// SecurityProvider.ResourceName reads [Resource] or Type.Name, never [Table] — Read with
+/// <c>userId={user}.Id</c>.
 /// The view itself contains no authorization — it resolves audience, not permission — so that one
 /// grant is the whole authorization story and must not be widened.
 ///

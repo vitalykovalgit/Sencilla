@@ -29,27 +29,20 @@ public enum NotificationScope : byte
 /// so an intersection such as "owners of project X" is a single row rather than something union
 /// semantics cannot express.
 ///
-/// Not client-facing: no <c>[CrudApi]</c>, written only through <see cref="NotificationWriter"/>.
+/// Not client-facing: no <c>[CrudApi]</c>. Written by the application, in whatever transaction the
+/// domain change it announces runs in — see <see cref="NotificationRepositoryEx.ToUser"/>, which is
+/// an extension over the caller's repositories for exactly that reason.
 /// </summary>
-public class NotificationTarget : IEntity<Guid>
+public class NotificationTarget : IEntity<Guid>, IEntityCreateable
 {
-    /// <summary>
-    /// Primary key. Application-generated sequential GUID (EF SequentialGuidValueGenerator).
-    /// </summary>
     public Guid Id { get; set; }
 
     public Guid NotificationId { get; set; }
 
-    /// <summary>See <see cref="NotificationScope"/>.</summary>
+    /// <summary>Values are <see cref="NotificationScope"/>.</summary>
     public byte Scope { get; set; }
 
-    /// <summary>
-    /// GUID-keyed target: the user id for <see cref="NotificationScope.User"/>, or an app scope's
-    /// own entity id. No FK — the target is polymorphic and lives in components this one does not
-    /// depend on.
-    /// </summary>
     public Guid? TargetGuid { get; set; }
 
-    /// <summary>INT-keyed target: a sec.Role id for <see cref="NotificationScope.Role"/>.</summary>
     public int? TargetInt { get; set; }
 }

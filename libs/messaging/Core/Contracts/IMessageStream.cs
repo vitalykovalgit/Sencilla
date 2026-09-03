@@ -1,4 +1,4 @@
-namespace Sencilla.Messaging;
+﻿namespace Sencilla.Messaging;
 
 /// <summary>
 /// Represents a queue or topic 
@@ -36,6 +36,15 @@ public interface IMessageStreamAck
 {
     /// <summary>All handlers completed. Mark the message terminally succeeded.</summary>
     Task Ack(Guid messageId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Acknowledge from inside the handler's scope, so a durable store can make the acknowledgement
+    /// part of the handler's own transaction: the domain change and "this message is done" then
+    /// commit together, which makes a redelivery impossible rather than merely tolerated. A stream
+    /// with no such store falls back to the plain ack.
+    /// </summary>
+    Task Ack(Guid messageId, IServiceProvider scopedProvider, CancellationToken cancellationToken = default)
+        => Ack(messageId, cancellationToken);
 
     /// <summary>
     /// Processing failed. <paramref name="retryable"/> false means the message can never succeed

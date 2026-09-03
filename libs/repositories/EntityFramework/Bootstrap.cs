@@ -65,6 +65,11 @@ public static class RepositoryEntityFrameworkBootstrap
         builder.TryAddScoped<RepositoryDependency>();
         builder.AddDbContext<DynamicDbContext>(configure);
 
+        // Explicit transaction seam over the default context: `using var tx = await
+        // transactions.Begin(token)` instead of borrowing BeginTransaction from an
+        // arbitrary repository. Per-context variants are registered in RegisterEFContexts.
+        builder.TryAddScoped<ITransactionFactory, EfTransactionFactory<DynamicDbContext>>();
+
         builder.AddEntityFrameworkCoreExtensions();
         return builder;
     }

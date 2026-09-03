@@ -1,4 +1,4 @@
-global using System.ComponentModel.DataAnnotations;
+﻿global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.Collections.Concurrent;
 global using System.Text.Json;
@@ -29,10 +29,13 @@ public static class Bootstrap
     /// Adds the database as a durable messaging transport: messages become rows in [Message],
     /// claimed by workers with an optimistic RowVersion claim and acknowledged terminally.
     ///
-    /// Unlike the fire-and-forget transports this one has a WRITE side that must be transactional,
-    /// so enqueueing does NOT go through the dispatcher middleware (a singleton cannot reach the
-    /// caller's scoped DbContext). Apps enqueue through the scoped <see cref="IMessageQueue"/>,
-    /// which shares the caller's DbContext and therefore its transaction.
+    /// The write side is transactional: <see cref="EfQueueMiddleware"/> is scoped and writes through
+    /// the caller's <see cref="IMessageQueue"/>, so a message dispatched inside a transaction commits
+    /// with it. Route messages here with <c>[Stream("name")]</c> on the payload type or
+    /// <c>ef.AddRoutes(r => r.SendToStream("name", typeof(T)))</c>; both must name a queue declared
+    /// in <c>ef.AddStreams(...)</c>. The message then continues down the pipeline: an in-process
+    /// Mediator in the same host skips <c>[Stream]</c> types unless it opts in with
+    /// <c>HandleDurable()</c>, so registration order does not matter.
     /// </summary>
     public static MessagingConfig UseEntityFramework(this MessagingConfig builder, Action<EfMessagingProviderConfig>? config = null)
     {
@@ -40,6 +43,7 @@ public static class Bootstrap
 
         builder.Services.TryAddSingleton(providerConfig.Options);
         builder.Services.TryAddScoped<IMessageQueue, MessageQueue>();
+        builder.AddMiddlewareOnce<EfQueueMiddleware>(ServiceLifetime.Scoped);
 
         builder.AddStreamProviderOnce<EfMessageStreamProvider>();
         builder.AddHostedServiceOnce<MessageStreamsConsumer<EfMessageStreamProvider, EfMessagingProviderConfig>>(providerConfig);

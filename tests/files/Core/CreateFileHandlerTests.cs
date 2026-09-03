@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using System.Linq.Expressions;
 
 namespace Sencilla.Component.Files.Tests;
@@ -14,10 +14,10 @@ public class CreateFileHandlerTests
     private readonly Mock<IEventDispatcher> _events = new();
     private readonly Mock<IFilePathResolver> _pathResolver = new();
     private readonly Mock<ICreateRepository<File, Guid>> _createRepo = new();
-    private readonly Mock<IMergeRepository<File, Guid>> _resMergeRepo = new();
+    private readonly Mock<IUpdateRepository<File, Guid>> _resMergeRepo = new();
 
     private CreateFileHandler CreateHandler() =>
-        new(_storage.Object, _events.Object, _pathResolver.Object, _createRepo.Object, _resMergeRepo.Object);
+        new(_storage.Object, _events.Object, _pathResolver.Object, new SencillaFilesOptions(new ServiceCollection()), _createRepo.Object, _resMergeRepo.Object);
 
     private static HttpContext CreateHttpContext(long uploadLength, string metadata)
     {
@@ -253,7 +253,7 @@ public class CreateFileHandlerTests
 
         Assert.Equal(StatusCodes.Status201Created, context.Response.StatusCode);
         _createRepo.Verify(r => r.Create(It.IsAny<File>(), It.IsAny<CancellationToken>()), Times.Never);
-        _resMergeRepo.Verify(r => r.MergeAsync(
+        _resMergeRepo.Verify(r => r.JsonMergeAsync(
             fileId,
             It.IsAny<Expression<Func<File, IDictionary<string, ResolutionInfo>?>>>(),
             "100",

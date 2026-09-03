@@ -1,4 +1,4 @@
-namespace Sencilla.Messaging.EntityFramework;
+﻿namespace Sencilla.Messaging.EntityFramework;
 
 /// <summary>
 /// One logical queue backed by rows in [Message].
@@ -115,6 +115,23 @@ public class EfMessageStream(
     {
         using var scope = scopeFactory.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<IUpdateRepository<QueueMessage, Guid>>();
+
+        await repository.ExecuteUpdateAsync(messageId, s =>
+        {
+            s.SetProperty(m => m.State, Succeeded);
+            s.SetProperty(m => m.ProcessedAt, DateTime.UtcNow);
+        }, cancellationToken);
+    }
+
+    /// <summary>
+    /// Acknowledge inside the handler's own transaction: the row flips to Succeeded through the
+    /// caller's DbContext — <see cref="AppMessage"/> maps the same table there — so the handler's
+    /// writes and the acknowledgement commit together. A crash after that commit cannot redeliver,
+    /// the row is already terminal; a crash before it rolls both back and the retry starts clean.
+    /// </summary>
+    public async Task Ack(Guid messageId, IServiceProvider scopedProvider, CancellationToken cancellationToken = default)
+    {
+        var repository = scopedProvider.GetRequiredService<IUpdateRepository<AppMessage, Guid>>();
 
         await repository.ExecuteUpdateAsync(messageId, s =>
         {

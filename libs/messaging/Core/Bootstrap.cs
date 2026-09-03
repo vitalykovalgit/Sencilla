@@ -1,5 +1,6 @@
 ﻿global using System.Collections.Concurrent;
 global using System.Collections.Generic;
+global using System.Diagnostics;
 global using System.Reflection;
 global using System.Text.Json;
 
@@ -35,7 +36,10 @@ public static class Bootstrap
         if (existingConfig == null)
         {
             services.AddSingleton(options);
-            services.AddSingleton<IMessageDispatcher, MessageDispatcher>();
+            // Scoped: a dispatch resolves its middlewares from the caller's scope, which is what
+            // lets the durable EF queue write through the caller's DbContext and commit with the
+            // caller's transaction. See MessageDispatcher for why this is cheap.
+            services.AddScoped<IMessageDispatcher, MessageDispatcher>();
             services.AddSingleton<IMessageHandlerExecutor, MessageHandlerExecutor>();
         }
 

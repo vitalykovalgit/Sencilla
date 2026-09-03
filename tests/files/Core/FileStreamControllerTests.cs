@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Sencilla.Component.Files.Tests;
@@ -13,6 +13,7 @@ public class FileStreamControllerTests
     private readonly Mock<IServiceProvider> _provider = new();
     private readonly Mock<IReadRepository<File, Guid>> _fileRepo = new();
     private readonly Mock<IFilePathResolver> _pathResolver = new();
+    private readonly Mock<IDeleteRepository<File, Guid>> _fileDeleteRepo = new();
     private readonly Mock<IFileStorage> _storage = new();
 
     private FileStreamController CreateController()
@@ -20,7 +21,7 @@ public class FileStreamControllerTests
         _provider.Setup(p => p.GetService(typeof(IFileStorage)))
             .Returns(_storage.Object);
 
-        var controller = new FileStreamController(_provider.Object, _fileRepo.Object, _pathResolver.Object);
+        var controller = new FileStreamController(_provider.Object, _fileRepo.Object, _fileDeleteRepo.Object, _pathResolver.Object);
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext()

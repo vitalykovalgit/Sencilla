@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using System.Linq.Expressions;
 
 namespace Sencilla.Component.Files.Tests;
@@ -15,7 +15,7 @@ public class UploadFileHandlerTests
     private readonly Mock<IFilePathResolver> _pathResolver = new();
     private readonly Mock<IReadRepository<File, Guid>> _readRepo = new();
     private readonly Mock<IUpdateRepository<FileUpload, Guid>> _uploadRepo = new();
-    private readonly Mock<IMergeRepository<File, Guid>> _resMergeRepo = new();
+    private readonly Mock<IUpdateRepository<File, Guid>> _resMergeRepo = new();
 
     private UploadFileHandler CreateHandler() =>
         new(_events.Object, _storage.Object, _pathResolver.Object, _readRepo.Object, _uploadRepo.Object, _resMergeRepo.Object);
@@ -159,7 +159,7 @@ public class UploadFileHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ResUploadComplete_ClearsResInfoAndPublishesEvent()
+    public async Task Handle_ResUploadComplete_MarksFullyUploadedAndPublishesEvent()
     {
         var fileId = Guid.NewGuid();
         var file = new File
@@ -185,11 +185,12 @@ public class UploadFileHandlerTests
         var handler = CreateHandler();
         await handler.Handle(context, CancellationToken.None);
 
-        _resMergeRepo.Verify(r => r.MergeAsync(
+        _resMergeRepo.Verify(r => r.JsonMergeAsync(
             fileId,
             It.IsAny<Expression<Func<File, IDictionary<string, ResolutionInfo>?>>>(),
             "600",
-            It.Is<ResolutionInfo>(i => i.S == null && i.U == null),
+            // Completion is U >= S, not nulls — the convention ImageCreateResolutionCommand writes.
+            It.Is<ResolutionInfo>(i => i.S == 1024 && i.U == 1024),
             It.IsAny<CancellationToken>()), Times.Once);
         _events.Verify(e => e.PublishAsync(
             It.Is<FileUploadedEvent>(ev => ev.Resolution == 600),
@@ -223,7 +224,7 @@ public class UploadFileHandlerTests
         var handler = CreateHandler();
         await handler.Handle(context, CancellationToken.None);
 
-        _resMergeRepo.Verify(r => r.MergeAsync(
+        _resMergeRepo.Verify(r => r.JsonMergeAsync(
             fileId,
             It.IsAny<Expression<Func<File, IDictionary<string, ResolutionInfo>?>>>(),
             "600",

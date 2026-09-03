@@ -36,7 +36,7 @@ requires `Sencilla.Component.Users.Mssql` and `Sencilla.Component.Security.Mssql
 2. Seed matrix grants — and **only** these:
 
    ```sql
-   (@Role_User, N'notificationinboxview', @ActionRead,   N'userId={user}.Id'),
+   (@Role_User, N'notificationinbox',     @ActionRead,   N'userId={user}.Id'),
    (@Role_User, N'notificationread',      @ActionCreate, N'userId={user}.Id'),
    (@Role_User, N'notificationread',      @ActionRead,   N'userId={user}.Id'),
    ```

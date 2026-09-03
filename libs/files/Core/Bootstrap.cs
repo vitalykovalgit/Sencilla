@@ -39,6 +39,7 @@ public static class Bootstrap
         services.TryAddKeyedTransient<IFileRequestHandler, DeleteFileHandler>(IFileRequestHandler.ServiceKey(DeleteFileHandler.Method));
 
         services.TryAddTransient<IFilePathResolver, FilePathResolver>();
+        services.TryAddTransient<IFileCloneRepository, FileCloneRepository>();
         return services;
     }
 

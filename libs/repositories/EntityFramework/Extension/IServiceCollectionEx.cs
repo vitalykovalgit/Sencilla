@@ -43,6 +43,10 @@ public static class RepoEFIServiceCollectionEx
 
             var genericMethod = addDbContextMethod.MakeGenericMethod(dbContextType);
             genericMethod.Invoke(null, [container, configure, ServiceLifetime.Scoped, ServiceLifetime.Scoped]);
+
+            // Transaction seam for entities pinned to this context with [DbContext<T>].
+            container.TryAddScoped(typeof(ITransactionFactory<>).MakeGenericType(type),
+                                   typeof(EfTransactionFactory<>).MakeGenericType(type));
         }
 
         return container;

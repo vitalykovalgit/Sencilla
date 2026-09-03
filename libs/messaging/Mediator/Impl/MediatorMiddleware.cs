@@ -1,8 +1,9 @@
-﻿namespace Sencilla.Messaging.Mediator;
+namespace Sencilla.Messaging.Mediator;
 
 /// <summary>
-/// In-process message handler middleware. Resolves and executes handlers via IMessageHandlerExecutor.
-/// Supports MediatorConfig filtering to allow/disable specific message types.
+/// In-process message handler middleware. Resolves and executes handlers via IMessageHandlerExecutor
+/// for every type <see cref="MediatorConfig.ShouldHandle"/> admits — by default everything except
+/// durable <c>[Stream]</c> commands, which the stream's consumer runs — then passes the message on.
 /// </summary>
 public class MediatorMiddleware(
     IServiceScopeFactory scopeFactory,
