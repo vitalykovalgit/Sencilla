@@ -1,19 +1,21 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Sencilla.Component.Files.Tests;
 
 /// <summary>
 /// Tests for <see cref="FileStreamController"/>.
 ///
-/// Covers: resolution stream retrieval, missing resolution returns 400, valid resolution returns stream.
+/// Covers: resolution stream retrieval, missing resolution returns 400, valid resolution returns stream,
+/// and that DELETE delegates to the one shared <see cref="IFileRequestHandler"/> rather than deleting
+/// the original by itself (which used to leak every variant and derivative, and asked nobody).
 /// </summary>
 public class FileStreamControllerTests
 {
     private readonly Mock<IServiceProvider> _provider = new();
     private readonly Mock<IReadRepository<File, Guid>> _fileRepo = new();
     private readonly Mock<IFilePathResolver> _pathResolver = new();
-    private readonly Mock<IDeleteRepository<File, Guid>> _fileDeleteRepo = new();
     private readonly Mock<IFileStorage> _storage = new();
 
     private FileStreamController CreateController()
@@ -21,7 +23,7 @@ public class FileStreamControllerTests
         _provider.Setup(p => p.GetService(typeof(IFileStorage)))
             .Returns(_storage.Object);
 
-        var controller = new FileStreamController(_provider.Object, _fileRepo.Object, _fileDeleteRepo.Object, _pathResolver.Object);
+        var controller = new FileStreamController(_provider.Object, _fileRepo.Object, _pathResolver.Object);
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext()
@@ -116,6 +118,29 @@ public class FileStreamControllerTests
         var result = await controller.GetFileStream(fileId, dim: null, res: 600, CancellationToken.None);
 
         Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task DeleteFile_DelegatesToTheDeleteHandler()
+    {
+        // A real container, not a mocked IServiceProvider: GetRequiredKeyedService is an extension
+        // method over IKeyedServiceProvider, which Moq cannot stand in for.
+        var handler = new Mock<IFileRequestHandler>();
+        var services = new ServiceCollection();
+        services.AddKeyedSingleton(IFileRequestHandler.ServiceKey("DELETE"), handler.Object);
+
+        var controller = new FileStreamController(services.BuildServiceProvider(), _fileRepo.Object, _pathResolver.Object)
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
+
+        var result = await controller.DeleteFile(CancellationToken.None);
+
+        // The handler owns the status code and the whole delete — variants, resolutions, the row and
+        // the event — so the action itself must add nothing.
+        Assert.IsType<EmptyResult>(result);
+        handler.Verify(h => h.Handle(controller.HttpContext, It.IsAny<CancellationToken>()), Times.Once);
+        _fileRepo.Verify(r => r.GetById(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

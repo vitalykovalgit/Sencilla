@@ -5,8 +5,7 @@ namespace Sencilla.Component.Files;
 [Route("api/v1/files/stream")]
 public class FileStreamController(
     IServiceProvider provider, 
-    IReadRepository<File, Guid> fileRepo, 
-    IDeleteRepository<File, Guid> deleteRepo,
+    IReadRepository<File, Guid> fileRepo,
     IFilePathResolver pathResolver) : ApiController(provider)
 {
     // TODO: Move to config cache duration
@@ -52,20 +51,26 @@ public class FileStreamController(
     //     return await RetriveFileStream(file, token);
     // }
 
+    /// <summary>
+    /// Delegates to <see cref="DeleteFileHandler"/> — the same implementation the upload route uses,
+    /// so there is ONE delete, not two that drift.
+    ///
+    /// This action used to delete the original blob and row by itself, which left every <c>_dim</c>
+    /// variant (blob AND File row) and every <c>_res</c> derivative behind forever, and asked nobody
+    /// whether the caller owned the file. The handler takes the variants and the derivatives, raises
+    /// <see cref="FileDeletedEvent"/>, and reads/deletes through the repositories — so the
+    /// <c>file</c> matrix grant is the authorization: a file the caller cannot read is a 400 here,
+    /// not a deletion.
+    ///
+    /// The handler reads the id off the last path segment, which this route's <c>{fileId}</c> is; it
+    /// writes its own status code, hence <see cref="EmptyResult"/>.
+    /// </summary>
     [HttpDelete, Route("{fileId}")]
-    public async Task<IActionResult> DeleteFile(Guid fileId, CancellationToken token)
+    public async Task<IActionResult> DeleteFile(CancellationToken token)
     {
-        var file = await fileRepo.GetById(fileId, token);
-        if (file == null) return NotFound();
-
-        var storage = file.Storage == 0 ? provider.GetService<IFileStorage>() : provider.GetKeyedService<IFileStorage>(file.Storage);
-        if (storage == null) return BadRequest($"File Storage is not configured for {file.Storage}");
-
-        await storage.DeleteFileAsync(file, token);
-
-        await deleteRepo.Delete(file, token);
-
-        return NoContent();
+        var handler = provider.GetRequiredKeyedService<IFileRequestHandler>(IFileRequestHandler.ServiceKey(DeleteFileHandler.Method));
+        await handler.Handle(HttpContext, token);
+        return new EmptyResult();
     }
 
     private async Task<IActionResult> RetriveFileStream(File? file, CancellationToken token)
