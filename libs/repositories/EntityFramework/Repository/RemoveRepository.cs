@@ -64,6 +64,15 @@ public class RemoveRepository<TEntity, TContext, TKey>(RepositoryDependency depe
             foreach (var e in rows)
                 e.DeletedDate = deletedDate;
 
+            // Those rows come back untracked, but the caller's own object for the same row is
+            // usually tracked already — a delete follows a read on the same scoped context.
+            // Attaching a second instance for a tracked key throws, and the caller's copy is the
+            // one to drop: the stored row is what gets stamped.
+            foreach (var entry in DbContext.ChangeTracker.Entries<TEntity>()
+                                           .Where(entry => ids.Contains(entry.Entity.Id))
+                                           .ToList())
+                entry.State = EntityState.Detached;
+
             await PersistUpdate(rows, token);
 
             await D.Events.PublishAsync(new EntityDeletedEvent<TEntity> { Entities = rows.AsQueryable() }, token);
