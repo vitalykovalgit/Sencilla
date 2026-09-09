@@ -5,9 +5,13 @@
 /// configuration class. Anything a COMPONENT needs on top of the conventions arrives through
 /// <see cref="IEntityModelConfigurator"/> — this context never learns what a component's marker interfaces mean,
 /// and no component has to be referenced here for its entities to map correctly.
+///
+/// Takes its own typed options: every AddDbContext re-registers the untyped <see cref="DbContextOptions"/>,
+/// so once a second context exists in the container (one pinned with [DbContext&lt;T&gt;]) the untyped one is
+/// whichever registered last.
 /// </summary>
 [DisableInjection]
-public class DynamicDbContext([NotNull] DbContextOptions options, IEnumerable<IEntityModelConfigurator>? configurators = null) : DbContext(options)
+public class DynamicDbContext([NotNull] DbContextOptions<DynamicDbContext> options, IEnumerable<IEntityModelConfigurator>? configurators = null) : DbContext(options)
 {
     private static IModel? _compiledModel;
     private static readonly object _modelLock = new();

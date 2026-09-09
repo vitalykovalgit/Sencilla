@@ -17,6 +17,7 @@
 /// needs no claim cache. Rows abandoned by an instance that never comes back are re-queued by age,
 /// deliberately NOT scoped to an owner: owner-scoped rescue can never rescue a dead peer.</para>
 /// </summary>
+[DisableInjection]
 public class EfMessageStream(
     IServiceScopeFactory scopeFactory,
     StreamConfig streamConfig,
@@ -47,6 +48,9 @@ public class EfMessageStream(
 
     public async Task<string?> Read(CancellationToken cancellationToken = default)
     {
+        // The rows are the transport's own: claiming, rescuing and sweeping them is a system action, not
+        // something the current user (a worker has none) must hold a grant for. Enqueue is the caller's.
+        using var root = Access.Root();
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -113,6 +117,7 @@ public class EfMessageStream(
 
     public async Task Ack(Guid messageId, CancellationToken cancellationToken = default)
     {
+        using var root = Access.Root();
         using var scope = scopeFactory.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<IUpdateRepository<QueueMessage, Guid>>();
 
@@ -131,6 +136,7 @@ public class EfMessageStream(
     /// </summary>
     public async Task Ack(Guid messageId, IServiceProvider scopedProvider, CancellationToken cancellationToken = default)
     {
+        using var root = Access.Root();
         var repository = scopedProvider.GetRequiredService<IUpdateRepository<AppMessage, Guid>>();
 
         await repository.ExecuteUpdateAsync(messageId, s =>
@@ -142,6 +148,7 @@ public class EfMessageStream(
 
     public async Task<bool> Nack(Guid messageId, string error, bool retryable, CancellationToken cancellationToken = default)
     {
+        using var root = Access.Root();
         using var scope = scopeFactory.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<IUpdateRepository<QueueMessage, Guid>>();
 

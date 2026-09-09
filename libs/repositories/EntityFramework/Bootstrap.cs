@@ -63,6 +63,9 @@ public static class RepositoryEntityFrameworkBootstrap
         builder.AddSencillaEFRepositoryForAssemblies(configure);
 
         builder.TryAddScoped<RepositoryDependency>();
+        // Contexts pinned with [DbContext<T>] on entities the AddSencilla() scan finds (outside the assemblies
+        // walked above) build their options from this when first resolved — see RegisterPinnedEFContext.
+        builder.TryAddSingleton(new EfContextConfigure(configure));
         builder.AddDbContext<DynamicDbContext>(configure);
 
         // Explicit transaction seam over the default context: `using var tx = await

@@ -18,7 +18,10 @@ global using Sencilla.Repository.EntityFramework;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // Force-loaded by AddSencilla()'s scan so RepositoryRegistrator sees AppMessage/QueueMessage
-// (repositories + the MessagingDbContext model).
+// (repositories + the MessagingDbContext model). The same scan runs AutoDiscoveryRegistrator over
+// every class here, so each type UseEntityFramework registers itself — or that is not a service at
+// all — carries [DisableInjection]: a stray transient descriptor would otherwise shadow the real one
+// (the last registration wins) or fail ValidateOnBuild on a constructor nothing can satisfy.
 [assembly: AutoDiscovery]
 
 namespace Microsoft.Extensions.DependencyInjection;

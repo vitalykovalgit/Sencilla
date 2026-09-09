@@ -224,12 +224,17 @@ public class RabbitMQStream : IMessageStream, IMessageStreamAck, IAsyncDisposabl
     {
         if (ConsumerInitialized) return;
 
+        // BEFORE taking InitLock, never under it: EnsureTopologyAsync takes the same lock, and a
+        // SemaphoreSlim is not reentrant. A stream that only ever consumes — the Notifier's — reached
+        // this with the topology still undeclared (a producer declares it on its first Write, and there
+        // is no producer here) and waited on itself forever: no connection, no queue, no error, just a
+        // consumer that "started" and never read. Found 2026-09-09 with the first real RabbitMQ consumer.
+        await EnsureTopologyAsync();
+
         await InitLock.WaitAsync();
         try
         {
             if (ConsumerInitialized) return;
-
-            await EnsureTopologyAsync();
 
             ConsumeChannel = await ConnectionFactory.CreateChannelAsync();
             var consumer = new AsyncEventingBasicConsumer(ConsumeChannel);

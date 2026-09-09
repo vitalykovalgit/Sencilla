@@ -166,3 +166,48 @@ public class RabbitMQStreamTests
     public async Task NoConsumerConfig_DefaultsToManualAck()
         => Assert.False(await Stream(null).Nack(Guid.NewGuid(), "boom", retryable: false));
 }
+
+/// <summary>
+/// A stream that only ever consumes must reach the broker on its first Read. It used to deadlock
+/// instead: EnsureConsumerAsync took InitLock and then called EnsureTopologyAsync, which takes the
+/// same non-reentrant lock — and only a producer's Write had ever declared the topology first.
+/// </summary>
+public class RabbitMQStreamConsumerTests
+{
+    [Fact]
+    public async Task Read_OnAConsumerOnlyStream_DeclaresTheQueueAndSubscribes()
+    {
+        var channel = new Mock<global::RabbitMQ.Client.IChannel>();
+        channel.Setup(c => c.QueueDeclareAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(),
+                It.IsAny<IDictionary<string, object?>>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new global::RabbitMQ.Client.QueueDeclareOk("notifications", 0, 0));
+        channel.Setup(c => c.BasicConsumeAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>(),
+                It.IsAny<IDictionary<string, object?>>(), It.IsAny<global::RabbitMQ.Client.IAsyncBasicConsumer>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("ctag");
+
+        var connectionFactory = new Mock<IRabbitMQConnectionFactory>();
+        connectionFactory.Setup(f => f.CreateChannelAsync()).ReturnsAsync(channel.Object);
+
+        var options = new RabbitMQProviderOptions { EnableDeadLetterQueue = false };
+        var providerConfig = new RabbitMQProviderConfig();
+        var streamConfig = new StreamConfig(providerConfig) { Name = "notifications" };
+        var consumerConfig = new ConsumerConfig { StreamName = "notifications" };
+
+        var stream = new RabbitMQStream(connectionFactory.Object, streamConfig, options, consumerConfig, NullLogger.Instance);
+
+        // Read blocks until a message arrives — but it must SUBSCRIBE first. With the deadlock nothing
+        // below ever ran, so the verifications are what tell "waiting for a message" from "stuck".
+        using var cts = new CancellationTokenSource();
+        var read = stream.Read(cts.Token);
+        await Task.WhenAny(read, Task.Delay(TimeSpan.FromSeconds(2)));
+
+        channel.Verify(c => c.QueueDeclareAsync("notifications", It.IsAny<bool>(), false, false,
+            It.IsAny<IDictionary<string, object?>>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+        channel.Verify(c => c.BasicConsumeAsync("notifications", false, It.IsAny<string>(), false, false,
+            It.IsAny<IDictionary<string, object?>>(), It.IsAny<global::RabbitMQ.Client.IAsyncBasicConsumer>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.False(read.IsCompleted, "no message was published, so Read must still be waiting");
+
+        cts.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => read);
+    }
+}

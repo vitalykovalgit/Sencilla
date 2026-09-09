@@ -1,4 +1,4 @@
-using Sencilla.Repository.EntityFramework.Tests.Infrastructure;
+﻿using Sencilla.Repository.EntityFramework.Tests.Infrastructure;
 
 namespace Sencilla.Repository.EntityFramework.Tests;
 
@@ -54,6 +54,31 @@ public class RemoveRepositoryTests : RepositoryTestBase<TestRemoveRepository>
 
         Assert.NotNull(result);
         Assert.NotNull(result.DeletedDate);
+    }
+
+    // ── The stored row, not the caller's object ──────────────────────────────
+
+    /// <summary>
+    /// A caller sends little more than the id — a client's delete is <c>new Project({ id })</c> —
+    /// and a soft delete changes DeletedDate and nothing else. Persisting the caller's object used to
+    /// replace the row with whatever the caller carried: an FK violation at best (UserId = Guid.Empty,
+    /// a 500 for every delete from the cabinet), a silently wiped row at worst, resurrected blank by Undo.
+    /// </summary>
+    [Fact]
+    public async Task Remove_DetachedObjectWithOtherValues_StampsTheStoredRowAndKeepsItsColumns()
+    {
+        await SeedAsync(MakeProduct(1, name: "Kept", price: 42m, stock: 7));
+
+        // Same id, every other column different — what a stub or a stale client row looks like.
+        var result = await Repository.Remove(MakeProduct(1));
+
+        DbContext.ChangeTracker.Clear();
+        var removed = await DbContext.Products.FindAsync(1);
+        Assert.NotNull(removed!.DeletedDate);
+        Assert.Equal("Kept", removed.Name);
+        Assert.Equal(42m, removed.Price);
+        Assert.Equal(7, removed.Stock);
+        Assert.Equal("Kept", result!.Name);
     }
 
     // ── Remove bulk ──────────────────────────────────────────────────────────

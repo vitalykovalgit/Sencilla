@@ -10,6 +10,7 @@ namespace Sencilla.Messaging.EntityFramework;
 /// also runs it is that Mediator's decision — it skips <c>[Stream]</c> types unless configured with
 /// <c>HandleDurable()</c> — so registration order does not matter.
 /// </summary>
+[DisableInjection]
 public class EfQueueMiddleware(EfMessagingProviderConfig config, IMessageQueue queue) : MessageMiddleware, IMessageMiddleware
 {
     public async Task HandleAsync<T>(Message<T> message, Func<Message<T>, CancellationToken, Task> next, CancellationToken cancellationToken = default)

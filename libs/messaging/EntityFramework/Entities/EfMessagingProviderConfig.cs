@@ -1,5 +1,6 @@
 namespace Sencilla.Messaging.EntityFramework;
 
+[DisableInjection]
 public class EfMessagingProviderConfig : ProviderConfig
 {
     public EfMessagingOptions Options { get; } = new();

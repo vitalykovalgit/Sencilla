@@ -1,6 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\libs\messaging\EntityFramework\Sencilla.Messaging.EntityFramework.csproj" />
   </ItemGroup>
 

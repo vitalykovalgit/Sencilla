@@ -4,6 +4,7 @@ namespace Sencilla.Messaging.EntityFramework;
 /// One <see cref="EfMessageStream"/> per stream name. Singleton like every stream provider; the
 /// streams open a scope per database operation rather than holding a DbContext.
 /// </summary>
+[DisableInjection]
 public class EfMessageStreamProvider(
     IServiceScopeFactory scopeFactory,
     EfMessagingOptions options,

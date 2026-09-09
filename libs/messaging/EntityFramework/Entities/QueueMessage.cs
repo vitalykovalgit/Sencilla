@@ -15,6 +15,7 @@ namespace Sencilla.Messaging.EntityFramework;
 public class QueueMessage : MessageRow;
 
 /// <summary>Isolated worker context for the queue twin.</summary>
+[DisableInjection]
 public class MessagingDbContext(DbContextOptions<MessagingDbContext> options) : DbContext(options)
 {
     public DbSet<QueueMessage> QueueMessages => Set<QueueMessage>();

@@ -55,14 +55,20 @@ public class RemoveRepository<TEntity, TContext, TKey>(RepositoryDependency depe
             await D.Events.PublishAsync(eventDeleting, token);
             await ThrowIfNarrowed(eventDeleting.Entities, dbQuery, token);
 
-            foreach (var e in entities)
+            // The rows as the database has them, not as the caller sent them. A soft delete changes
+            // DeletedDate and nothing else, and a caller sends little more than the id (a client's
+            // delete is `new Project({ id })`): persisting its object replaced the row with defaults —
+            // an FK violation at best (UserId = Guid.Empty, a 500), a silently wiped row at worst,
+            // resurrected blank by Undo.
+            var rows = await dbQuery.ToListAsync(token);
+            foreach (var e in rows)
                 e.DeletedDate = deletedDate;
 
-            await PersistUpdate(entities, token);
+            await PersistUpdate(rows, token);
 
-            await D.Events.PublishAsync(new EntityDeletedEvent<TEntity> { Entities = entities.AsQueryable() }, token);
+            await D.Events.PublishAsync(new EntityDeletedEvent<TEntity> { Entities = rows.AsQueryable() }, token);
 
-            return entities;
+            return rows;
         }, token);
     }
 }

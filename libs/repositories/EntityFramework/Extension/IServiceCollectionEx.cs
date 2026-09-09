@@ -52,6 +52,32 @@ public static class RepoEFIServiceCollectionEx
         return container;
     }
 
+    /// <summary>
+    /// Registers the context an entity pins with [DbContext&lt;T&gt;]. The entity may be found by the AddSencilla()
+    /// scan rather than by AddSencillaRepositoryForEF's assembly walk, in either order, so the provider
+    /// configuration is not known here: the options are built from <see cref="EfContextConfigure"/> when first
+    /// resolved. A context the walk already registered is left alone.
+    /// </summary>
+    public static IServiceCollection RegisterPinnedEFContext(this IServiceCollection container, Type type)
+    {
+        if (type == dynamicDbContextType || container.Any(descriptor => descriptor.ServiceType == type))
+            return container;
+
+        AddPinnedContextMethod.MakeGenericMethod(type).Invoke(null, [container]);
+        container.TryAddScoped(typeof(ITransactionFactory<>).MakeGenericType(type),
+                               typeof(EfTransactionFactory<>).MakeGenericType(type));
+        return container;
+    }
+
+    private static readonly MethodInfo AddPinnedContextMethod =
+        typeof(RepoEFIServiceCollectionEx).GetMethod(nameof(AddPinnedContext), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static void AddPinnedContext<TContext>(IServiceCollection container) where TContext : DbContext
+        => container.AddDbContext<TContext>((provider, options) =>
+            (provider.GetService<EfContextConfigure>()
+                ?? throw new InvalidOperationException($"{typeof(TContext).Name} is pinned with [DbContext<T>] but AddSencillaRepositoryForEF was never called."))
+            .Configure(options));
+
     public static IServiceCollection RegisterEFRepositoriesForType(this IServiceCollection container, Type type, out bool isAdded) 
     {
         // 
@@ -66,8 +92,11 @@ public static class RepoEFIServiceCollectionEx
             var customDbContext = type.GetCustomAttribute(typeof(DbContextAttribute<>)) as IDbContextAttribute;
             var key = entity.GetGenericArguments()[0];
             var context = dynamicDbContextType;
-            if (customDbContext != null) 
+            if (customDbContext != null)
+            {
                 context = customDbContext.Type;
+                container.RegisterPinnedEFContext(context);
+            }
 
             RegisterReadRepo(container, type, context, key);
             RegisterCreateRepo(container, type, context, key);

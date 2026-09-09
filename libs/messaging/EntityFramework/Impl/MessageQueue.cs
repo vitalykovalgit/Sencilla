@@ -4,6 +4,7 @@ namespace Sencilla.Messaging.EntityFramework;
 /// Writes the [Message] row through the caller's scoped repository — see <see cref="IMessageQueue"/>
 /// for why this is not a dispatcher middleware.
 /// </summary>
+[DisableInjection]
 public class MessageQueue(ICreateRepository<AppMessage, Guid> messages) : IMessageQueue
 {
     public async Task<Guid> Enqueue<T>(Message<T> message, string stream, DateTime? availableAt = null, CancellationToken token = default)

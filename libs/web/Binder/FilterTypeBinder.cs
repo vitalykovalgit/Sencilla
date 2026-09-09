@@ -66,6 +66,18 @@ public class FilterTypeBinder : IModelBinder
                     foreach (var v in values)
                         filter.AddProperty(propName, propertyType, v);
                 }
+
+                // `?deletedDate=null` is the one value the collection binder cannot convert: it bound
+                // nothing, and the criterion vanished without a word — the same silence the byte binder
+                // had, and a cabinet that listed every soft-deleted project. Null IS a value to the filter
+                // (ToExpression renders a lone null as `X == null`), so it is added by hand — for a column
+                // that can hold one. A string column keeps matching the literal, as it always did.
+                if (filter != null && Nullable.GetUnderlyingType(propertyType) != null)
+                {
+                    foreach (var v in parameters[propName])
+                        if (string.Equals(v, "null", StringComparison.OrdinalIgnoreCase))
+                            filter.AddProperty(propName, propertyType, [null]); // `params`: a bare null would be the ARRAY
+                }
             }
             else
             {

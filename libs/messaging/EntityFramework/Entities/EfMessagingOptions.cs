@@ -4,6 +4,7 @@ namespace Sencilla.Messaging.EntityFramework;
 /// Worker-side knobs for the durable database transport (bound from the "Messaging" section).
 /// App-domain policies (grace periods, business schedules) belong to the consuming app's options.
 /// </summary>
+[DisableInjection]
 public class EfMessagingOptions
 {
     /// <summary>
