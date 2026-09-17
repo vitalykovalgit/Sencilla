@@ -3,7 +3,11 @@ CREATE TABLE [sec].[User]
 (
 	[Id]                UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
 
-    [Phone]             BIGINT NULL,
+    -- NOT NULL, because the entity is: User.Phone is a non-nullable `long` and 0 is «no phone»
+    -- everywhere (ToUser, EfUserStore, IsAnonymous). A NULL here is not a missing phone, it is a
+    -- SqlNullValueException from the materializer — for that user on EVERY request, and for
+    -- every list that pages over the row. Only raw SQL ever wrote one; now it cannot.
+    [Phone]             BIGINT NOT NULL DEFAULT 0,
     [PhoneConf]         BIT NOT NULL DEFAULT 0,
 
     [Email]             NVARCHAR (255)  NULL,
