@@ -15,9 +15,10 @@ public class CreateFileHandlerTests
     private readonly Mock<IFilePathResolver> _pathResolver = new();
     private readonly Mock<ICreateRepository<File, Guid>> _createRepo = new();
     private readonly Mock<IUpdateRepository<File, Guid>> _resMergeRepo = new();
+    private readonly Mock<IUpdateRepository<FileSizeUpdate, Guid>> _sizeRepo = new();
 
     private CreateFileHandler CreateHandler() =>
-        new(_storage.Object, _events.Object, _pathResolver.Object, new SencillaFilesOptions(new ServiceCollection()), _createRepo.Object, _resMergeRepo.Object);
+        new(_storage.Object, _events.Object, _pathResolver.Object, new SencillaFilesOptions(new ServiceCollection()), _createRepo.Object, _resMergeRepo.Object, _sizeRepo.Object);
 
     private static HttpContext CreateHttpContext(long uploadLength, string metadata)
     {
@@ -75,6 +76,66 @@ public class CreateFileHandlerTests
 
         Assert.Equal(StatusCodes.Status201Created, context.Response.StatusCode);
         _createRepo.Verify(r => r.Create(It.IsAny<File>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// The original arriving for a row registered from a zero-byte placeholder must record its declared
+    /// length. Leaving Size at 0 makes HeadFileHandler answer `Upload-Length: 0` alongside
+    /// `Upload-Offset: 0`, which tus reads as "already complete": it fires onSuccess without sending the
+    /// body and the file is stored empty — invisible until prepress fails to print it.
+    /// </summary>
+    [Fact]
+    public async Task Handle_ExistingPlaceholderRow_RecordsDeclaredUploadLength()
+    {
+        var fileId = Guid.NewGuid();
+        var existingFile = new File { Id = fileId, Name = "photo.jpg", Size = 0 };
+        var metadata = EncodeMetadata(("id", fileId.ToString()), ("name", "photo.jpg"), ("size", "0"));
+        var context = CreateHttpContext(2048, metadata);
+
+        _createRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>())).ReturnsAsync(existingFile);
+        _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
+
+        var handler = CreateHandler();
+        await handler.Handle(context, CancellationToken.None);
+
+        _sizeRepo.Verify(r => r.Update(It.Is<FileSizeUpdate>(u => u.Id == fileId && u.Size == 2048), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>A row that already knows its size is never rewritten — the first upload's length wins.</summary>
+    [Fact]
+    public async Task Handle_ExistingSizedRow_LeavesSizeAlone()
+    {
+        var fileId = Guid.NewGuid();
+        var existingFile = new File { Id = fileId, Name = "photo.jpg", Size = 4096 };
+        var metadata = EncodeMetadata(("id", fileId.ToString()), ("name", "photo.jpg"), ("size", "4096"));
+        var context = CreateHttpContext(2048, metadata);
+
+        _createRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>())).ReturnsAsync(existingFile);
+        _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
+
+        var handler = CreateHandler();
+        await handler.Handle(context, CancellationToken.None);
+
+        _sizeRepo.Verify(r => r.Update(It.IsAny<FileSizeUpdate>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>A resolution upload registers the variant; it must not touch the original's Size.</summary>
+    [Fact]
+    public async Task Handle_ResolutionUpload_DoesNotOverwriteOriginalSize()
+    {
+        var fileId = Guid.NewGuid();
+        var existingFile = new File { Id = fileId, Name = "photo.jpg", Size = 0 };
+        var metadata = EncodeMetadata(("id", fileId.ToString()), ("name", "photo.jpg"), ("size", "512"), ("res", "100"));
+        var context = CreateHttpContext(512, metadata);
+
+        _createRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>())).ReturnsAsync(existingFile);
+        _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
+        _pathResolver.Setup(p => p.GetResolutionPath(It.IsAny<File>(), It.IsAny<int>(), It.IsAny<string?>())).Returns("test/path_100.jpg");
+
+        var handler = CreateHandler();
+        await handler.Handle(context, CancellationToken.None);
+
+        _sizeRepo.Verify(r => r.Update(It.IsAny<FileSizeUpdate>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

@@ -7,7 +7,8 @@ internal class CreateFileHandler(
     IFilePathResolver pathResolver,
     SencillaFilesOptions options,
     ICreateRepository<File, Guid> fileRepo,
-    IUpdateRepository<File, Guid> fileUpdateRepo): IFileRequestHandler
+    IUpdateRepository<File, Guid> fileUpdateRepo,
+    IUpdateRepository<FileSizeUpdate, Guid> fileSizeRepo): IFileRequestHandler
 {
     public const string Method = "POST";
 
@@ -90,6 +91,18 @@ internal class CreateFileHandler(
             // above just wrote, so the derivative's type has to come from this request's metadata.
             var resPath = pathResolver.GetResolutionPath(dbFile, res.Value, file.MimeType);
             await storage.WriteFileAsync(new File { Path = resPath, Storage = dbFile.Storage }, []);
+        }
+        else if (dbFile.Size <= 0 && uploadLength > 0)
+        {
+            // The ORIGINAL arriving for a row that was created from a zero-byte placeholder (a client that
+            // registers the file first and uploads the bytes in a second pass). Record what THIS upload
+            // declares, because Size is what HeadFileHandler answers as Upload-Length: left at 0, a resuming
+            // client reads `Upload-Offset: 0 == Upload-Length: 0` as "already complete", fires onSuccess and
+            // never sends the body — a dropped connection then becomes permanent, silent data loss.
+            // It also re-arms `Uploaded == Size` as the real completion test for FileUploadedEvent, which
+            // otherwise fires on the empty placeholder and never on the bytes.
+            await fileSizeRepo.Update(new FileSizeUpdate { Id = dbFile.Id, Size = uploadLength }, token);
+            dbFile.Size = uploadLength;
         }
 
         // think about location for uploading, probably can be S3/CloudFare directly

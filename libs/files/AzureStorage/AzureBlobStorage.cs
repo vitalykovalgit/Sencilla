@@ -374,6 +374,18 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
 
         var appendBlobClient = container.GetAppendBlobClient(blobName);
 
+        // Buffer non-seekable request bodies so the length is known up front. This happens BEFORE the
+        // blob is touched: CreateAsync below truncates, and buffering a slow upload can take tens of
+        // seconds. Truncating first meant a connection dropped mid-body left the blob destroyed with
+        // nothing to put back — a re-upload that failed used to wipe a perfectly good original.
+        using var ms = new MemoryStream();
+        if (!stream.CanSeek)
+        {
+            await stream.CopyToAsync(ms, ct);
+            ms.Position = 0;
+            stream = ms;
+        }
+
         // A fresh upload (offset 0) must start from an empty blob: this is the
         // chunked-TUS first chunk (or a full-file write/restart). Recreating
         // guarantees a retried upload can never concatenate onto a stale,
@@ -384,15 +396,8 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
         else
             await appendBlobClient.CreateIfNotExistsAsync(cancellationToken: ct);
 
-        // Buffer non-seekable request bodies so the length is known up front.
-        using var ms = new MemoryStream();
-        if (!stream.CanSeek)
-        {
-            await stream.CopyToAsync(ms, ct);
-            ms.Position = 0;
-            stream = ms;
-        }
-
+        // After the create, so a zero-length write still materialises the empty blob that
+        // CreateFileHandler registers a file with.
         if (stream.Length == 0)
             return offset;
 
@@ -423,8 +428,18 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
             }
             catch (Azure.RequestFailedException ex) when (ex.Status == 412)
             {
-                // Append position already past this chunk — it was committed by an
-                // earlier attempt. Skip it rather than duplicate the data.
+                // The append position is not where we expected. That is benign in exactly one case:
+                // THIS chunk was already committed by an earlier attempt (a TUS retry after a dropped
+                // response), which leaves the blob exactly writePosition + bytesRead long. Any other
+                // length means a concurrent writer truncated or appended underneath us and these bytes
+                // were never stored — swallowing that returned a fake offset and reported success for
+                // data that does not exist.
+                var props = await appendBlobClient.GetPropertiesAsync(cancellationToken: ct);
+                if (props.Value.ContentLength != writePosition + bytesRead)
+                    throw new InvalidOperationException(
+                        $"Append conflict on '{blobName}': expected append position {writePosition}, " +
+                        $"blob is {props.Value.ContentLength} bytes. A concurrent write changed this blob " +
+                        $"and the uploaded chunk was not stored.", ex);
             }
 
             writePosition += bytesRead;
