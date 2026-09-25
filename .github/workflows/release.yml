@@ -86,33 +86,17 @@ jobs:
             --output ./artifacts/nuget
 
       # ── Pack SQL (dacpac) packages ────────────────────────────────────────
-      # Packed in two waves so intra-repo PackageReferences resolve correctly:
-      #   Wave 1 — projects with no Sencilla PackageReferences (no local dep)
-      #   Wave 2 — projects that reference other Sencilla SQL packages
-      # The local-build source makes wave-1 packages visible to wave-2 restores
-      # without waiting for a NuGet.org push.
+      # Packed in dependency order so intra-repo PackageReferences resolve:
+      # SQL packages reference each other at the same version
+      # (Notifications -> Security -> Users), so each must be packed before its
+      # dependents restore. The local-build source makes already-packed packages
+      # visible to later restores without waiting for a NuGet.org push.
       - name: Pack SQL (dacpac) packages
         run: |
           dotnet nuget add source "$(pwd)/artifacts/nuget" --name local-build
-          SQLPROJS=$(find libs -name '*.sqlproj' -not -path '*/obj/*' -not -path '*/bin/*')
-          pack() {
-            echo "Packing $1"
-            dotnet pack "$1" \
-              --configuration Release \
-              --output ./artifacts/nuget \
-              /p:ContinuousIntegrationBuild=true \
-              /p:GeneratePackageOnBuild=false
-          }
-          # Wave 1: no intra-repo dependencies
-          for proj in $SQLPROJS; do
-            grep -q 'PackageReference Include="Sencilla' "$proj" && continue
-            pack "$proj"
-          done
-          # Wave 2: depends on other Sencilla SQL packages (now in local-build)
-          for proj in $SQLPROJS; do
-            grep -q 'PackageReference Include="Sencilla' "$proj" || continue
-            pack "$proj"
-          done
+          ./builds/pack-sql.sh ./artifacts/nuget \
+            --configuration Release \
+            /p:ContinuousIntegrationBuild=true
 
       # ── List packages (for debug / audit) ─────────────────────────────────
       - name: List produced packages
