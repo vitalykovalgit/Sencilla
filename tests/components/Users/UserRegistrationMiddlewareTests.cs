@@ -100,8 +100,8 @@ public class UserRegistrationMiddlewareTests
         Assert.True(_nextCalled);
         // Repo was called for lookup
         _userRepo.Verify(r => r.FirstOrDefault(It.IsAny<UserFilter>(), It.IsAny<CancellationToken>()), Times.Once);
-        // UpsertAsync should NOT be called since user exists
-        _userRepo.Verify(r => r.UpsertAsync(It.IsAny<User>(), It.IsAny<System.Linq.Expressions.Expression<Func<User, object?>>>(), null, null, It.IsAny<CancellationToken>()), Times.Never);
+        // Nothing is created since the user exists
+        _userRepo.Verify(r => r.GetOrCreateAsync(It.IsAny<IEnumerable<User>>(), It.IsAny<System.Linq.Expressions.Expression<Func<User, object>>[]>()), Times.Never);
         // User should be cached after lookup
         Assert.True(_cache.TryGetValue("user_by_email_db@test.com", out User? cached));
         Assert.Equal(userId, cached!.Id);
@@ -118,16 +118,18 @@ public class UserRegistrationMiddlewareTests
 
         _userProvider.Setup(p => p.CurrentUser).Returns(incomingUser);
 
-        // First call (from Invoke): returns null — user doesn't exist
-        // Second call (from UpsertUserAsync): returns created user
+        // First call (from Invoke): null — user doesn't exist
+        // Second call (the re-check once the registration gate is held): still null
+        // Third call (read back after GetOrCreateUserAsync): the created user
         _userRepo.SetupSequence(r => r.FirstOrDefault(It.IsAny<UserFilter>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null)
             .ReturnsAsync((User?)null)
             .ReturnsAsync(createdUser);
 
-        _userRepo.Setup(r => r.UpsertAsync(It.IsAny<User>(), It.IsAny<System.Linq.Expressions.Expression<Func<User, object?>>>(), null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(incomingUser);
-        _userAuthRepo.Setup(r => r.UpsertAsync(It.IsAny<UserAuth>(), It.IsAny<System.Linq.Expressions.Expression<Func<UserAuth, object?>>>(), null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserAuth { Auth = "", Email = "" });
+        _userRepo.Setup(r => r.GetOrCreateAsync(It.IsAny<IEnumerable<User>>(), It.IsAny<System.Linq.Expressions.Expression<Func<User, object>>[]>()))
+            .ReturnsAsync(new GetOrCreateResult<User> { Created = [createdUser] });
+        _userAuthRepo.Setup(r => r.GetOrCreateAsync(It.IsAny<IEnumerable<UserAuth>>(), It.IsAny<System.Linq.Expressions.Expression<Func<UserAuth, object>>[]>()))
+            .ReturnsAsync(new GetOrCreateResult<UserAuth> { Created = [new UserAuth { Auth = "", Email = "" }] });
 
         var middleware = CreateMiddleware();
         var context = CreateHttpContext();
@@ -135,11 +137,42 @@ public class UserRegistrationMiddlewareTests
         await middleware.Invoke(context);
 
         Assert.True(_nextCalled);
-        // UpsertAsync was called to create user
-        _userRepo.Verify(r => r.UpsertAsync(It.IsAny<User>(), It.IsAny<System.Linq.Expressions.Expression<Func<User, object?>>>(), null, null, It.IsAny<CancellationToken>()), Times.Once);
+        // The user and its sign-in were created — insert-only, never upserted
+        _userRepo.Verify(r => r.GetOrCreateAsync(It.IsAny<IEnumerable<User>>(), It.IsAny<System.Linq.Expressions.Expression<Func<User, object>>[]>()), Times.Once);
+        _userAuthRepo.Verify(r => r.GetOrCreateAsync(It.IsAny<IEnumerable<UserAuth>>(), It.IsAny<System.Linq.Expressions.Expression<Func<UserAuth, object>>[]>()), Times.Once);
         // User should be cached
         Assert.True(_cache.TryGetValue("user_by_email_new@test.com", out User? cached));
         Assert.Equal(userId, cached!.Id);
+    }
+
+    // ── Parallel first requests (a new account's first page) ─────────────────
+
+    /// <summary>
+    /// The page a new user lands on fires its API calls at once, and every one misses the cache and
+    /// finds no user. Before the registration gate each of them created the account, and their MERGEs
+    /// deadlocked each other in SQL Server. One of them creates it now; the rest read it back.
+    /// </summary>
+    [Fact]
+    public async Task Invoke_ParallelFirstRequests_CreateTheUserOnce()
+    {
+        var createdUser = new User { Id = Guid.NewGuid(), Email = "burst@test.com" };
+        var created = false;
+
+        _userProvider.Setup(p => p.CurrentUser).Returns(() => new User { Email = "burst@test.com" });
+        _userRepo.Setup(r => r.FirstOrDefault(It.IsAny<UserFilter>(), It.IsAny<CancellationToken>()))
+            // Like a real query: the answer is what the table held when the lookup STARTED, not when it returned.
+            .Returns(async () => { var seen = created ? createdUser : null; await Task.Delay(10); return seen; });
+        _userRepo.Setup(r => r.GetOrCreateAsync(It.IsAny<IEnumerable<User>>(), It.IsAny<System.Linq.Expressions.Expression<Func<User, object>>[]>()))
+            .Callback(() => created = true)
+            .ReturnsAsync(new GetOrCreateResult<User> { Created = [createdUser] });
+        _userAuthRepo.Setup(r => r.GetOrCreateAsync(It.IsAny<IEnumerable<UserAuth>>(), It.IsAny<System.Linq.Expressions.Expression<Func<UserAuth, object>>[]>()))
+            .ReturnsAsync(new GetOrCreateResult<UserAuth> { Created = [new UserAuth { Auth = "", Email = "" }] });
+
+        var middleware = CreateMiddleware();
+        await Task.WhenAll(Enumerable.Range(0, 15).Select(_ => middleware.Invoke(CreateHttpContext())));
+
+        _userRepo.Verify(r => r.GetOrCreateAsync(It.IsAny<IEnumerable<User>>(), It.IsAny<System.Linq.Expressions.Expression<Func<User, object>>[]>()), Times.Once);
+        _userAuthRepo.Verify(r => r.GetOrCreateAsync(It.IsAny<IEnumerable<UserAuth>>(), It.IsAny<System.Linq.Expressions.Expression<Func<UserAuth, object>>[]>()), Times.Once);
     }
 
     // ── No user provider ─────────────────────────────────────────────────────

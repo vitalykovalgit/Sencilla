@@ -9,6 +9,10 @@ public class UserRegistrationMiddleware
     // TODO: Make this configurable
     private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(5);
 
+    // ponytail: striped rather than one lock per email, so memory stays bounded for the node's lifetime.
+    // Unrelated first logins that share a stripe wait for each other; raise the count if sign-up bursts show it.
+    private static readonly SemaphoreSlim[] RegistrationGates = Enumerable.Range(0, 64).Select(_ => new SemaphoreSlim(1, 1)).ToArray();
+
     public UserRegistrationMiddleware(RequestDelegate next, IMemoryCache cache)
     {
         Next = next;
@@ -31,7 +35,7 @@ public class UserRegistrationMiddleware
             {
                 // Establish the security context from the verified principal BEFORE any
                 // repo work, so first-login self-registration (the User/UserAuth insert in
-                // UpsertUserAsync) runs as the authenticated User role, not as Anonymous.
+                // GetOrCreateUserAsync) runs as the authenticated User role, not as Anonymous.
                 // Without this the entity-constraint handler sees no current user and the
                 // insert is forbidden (403). Overwritten with the persisted user below.
                 sysVars?.SetCurrentUser(user);
@@ -52,7 +56,7 @@ public class UserRegistrationMiddleware
                     if (dbUser == null)
                     {
                         // create if not exists
-                        dbUser = await UpsertUserAsync(container, userRepo!, user, userProvider.CurrentPrincipal?.Identity?.AuthenticationType);
+                        dbUser = await RegisterOnceAsync(container, userRepo!, user, userProvider.CurrentPrincipal?.Identity?.AuthenticationType, context.RequestAborted);
                     }
 
                     _cache.Set(cacheKey, dbUser, CacheExpiration);
@@ -75,10 +79,31 @@ public class UserRegistrationMiddleware
     }
 
 
-    private async Task<User> UpsertUserAsync(IServiceProvider sp, ICreateRepository<User, Guid> userRepo, User user, string? authType)
+    /// <summary>
+    /// First login. The page a new user lands on fires its API calls in parallel, and every one of them
+    /// missed the cache and found no user. On this node one call per email creates the user and the rest
+    /// read it back. Across nodes the unique keys on sec.User and sec.UserAuth keep the inserts correct;
+    /// this only spares the database the pile-up.
+    /// </summary>
+    private async Task<User> RegisterOnceAsync(IServiceProvider sp, ICreateRepository<User, Guid> userRepo, User user, string? authType, CancellationToken token)
     {
-        // TODO: Think about saving this in transaction
-        await userRepo.UpsertAsync(user, u => u.Email!);
+        var gate = RegistrationGates[(StringComparer.OrdinalIgnoreCase.GetHashCode(user.Email ?? "") & int.MaxValue) % RegistrationGates.Length];
+        await gate.WaitAsync(token);
+        try
+        {
+            return await userRepo.FirstOrDefault(ByEmail(user.Email), token)
+                ?? await GetOrCreateUserAsync(sp, userRepo, user, authType);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    private async Task<User> GetOrCreateUserAsync(IServiceProvider sp, ICreateRepository<User, Guid> userRepo, User user, string? authType)
+    {
+        // Insert-only: a row another request or node created a moment ago is read back, never rewritten.
+        await userRepo.GetOrCreateAsync([user], u => u.Email!);
         var dbUser = await userRepo.FirstOrDefault(ByEmail(user.Email));
 
         var userAuth = new UserAuth()
@@ -90,7 +115,9 @@ public class UserRegistrationMiddleware
         };
 
         var userAuthRepo = sp.GetService<ICreateRepository<UserAuth, Guid>>();
-        await userAuthRepo.UpsertAsync(userAuth, u => new { u.Email, u.Auth, u.UserId, });
+        // Matched on exactly the columns of UX_UserAuth_EmailAuthUser (UserAuth.sql): with that unique index
+        // under the MERGE's HOLDLOCK, concurrent first logins queue on one key instead of deadlocking.
+        await userAuthRepo!.GetOrCreateAsync([userAuth], u => u.Email!, u => u.Auth, u => u.UserId);
 
         return dbUser;
     }
