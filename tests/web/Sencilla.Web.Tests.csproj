@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\libs\web\Sencilla.Web.csproj" />
+    <ProjectReference Include="..\..\libs\webapi\MinimalApi\Sencilla.Web.MinimalApi.csproj" />
   </ItemGroup>
 
 </Project>

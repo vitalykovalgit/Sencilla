@@ -18,6 +18,10 @@ app.MapPost("/products", async (Product product, ICreateRepository<Product, int>
     await repo.Create(product));
 ```
 
+## Client error log
+
+`services.AddClientLogging()` maps `POST /api/v1/client-log` (anonymous) through `MapSencillaEndpoints()`. A browser posts `{ kind, message, stack, path, build, window_class, input_type, extra }` as `text/plain`, and each report becomes one `client-error …` warning in the server logs. Untrusted input: 16 KB at most (413), JSON or 400, 120 reports a minute per process (429), every field truncated and logged as a parameter.
+
 ## Documentation
 
 - [Web API](https://github.com/vitalykovalgit/Sencilla/blob/master/docs/webapi/README.md)
