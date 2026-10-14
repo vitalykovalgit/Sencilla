@@ -12,8 +12,15 @@ public static class IServiceProviderExt
             return Task.CompletedTask;
 
         var methodInfo = obj.GetMethodCached(method, @params);
-        return (Task)(methodInfo?.Invoke(obj, provider.InjectMethodParameters(methodInfo, @params)) ?? Task.CompletedTask);
+        return (Task)(methodInfo?.Invoke(obj, DoNotWrap, null, provider.InjectMethodParameters(methodInfo, @params), null) ?? Task.CompletedTask);
     }
+
+    /// <summary>
+    /// A handler that throws before it returns its Task (a non-async method, a guard written as an expression) must
+    /// surface the exception it threw, as an async one does: wrapped in TargetInvocationException, a 400 the handler
+    /// meant became a 500.
+    /// </summary>
+    private const BindingFlags DoNotWrap = BindingFlags.DoNotWrapExceptions;
 
     public static async Task<T?> InvokeMethod<T>(this IServiceProvider provider, object? obj, string method, params object[] @params)
     {
@@ -21,7 +28,7 @@ public static class IServiceProviderExt
             return default;
 
         var methodInfo = obj.GetMethodCached(method, @params);
-        return await (Task<T>)(methodInfo?.Invoke(obj, provider.InjectMethodParameters(methodInfo, @params)) ?? Task.CompletedTask);
+        return await (Task<T>)(methodInfo?.Invoke(obj, DoNotWrap, null, provider.InjectMethodParameters(methodInfo, @params), null) ?? Task.CompletedTask);
     }
 
     /// <summary>

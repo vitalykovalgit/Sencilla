@@ -47,6 +47,13 @@ public class File
     public FileOrigin Origin { get; set; } = FileOrigin.None;
 
     /// <summary>
+    /// What the file is for. Opaque here — the application defines the values (Photoboost: 1 = a layout
+    /// template's file), and whoever creates the row sets it (<see cref="IFileCloneRepository.Clone"/>).
+    /// Never read from upload metadata. 0 = nothing in particular.
+    /// </summary>
+    public short Type { get; set; }
+
+    /// <summary>
     /// Path
     /// </summary>
     public string? Path { get; set; }

@@ -70,7 +70,7 @@ public class FileCloneRepositoryTests
             Origin = FileOrigin.User,
             Storage = 2,
             Res = res,
-            Attrs = new Dictionary<string, string> { ["projectid"] = SourceProject, ["folder"] = "keep-me" },
+            Attrs = new Dictionary<string, string> { ["projectid"] = SourceProject, ["note"] = "keep-me" },
         };
         file.Path = _paths.GetFullPath(file);
 
@@ -79,7 +79,10 @@ public class FileCloneRepositoryTests
         return file;
     }
 
-    private static IDictionary<string, string> ToTargetProject() => new Dictionary<string, string> { ["projectId"] = TargetProject };
+    private static IDictionary<string, string?> ToTargetProject() => new Dictionary<string, string?> { ["projectId"] = TargetProject };
+
+    // A template's copy: out of the project, into the owner's templates folder.
+    private static IDictionary<string, string?> ToTemplates() => new Dictionary<string, string?> { ["projectId"] = null, ["folder"] = "templates" };
 
     [Fact]
     public async Task Clone_WritesRowAndBlob_UnderTheNewOwnerAndScope()
@@ -141,8 +144,58 @@ public class FileCloneRepositoryTests
         var clone = Assert.Single(_created);
         Assert.Equal(TargetProject, clone.Attrs!["projectid"]);
         Assert.False(clone.Attrs.ContainsKey("projectId"));
-        Assert.Equal("keep-me", clone.Attrs["folder"]);
+        Assert.Equal("keep-me", clone.Attrs["note"]);
         Assert.Equal(SourceProject, source.Attrs!["projectid"]); // the source is not touched
+    }
+
+    [Fact]
+    public async Task Clone_NullAttr_RemovesIt_SoTheCopyLeavesTheProjectFolder()
+    {
+        var source = Seed("photo.jpg");
+
+        var map = await Cloner().Clone([source.Id], SourceUser, ToTemplates(), type: 1);
+
+        var clone = Assert.Single(_created);
+        Assert.False(clone.Attrs!.ContainsKey("projectid"));
+        Assert.Equal("templates", clone.Attrs["folder"]);
+        Assert.Equal((short)1, clone.Type);
+        Assert.Equal(SourceUser, clone.UserId);
+        Assert.Equal(FileOrigin.User, clone.Origin);
+        Assert.Equal($"user{SourceUser}/templates/{map[source.Id]}.jpg", clone.Path);
+        Assert.Contains(clone.Path, _written);
+    }
+
+    [Fact]
+    public async Task Clone_AsSystem_DropsTheOwner_AndLandsUnderSystem()
+    {
+        var source = Seed("photo.jpg", res: new Dictionary<string, ResolutionInfo>
+        {
+            ["600"] = new ResolutionInfo { S = 900, U = 900, Ct = "image/webp" },
+        });
+        _existingBlobs.Add($"user{SourceUser}/project{SourceProject}/{source.Id}_600.webp");
+
+        var map = await Cloner().Clone([source.Id], null, ToTemplates(), FileOrigin.System, 1);
+
+        var clone = Assert.Single(_created);
+        Assert.Null(clone.UserId);
+        Assert.Equal(FileOrigin.System, clone.Origin);
+        Assert.Equal((short)1, clone.Type);
+        Assert.Equal($"system/templates/{map[source.Id]}.jpg", clone.Path);
+        Assert.Contains($"system/templates/{map[source.Id]}_600.webp", _written);
+    }
+
+    [Fact]
+    public async Task Clone_WithoutOriginOrType_KeepsTheSources()
+    {
+        var source = Seed("photo.jpg");
+        source.Type = 7;
+
+        await Cloner().Clone([source.Id], TargetUser, ToTargetProject());
+
+        var clone = Assert.Single(_created);
+        Assert.Equal(FileOrigin.User, clone.Origin);
+        Assert.Equal((short)7, clone.Type);
+        Assert.Equal(TargetUser, clone.UserId);
     }
 
     [Fact]

@@ -112,26 +112,54 @@ public class FilePathResolverTests
         Assert.Equal($"system/{fileId}.jpg", path);
     }
 
-    // Asserts a feature that no longer exists: the folder segment is commented out in
-    // FilePathResolver.GetFullPath (`/* folderPath,*/`). Skipped rather than deleted so the decision to
-    // drop folders from the path stays visible. Unrelated to the resolution-extension change.
-    [Fact(Skip = "Folder segment is disabled in FilePathResolver.GetFullPath")]
+    [Fact]
     public void GetFullPath_WithFolder_IncludesFolderInPath()
     {
+        var userId = Guid.Parse("11111111-2222-3333-4444-555555555555");
         var file = new File
         {
             Id = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
             Name = "doc.pdf",
-            // Was `UserId = 1` — left behind by the int -> Guid primary key migration, so this file has not
-            // compiled since. Unrelated to the resolution-extension change, fixed here to get the suite running.
-            UserId = Guid.Parse("11111111-2222-3333-4444-555555555555"),
+            UserId = userId,
             Origin = FileOrigin.User,
             Attrs = new Dictionary<string, string> { ["folder"] = "documents" }
         };
 
         var path = _resolver.GetFullPath(file);
 
-        Assert.Contains("documents", path);
+        Assert.Equal($"user{userId}/documents/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.pdf", path);
+    }
+
+    [Fact]
+    public void GetFullPath_SystemOrigin_WithFolder_IncludesFolderInPath()
+    {
+        var file = new File
+        {
+            Id = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
+            Name = "photo.jpg",
+            Origin = FileOrigin.System,
+            Attrs = new Dictionary<string, string> { ["folder"] = "templates" }
+        };
+
+        var path = _resolver.GetFullPath(file);
+
+        Assert.Equal("system/templates/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg", path);
+    }
+
+    [Fact]
+    public void GetFullPath_Folder_CannotClimbOutOfTheOwnersRoot()
+    {
+        var file = new File
+        {
+            Id = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
+            Name = "photo.jpg",
+            Origin = FileOrigin.System,
+            Attrs = new Dictionary<string, string> { ["folder"] = "../../user1/x" }
+        };
+
+        var path = _resolver.GetFullPath(file);
+
+        Assert.Equal("system/user1x/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg", path);
     }
 
     [Fact]

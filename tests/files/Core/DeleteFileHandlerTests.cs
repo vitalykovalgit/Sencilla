@@ -80,6 +80,37 @@ public class DeleteFileHandlerTests
     }
 
     [Fact]
+    public async Task Handle_RefusedRowDelete_LeavesEveryBlob()
+    {
+        var fileId = Guid.NewGuid();
+        var file = new File
+        {
+            Id = fileId,
+            Name = "photo.jpg",
+            Path = "test/photo.jpg",
+            Res = new Dictionary<string, ResolutionInfo> { ["100"] = new ResolutionInfo() }
+        };
+        var variant = new File { Id = Guid.NewGuid(), ParentId = fileId };
+        var context = CreateDeleteContext(fileId);
+
+        _readRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(file);
+        _readRepo.Setup(r => r.GetAll(It.IsAny<FileFilter>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { variant });
+        _pathResolver.Setup(p => p.GetResolutionPath(file, 100)).Returns("test/photo_100.jpg");
+        // A deleting-event handler or a foreign key refuses the original's row.
+        _deleteRepo.Setup(d => d.Delete(file, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("refused"));
+
+        var handler = CreateHandler();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(context, CancellationToken.None));
+
+        _storage.Verify(s => s.DeleteFileAsync(It.IsAny<File>(), It.IsAny<CancellationToken>()), Times.Never);
+        _storage.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _events.Verify(e => e.PublishAsync(It.IsAny<FileDeletedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Handle_NonExistentFile_Returns400()
     {
         var fileId = Guid.NewGuid();

@@ -13,7 +13,9 @@ internal class FileCloneRepository(
     public async Task<IReadOnlyDictionary<Guid, Guid>> Clone(
         IReadOnlyCollection<Guid> fileIds,
         Guid? userId = null,
-        IDictionary<string, string>? attrs = null,
+        IDictionary<string, string?>? attrs = null,
+        FileOrigin? origin = null,
+        short? type = null,
         CancellationToken token = default)
     {
         var ids = fileIds.Distinct().ToArray();
@@ -30,7 +32,7 @@ internal class FileCloneRepository(
             .ToList();
 
         var map = parents.Concat(children).ToDictionary(f => f.Id, _ => Guid.NewGuid());
-        var clones = parents.Concat(children).Select(src => (Source: src, Clone: CloneOf(src, map, userId, attrs))).ToList();
+        var clones = parents.Concat(children).Select(src => (Source: src, Clone: CloneOf(src, map, userId, attrs, origin, type))).ToList();
 
         // Blobs first, then every row: a caller holding a transaction open keeps it off the slow
         // blob IO, and an interrupted clone leaves orphan blobs rather than rows pointing at nothing.
@@ -44,7 +46,7 @@ internal class FileCloneRepository(
         return map;
     }
 
-    private File CloneOf(File src, IReadOnlyDictionary<Guid, Guid> map, Guid? userId, IDictionary<string, string>? attrs)
+    private File CloneOf(File src, IReadOnlyDictionary<Guid, Guid> map, Guid? userId, IDictionary<string, string?>? attrs, FileOrigin? origin, short? type)
     {
         var now = DateTime.UtcNow;
         var clone = new File
@@ -59,8 +61,10 @@ internal class FileCloneRepository(
             MimeType = src.MimeType,
             Size = src.Size,
             Uploaded = src.Uploaded,
-            UserId = userId ?? src.UserId,
-            Origin = src.Origin,
+            // A system copy has no owner: system/ is everyone's, and the matrix reads userId=null as public.
+            UserId = origin == FileOrigin.System ? null : userId ?? src.UserId,
+            Origin = origin ?? src.Origin,
+            Type = type ?? src.Type,
             Storage = src.Storage,
             Dim = src.Dim,
             Width = src.Width,
@@ -80,7 +84,7 @@ internal class FileCloneRepository(
         return clone;
     }
 
-    private static IDictionary<string, string>? Merge(IDictionary<string, string>? source, IDictionary<string, string>? overrides)
+    private static IDictionary<string, string>? Merge(IDictionary<string, string>? source, IDictionary<string, string?>? overrides)
     {
         if (source == null && overrides == null)
             return null;
@@ -90,9 +94,14 @@ internal class FileCloneRepository(
         // Attribute keys are lower-cased everywhere else in the component — GetMetadata lower-cases
         // on the way in, GetString lower-cases on the way out — so an override keyed "projectId"
         // would sit next to the stored "projectid" instead of replacing it, and GetFullPath would
-        // keep resolving the ORIGINAL value.
-        foreach (var attr in overrides ?? new Dictionary<string, string>())
-            merged[attr.Key.ToLower()] = attr.Value;
+        // keep resolving the ORIGINAL value. A null override removes the key instead.
+        foreach (var (key, value) in overrides ?? new Dictionary<string, string?>())
+        {
+            if (value == null)
+                merged.Remove(key.ToLower());
+            else
+                merged[key.ToLower()] = value;
+        }
 
         return merged;
     }

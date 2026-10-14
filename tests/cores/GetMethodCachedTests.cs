@@ -39,6 +39,11 @@ public class GetMethodCachedTests
             WasCalled = true;
             return Task.CompletedTask;
         }
+
+        // Throw before any Task exists — the shape of a guard written as an expression.
+        public Task Refuse(string reason) => throw new InvalidOperationException(reason);
+
+        public Task<string> RefuseResult(string reason) => throw new InvalidOperationException(reason);
     }
 
     // ── GetMethodCached ──────────────────────────────────────────────────────
@@ -157,6 +162,17 @@ public class GetMethodCachedTests
         var result = await sp.InvokeMethod<string>(null, "GetResultAsync", "test");
 
         Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task InvokeMethod_SurfacesWhatASynchronousThrowThrew()
+    {
+        var handler = new SampleHandler();
+        var sp = new ServiceCollection().BuildServiceProvider();
+
+        // Wrapped in TargetInvocationException, a handler's own 400 reached the caller as a 500.
+        Assert.Equal("no", (await Assert.ThrowsAsync<InvalidOperationException>(() => sp.InvokeMethod(handler, "Refuse", "no"))).Message);
+        Assert.Equal("no", (await Assert.ThrowsAsync<InvalidOperationException>(() => sp.InvokeMethod<string>(handler, "RefuseResult", "no"))).Message);
     }
 
     // ── InjectMethodParameters ───────────────────────────────────────────────

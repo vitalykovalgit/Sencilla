@@ -27,14 +27,17 @@ internal class FilePathResolver : IFilePathResolver
         
         var projectId = file.Attrs?.GetString("projectId");
         var projectPath = projectId == null ? "" : $"project{projectId}";
-        //var folder = file.Attrs?.GetString("folder");
-        //var folderPath = RemoveSpecialCharacters(folder); // remove any special characters leves only latters and numbers 
+
+        // The `folder` attr is a sub-folder of the owner's root (user{id}/templates/, system/templates/). Only letters,
+        // digits, '_' and '-' survive, so it can never climb out of that root. Absent = no sub-folder.
+        var folder = RemoveSpecialCharacters(file.Attrs?.GetString("folder"));
+        var folderPath = folder.Length == 0 ? "" : $"{folder}/";
 
         return file.Origin switch
         {
-            FileOrigin.User => Path.Combine($"user{file.UserId ?? Guid.Empty}", projectPath,/* folderPath,*/ fileName),
-            FileOrigin.System => $"system/{fileName}",
-            _ => $"none/{fileName}"
+            FileOrigin.User => Path.Combine($"user{file.UserId ?? Guid.Empty}", projectPath, folder, fileName),
+            FileOrigin.System => $"system/{folderPath}{fileName}",
+            _ => $"none/{folderPath}{fileName}"
         };
     }
 

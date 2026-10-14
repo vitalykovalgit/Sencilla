@@ -20,13 +20,16 @@ internal class DeleteFileHandler(
             return;
         }
 
-        // Find and delete all dimension variants
-        var variants = await fileReadRepo.GetAll(new FileFilter().ByParentId(fileId), token);
+        // Rows first, blobs after: a delete the repository refuses — a deleting-event handler, a row something still
+        // references — must leave every blob where it was. Blobs-first emptied the file and then failed on its row,
+        // leaving a row that streams nothing. Dimension variants go before the original: ParentId is a self-FK.
+        var variants = (await fileReadRepo.GetAll(new FileFilter().ByParentId(fileId), token)).ToList();
         foreach (var variant in variants)
-        {
-            await storage.DeleteFileAsync(variant, token);
             await fileDeleteRepo.Delete(variant, token);
-        }
+        await fileDeleteRepo.Delete(file, token);
+
+        foreach (var variant in variants)
+            await storage.DeleteFileAsync(variant, token);
 
         // Delete all resolution files from storage
         if (file.Res != null)
@@ -43,7 +46,6 @@ internal class DeleteFileHandler(
 
         // Delete the original file
         await storage.DeleteFileAsync(file, token);
-        await fileDeleteRepo.Delete(file, token);
 
         await events.PublishAsync(new FileDeletedEvent { File = file }, token);
 
