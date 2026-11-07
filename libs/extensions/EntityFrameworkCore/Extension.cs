@@ -1,272 +1,47 @@
-﻿using System.Data;
-using System.Data.Common;
+﻿using System.Data.Common;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
-using Sencilla.Core;
 
 namespace Microsoft.EntityFrameworkCore;
 
 public static class EntityFrameworkCoreExtensions
 {
-    public static Task<(IEnumerable<TEntity> Created, IEnumerable<TEntity> Existing)> GetOrCreateBulkAsync<TEntity, TContext>(
-        this TContext context,
-        IEnumerable<TEntity> entities,
-        string[] keys,
-        CancellationToken token = default)
-        where TEntity : class, IBaseEntity, new()
-        where TContext : DbContext
-        => context.GetOrCreateBulkAsync<TEntity, TContext>(entities, keys, filter: null, token);
+    /// <summary>The <c>$action</c> a MERGE's OUTPUT gives a row it inserted.</summary>
+    private const string InsertAction = "INSERT";
 
-    public static async Task<(IEnumerable<TEntity> Created, IEnumerable<TEntity> Existing)> GetOrCreateBulkAsync<TEntity, TContext>(
+    /// <summary>
+    /// Inserts every row no existing row matches on <paramref name="keys"/> (an insert-only MERGE) and returns the
+    /// primary keys of the rows it inserted and of every row matching the keys. It reads no row itself: the caller
+    /// reads them back by key, through whatever judges a read.
+    /// </summary>
+    public static async Task<(IReadOnlyList<object> Inserted, IReadOnlyList<object> Matched)> GetOrCreateBulkAsync<TEntity, TContext>(
         this TContext context,
         IEnumerable<TEntity> entities,
         string[] keys,
-        Filter? filter,
         CancellationToken token = default)
-        where TEntity : class, IBaseEntity, new()
+        where TEntity : class
         where TContext : DbContext
     {
         var entityList = entities.ToList();
         if (entityList.Count == 0)
             return ([], []);
 
-        // Fast path: no Include requested — keep the single-batch full-row reflection map.
-        if (filter?.With is null || filter.With.Length == 0)
-            return await GetOrCreateBulkFullRowAsync<TEntity, TContext>(context, entityList, keys, token);
+        var (mergeQuery, selectQuery) = new GetOrCreateQueryBuilder<TEntity>(keys).Build(entityList);
 
-        // Include path: MERGE+SELECT return only PK ids; EF reloads with .Include() + AsNoTracking.
-        return await GetOrCreateBulkWithIncludesAsync(context, entityList, keys, filter.With, token);
-    }
-
-    private static async Task<(IEnumerable<TEntity> Created, IEnumerable<TEntity> Existing)> GetOrCreateBulkFullRowAsync<TEntity, TContext>(
-        TContext context,
-        List<TEntity> entityList,
-        string[] keys,
-        CancellationToken token)
-        where TEntity : class, new()
-        where TContext : DbContext
-    {
-        var builder = new GetOrCreateQueryBuilder<TEntity>(keys);
-        var props = builder.GetMappedProperties();
-        var keyProps = builder.ResolveKeyProperties(props);
-        var (mergeQuery, selectQuery) = builder.Build(entityList);
-
-        var connection = context.Database.GetDbConnection();
-        var wasOpen = connection.State == ConnectionState.Open;
-        if (!wasOpen)
-            await connection.OpenAsync(token);
-
-        try
+        // Result set 0 is the MERGE's OUTPUT (an insert-only MERGE: every row is one it inserted), result set 1 the SELECT.
+        var inserted = new List<object>();
+        var matched = new List<object>();
+        await ReadRowsAsync(context, mergeQuery + "\n" + selectQuery, (set, row) =>
         {
-            using var cmd = connection.CreateCommand();
-            // Enlist in the ambient repository transaction, if any — a raw command on a
-            // connection with a pending local transaction throws otherwise (SQL Server).
-            cmd.Transaction = context.Database.CurrentTransaction?.GetDbTransaction();
-            cmd.CommandText = mergeQuery + "\n" + selectQuery;
-
-            using var reader = await cmd.ExecuteReaderAsync(token);
-
-            // Result set 1: key values of rows just inserted (OUTPUT INSERTED.*)
-            var insertedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            while (await reader.ReadAsync(token))
-            {
-                var composite = BuildKeyComposite(reader, keyProps);
-                insertedKeys.Add(composite);
-            }
-
-            // Result set 2: all matching rows (existing + newly inserted)
-            await reader.NextResultAsync(token);
-
-            var created = new List<TEntity>();
-            var existing = new List<TEntity>();
-
-            while (await reader.ReadAsync(token))
-            {
-                var entity = MapRow<TEntity>(reader, props);
-                var composite = BuildKeyComposite(reader, keyProps);
-
-                if (insertedKeys.Contains(composite))
-                    created.Add(entity);
-                else
-                    existing.Add(entity);
-            }
-
-            return (created, existing);
-        }
-        finally
-        {
-            if (!wasOpen)
-                await connection.CloseAsync();
-        }
-    }
-
-    private static async Task<(IEnumerable<TEntity> Created, IEnumerable<TEntity> Existing)> GetOrCreateBulkWithIncludesAsync<TEntity, TContext>(
-        TContext context,
-        List<TEntity> entityList,
-        string[] keys,
-        string[] with,
-        CancellationToken token)
-        where TEntity : class, IBaseEntity, new()
-        where TContext : DbContext
-    {
-        var builder = new GetOrCreateQueryBuilder<TEntity>(keys);
-        var props = builder.GetMappedProperties();
-        var pkProp = GetOrCreateQueryBuilder<TEntity>.GetPrimaryKeyProperty(props);
-        var (mergeQuery, selectQuery) = builder.BuildIdsOnly(entityList);
-
-        var insertedIds = new HashSet<object>();
-        var allIds = new List<object>();
-
-        var connection = context.Database.GetDbConnection();
-        var wasOpen = connection.State == ConnectionState.Open;
-        if (!wasOpen)
-            await connection.OpenAsync(token);
-
-        try
-        {
-            using var cmd = connection.CreateCommand();
-            // Enlist in the ambient repository transaction, if any — a raw command on a
-            // connection with a pending local transaction throws otherwise (SQL Server).
-            cmd.Transaction = context.Database.CurrentTransaction?.GetDbTransaction();
-            cmd.CommandText = mergeQuery + "\n" + selectQuery;
-
-            using var reader = await cmd.ExecuteReaderAsync(token);
-
-            // Result set 1: ids of newly inserted rows
-            while (await reader.ReadAsync(token))
-                insertedIds.Add(reader.GetValue(0));
-
-            // Result set 2: ids of ALL matched rows (existing + newly inserted)
-            await reader.NextResultAsync(token);
-            while (await reader.ReadAsync(token))
-                allIds.Add(reader.GetValue(0));
-        }
-        finally
-        {
-            if (!wasOpen)
-                await connection.CloseAsync();
-        }
-
-        if (allIds.Count == 0)
-            return ([], []);
-
-        // Reload via EF so navigation properties materialize through .Include().
-        var query = BuildIdInQuery<TEntity>(context, pkProp, allIds);
-
-        foreach (var path in with)
-        {
-            var canonical = ResolveNavigationPath<TEntity>(path);
-            query = query.Include(canonical);
-        }
-
-        var loaded = await query.AsNoTracking().ToListAsync(token);
-
-        var created = new List<TEntity>();
-        var existing = new List<TEntity>();
-        foreach (var e in loaded)
-        {
-            var id = pkProp.GetValue(e)!;
-            if (insertedIds.Contains(id))
-                created.Add(e);
+            if (set == 0)
+                inserted.Add(row.GetValue(1));
             else
-                existing.Add(e);
-        }
+                matched.Add(row.GetValue(0));
+        }, token);
 
-        return (created, existing);
+        return (inserted, matched);
     }
-
-    private static IQueryable<TEntity> BuildIdInQuery<TEntity>(DbContext context, PropertyInfo idProp, List<object> ids)
-        where TEntity : class
-    {
-        var idType = idProp.PropertyType;
-        var typedArray = Array.CreateInstance(idType, ids.Count);
-        for (var i = 0; i < ids.Count; i++)
-            typedArray.SetValue(Convert.ChangeType(ids[i], idType), i);
-
-        // Build: e => typedArray.Contains(e.Id) — translates to SQL IN (...)
-        var param = Expression.Parameter(typeof(TEntity), "e");
-        var idAccess = Expression.Property(param, idProp);
-
-        var containsMethod = typeof(Enumerable).GetMethods()
-            .First(m => m.Name == nameof(Enumerable.Contains) && m.GetParameters().Length == 2)
-            .MakeGenericMethod(idType);
-
-        var containsCall = Expression.Call(null, containsMethod, Expression.Constant(typedArray), idAccess);
-        var lambda = Expression.Lambda<Func<TEntity, bool>>(containsCall, param);
-
-        return context.Set<TEntity>().Where(lambda);
-    }
-
-    /// <summary>
-    /// Walks a dotted include path (e.g. "items.products") case-insensitively against the
-    /// entity model and returns the canonical PascalCase path EF requires. Throws when a
-    /// segment doesn't exist so the API surfaces a clear error instead of EF's cryptic one.
-    /// </summary>
-    private static string ResolveNavigationPath<TEntity>(string path)
-    {
-        var segments = path.Split('.');
-        var current = typeof(TEntity);
-        var resolved = new string[segments.Length];
-
-        for (var i = 0; i < segments.Length; i++)
-        {
-            var prop = current.GetProperties()
-                .FirstOrDefault(p => string.Equals(p.Name, segments[i], StringComparison.OrdinalIgnoreCase))
-                ?? throw new InvalidOperationException(
-                    $"Navigation property '{segments[i]}' not found on {current.Name} (path: '{path}').");
-
-            resolved[i] = prop.Name;
-
-            // Walk into the next type — element type for collections, declared type otherwise.
-            var propType = prop.PropertyType;
-            if (propType.IsGenericType)
-            {
-                var elementType = propType.GetGenericArguments().FirstOrDefault();
-                current = elementType is not null && elementType.IsAssignableTo(typeof(IBaseEntity))
-                    ? elementType
-                    : propType;
-            }
-            else
-            {
-                current = propType;
-            }
-        }
-
-        return string.Join(".", resolved);
-    }
-
-    private static string BuildKeyComposite(DbDataReader reader, List<System.Reflection.PropertyInfo> keyProps)
-    {
-        var parts = keyProps.Select(p =>
-        {
-            var colName = p.GetCustomAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>()?.Name ?? p.Name;
-            try { return reader[colName]?.ToString() ?? ""; }
-            catch { return ""; }
-        });
-        return string.Join("|", parts);
-    }
-
-    private static TEntity MapRow<TEntity>(DbDataReader reader, List<System.Reflection.PropertyInfo> props)
-        where TEntity : new()
-    {
-        var entity = new TEntity();
-        foreach (var prop in props)
-        {
-            var colName = prop.GetCustomAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>()?.Name ?? prop.Name;
-            try
-            {
-                var ordinal = reader.GetOrdinal(colName);
-                if (reader.IsDBNull(ordinal))
-                    continue;
-
-                var value = reader.GetValue(ordinal);
-                var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
-                prop.SetValue(entity, Convert.ChangeType(value, targetType));
-            }
-            catch { /* column not found or type mismatch — skip */ }
-        }
-        return entity;
-    }
-
 
     public static Task UpsertAsync<TEntity, TContext>(this TContext context,
         TEntity e,
@@ -274,17 +49,18 @@ public static class EntityFrameworkCoreExtensions
         Expression<Func<TEntity, TEntity>>? insertAction = null,
         Expression<Func<TEntity, TEntity>>? updateAction = null)
         where TEntity : class
-        where TContext : DbContext 
+        where TContext : DbContext
     {
         return UpsertBulkAsync(context, new List<TEntity> { e }, condition, insertAction, updateAction);
     }
 
-
-    public static async Task UpsertBulkAsync<TEntity, TContext>(this TContext context,
+    /// <summary>Upserts <paramref name="entities"/> in one MERGE and returns the primary keys of the rows it inserted.</summary>
+    public static Task<IReadOnlyList<object>> UpsertBulkAsync<TEntity, TContext>(this TContext context,
         IEnumerable<TEntity> entities,
         Expression<Func<TEntity, object>> condition,
         Expression<Func<TEntity, TEntity>>? insertAction = null,
-        Expression<Func<TEntity, TEntity>>? updateAction = null)
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default)
         where TEntity : class
         where TContext : DbContext
     {
@@ -298,7 +74,7 @@ public static class EntityFrameworkCoreExtensions
 
         var query = builder.Build(entities);
 
-        await context.Database.ExecuteSqlRawAsync(EscapeFormatBraces(query));
+        return ReadInsertedKeysAsync(context, query, token);
     }
 
     public static Task MergeAsync<TEntity, TContext>(this TContext context,
@@ -312,11 +88,16 @@ public static class EntityFrameworkCoreExtensions
         return MergeBulkAsync(context, new List<TEntity> { e }, condition, insertAction, updateAction);
     }
 
-    public static async Task MergeBulkAsync<TEntity, TContext>(this TContext context,
+    /// <summary>
+    /// Merges <paramref name="entities"/> in one MERGE — inserts, updates, and deletes every row not among them — and
+    /// returns the primary keys of the rows it inserted.
+    /// </summary>
+    public static async Task<IReadOnlyList<object>> MergeBulkAsync<TEntity, TContext>(this TContext context,
         IEnumerable<TEntity> entities,
         Expression<Func<TEntity, object>> condition,
         Expression<Func<TEntity, TEntity>>? insertAction = null,
-        Expression<Func<TEntity, TEntity>>? updateAction = null)
+        Expression<Func<TEntity, TEntity>>? updateAction = null,
+        CancellationToken token = default)
         where TEntity : class
         where TContext : DbContext
     {
@@ -324,7 +105,7 @@ public static class EntityFrameworkCoreExtensions
         // VALUES row (typed [Id] = 0, which clashes with a uniqueidentifier key) AND an
         // unscoped "WHEN NOT MATCHED BY SOURCE THEN DELETE" that would wipe the whole table.
         if (entities is null || !entities.Any())
-            return;
+            return [];
 
         var cmnd = new MergeCommand<TEntity>(condition)
         {
@@ -336,14 +117,42 @@ public static class EntityFrameworkCoreExtensions
 
         var query = builder.Build(entities);
 
-        await context.Database.ExecuteSqlRawAsync(EscapeFormatBraces(query));
+        return await ReadInsertedKeysAsync(context, query, token);
+    }
+
+    /// <summary>The primary keys a MERGE inserted, read from its OUTPUT (<see cref="QueryProvider.ToOutputMergeQuery"/>).</summary>
+    private static async Task<IReadOnlyList<object>> ReadInsertedKeysAsync(DbContext context, string mergeQuery, CancellationToken token)
+    {
+        var inserted = new List<object>();
+        await ReadRowsAsync(context, mergeQuery, (_, row) =>
+        {
+            if (row.GetString(0) == InsertAction)
+                inserted.Add(row.GetValue(1));
+        }, token);
+
+        return inserted;
     }
 
     /// <summary>
-    /// Doubles `{`/`}` so <c>ExecuteSqlRaw</c> leaves them alone. EF's <c>RawSqlCommandBuilder.Build</c>
-    /// unconditionally runs the command text through <see cref="string.Format(string, object[])"/> to
-    /// substitute parameter placeholders — even with zero parameters — so a brace inlined by the MERGE
-    /// builders (any JSON string column) throws FormatException before the command ever reaches SQL Server.
+    /// Runs a hand-built batch as EF runs its own commands — on the context's connection and transaction, with its
+    /// timeout, logging and interceptors — and hands every row of every result set to <paramref name="read"/> with the
+    /// set's index. Built without parameters, the text is never run through string.Format (ExecuteSqlRaw's is), so the
+    /// braces of an inlined JSON value need no escaping.
     /// </summary>
-    public static string EscapeFormatBraces(string sql) => sql.Replace("{", "{{").Replace("}", "}}");
+    private static async Task ReadRowsAsync(DbContext context, string sql, Action<int, DbDataReader> read, CancellationToken token)
+    {
+        var command = context.GetService<IRawSqlCommandBuilder>().Build(sql);
+        var execution = new RelationalCommandParameterObject(
+            context.GetService<IRelationalConnection>(), null, null, context, context.GetService<IRelationalCommandDiagnosticsLogger>());
+
+        await using var reader = await command.ExecuteReaderAsync(execution, token);
+        var set = 0;
+        do
+        {
+            while (await reader.ReadAsync(token))
+                read(set, reader.DbDataReader);
+            set++;
+        }
+        while (await reader.DbDataReader.NextResultAsync(token));
+    }
 }

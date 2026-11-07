@@ -4,6 +4,9 @@ namespace Sencilla.Repository.EntityFramework.Extension;
 
 public class QueryProvider
 {
+    /// <summary>The key column every hand-built statement matches, omits from an INSERT, and reads back.</summary>
+    public const string KeyColumn = $"[{nameof(IEntity<int>.Id)}]";
+
     public string ToMergeQuery(Expression e, QueryClauseType t)
     {
         var tr = new TranslatorFactory().Get(t);
@@ -92,6 +95,14 @@ public class QueryProvider
 
     public string ToDeleteMergeQuery() => "DELETE";
 
+    /// <summary>
+    /// What the MERGE did to each row, and the row's key: the only place a key the database generated is ever known.
+    /// <see cref="Microsoft.EntityFrameworkCore.EntityFrameworkCoreExtensions"/> reads the inserted ones back from it.
+    /// </summary>
+    // ponytail: OUTPUT without INTO, which SQL Server refuses on a table with an enabled trigger (Msg 334); no Sencilla
+    // or Photoboost table has one. OUTPUT INTO a table variable, then SELECT from it, if one ever does.
+    public string ToOutputMergeQuery() => $"OUTPUT $action, INSERTED.{KeyColumn}";
+
     // T-SQL escapes a single quote by DOUBLING it. The previous `\'` is MySQL syntax and SQL Server
     // does not treat a backslash as an escape, so N'Сім\'я' terminated the literal after «Сім\» and
     // left «я'» as a syntax error — every value containing an apostrophe broke the statement, and the
@@ -99,5 +110,5 @@ public class QueryProvider
     // interpolation safe: a value can no longer close its own literal and append SQL.
     private string Sanitize(string input) => string.IsNullOrEmpty(input) ? input : input.Replace("'", "''").Trim();
 
-    private string ExcludeIdColumn(string cols) => cols.Split(",").Where(x => x is not "[Id]" and not "Id").Join(",");
+    private string ExcludeIdColumn(string cols) => cols.Split(",").Where(x => x is not KeyColumn and not "Id").Join(",");
 }

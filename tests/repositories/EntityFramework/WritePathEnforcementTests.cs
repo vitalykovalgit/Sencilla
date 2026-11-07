@@ -15,6 +15,7 @@ public class WritePathEnforcementTests : IDisposable
     private readonly SqliteConnection _connection;
     private readonly TestDbContext _db;
     private readonly Mock<IEventDispatcher> _events = new();
+    private readonly Mock<IServiceProvider> _services = new();
 
     public WritePathEnforcementTests()
     {
@@ -27,10 +28,13 @@ public class WritePathEnforcementTests : IDisposable
 
         _db = new TestDbContext(options);
         _db.Database.EnsureCreated();
+
+        // What the container hands a repository asking for its entity's create repository: one on the same context.
+        _services.Setup(s => s.GetService(typeof(ICreateRepository<TestProduct, int>))).Returns(() => new TestCreateRepository(Dependency, _db));
     }
 
     private RepositoryDependency Dependency => new(
-        Mock.Of<IServiceProvider>(), _events.Object, Mock.Of<ICommandDispatcher>());
+        _services.Object, _events.Object, Mock.Of<ICommandDispatcher>());
 
     private async Task Seed(params TestProduct[] products)
     {
@@ -57,6 +61,14 @@ public class WritePathEnforcementTests : IDisposable
                    return Task.CompletedTask;
                });
 
+    private void NarrowCreated(Func<IQueryable<TestProduct>, IQueryable<TestProduct>> narrow) =>
+        _events.Setup(x => x.PublishAsync(It.IsAny<EntityCreatedEvent<TestProduct>>(), It.IsAny<CancellationToken>()))
+               .Returns<EntityCreatedEvent<TestProduct>, CancellationToken>((e, _) =>
+               {
+                   e.DbEntities = narrow(e.DbEntities!);
+                   return Task.CompletedTask;
+               });
+
     private void NarrowDeleting(Func<IQueryable<TestProduct>, IQueryable<TestProduct>> narrow) =>
         _events.Setup(x => x.PublishAsync(It.IsAny<EntityDeletingEvent<TestProduct>>(), It.IsAny<CancellationToken>()))
                .Returns<EntityDeletingEvent<TestProduct>, CancellationToken>((e, _) =>
@@ -66,6 +78,8 @@ public class WritePathEnforcementTests : IDisposable
                });
 
     private TestProduct DbRow(int id) => _db.Products.AsNoTracking().Single(p => p.Id == id);
+
+    private TEvent Published<TEvent>() => _events.Invocations.Select(i => i.Arguments[0]).OfType<TEvent>().Single();
 
     // ── Update: pre-image ────────────────────────────────────────────────────
 
@@ -111,6 +125,64 @@ public class WritePathEnforcementTests : IDisposable
             () => repo.Update(new TestProduct { Id = 1, Name = "kept", Stock = 0 }));
 
         Assert.Equal(10, DbRow(1).Stock);
+    }
+
+    // ── Update: a row with no key is a create ────────────────────────────────
+
+    [Fact]
+    public async Task Update_JudgesARowWithNoKey_AsACreate()
+    {
+        // UpdateRange INSERTs a row whose key is unset, and neither update image can see it: any Update grant
+        // planted any row. Denied as a create, it is not there.
+        NarrowCreated(q => q.Where(p => p.Name == "mine"));
+        var repo = new TestUpdateRepository(Dependency, _db);
+
+        await Assert.ThrowsAsync<ForbiddenException>(() => repo.Update(new TestProduct { Name = "planted" }));
+
+        Assert.Empty(_db.Products.AsNoTracking());
+    }
+
+    [Fact]
+    public async Task Update_CreatesARowWithNoKey_OnceAndWithItsKey()
+    {
+        var repo = new TestUpdateRepository(Dependency, _db);
+
+        // Lazy on purpose: every pass over it makes a new object.
+        var answer = await repo.Update(Enumerable.Range(0, 1).Select(_ => new TestProduct { Name = "added" }));
+
+        var row = Assert.Single(_db.Products.AsNoTracking());
+        Assert.Equal(row.Id, Assert.Single(answer).Id);
+        Assert.NotEqual(default, row.CreatedDate);
+        _events.Verify(x => x.PublishAsync(It.IsAny<EntityCreatedEvent<TestProduct>>(), It.IsAny<CancellationToken>()), Times.Once);
+
+        // Updating handlers could prepare it; Updated does not report as updated what Created already announced.
+        Assert.Single(Published<EntityUpdatingEvent<TestProduct>>().Entities!);
+        Assert.Empty(Published<EntityUpdatedEvent<TestProduct>>().Entities!);
+    }
+
+    [Fact]
+    public async Task Update_RefusesARowWithNoKey_WhenTheEntityCannotBeCreated()
+    {
+        var noCreate = new RepositoryDependency(Mock.Of<IServiceProvider>(), _events.Object, Mock.Of<ICommandDispatcher>());
+        var repo = new TestUpdateRepository(noCreate, _db);
+
+        await Assert.ThrowsAsync<ForbiddenException>(() => repo.Update(new TestProduct { Name = "stray" }));
+
+        Assert.Empty(_db.Products.AsNoTracking());
+    }
+
+    [Fact]
+    public async Task Update_RollsBackTheCreatedRow_WhenTheRestOfTheBatchIsDenied()
+    {
+        await Seed(new TestProduct { Id = 1, Name = "kept", Stock = 10 });
+        NarrowUpdated(q => q.Where(p => p.Stock > 0));
+        var repo = new TestUpdateRepository(Dependency, _db);
+
+        await Assert.ThrowsAsync<ForbiddenException>(
+            () => repo.Update(new TestProduct { Id = 1, Name = "kept", Stock = 0 }, new TestProduct { Name = "added" }));
+
+        Assert.Equal(10, DbRow(1).Stock);
+        Assert.Single(_db.Products.AsNoTracking());
     }
 
     // ── Delete by ids ────────────────────────────────────────────────────────

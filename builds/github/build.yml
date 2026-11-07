@@ -26,6 +26,19 @@ jobs:
     name: Build & Test
     runs-on: ubuntu-latest
 
+    # RawMergeEnforcementTests run upsert/merge/get-or-create on a real SQL Server and skip without one. The password
+    # is a throwaway: the container lives for this job only.
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Sencilla_ci_1"
+        ports:
+          - 1433:1433
+    env:
+      SENCILLA_TEST_SQLSERVER: "Server=localhost,1433;User Id=sa;Password=Sencilla_ci_1;TrustServerCertificate=True;Encrypt=False"
+
     steps:
       # ── Checkout ──────────────────────────────────────────────────────────
       - name: Checkout repository

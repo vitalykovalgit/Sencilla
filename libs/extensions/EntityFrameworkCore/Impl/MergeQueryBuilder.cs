@@ -64,6 +64,7 @@ public class MergeQueryBuilder<TEntity>
         query += Environment.NewLine + "WHEN NOT MATCHED BY SOURCE THEN" + Environment.NewLine
             + _qp.ToDeleteMergeQuery();
 
+        query += Environment.NewLine + _qp.ToOutputMergeQuery();
         query += Environment.NewLine + ";";
 
         /*

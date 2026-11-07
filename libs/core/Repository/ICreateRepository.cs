@@ -104,9 +104,9 @@ public interface ICreateRepository<TEntity, TKey> : IReadRepository<TEntity, TKe
         CancellationToken token = default);
 
     /// <summary>
-    /// Get or create entities by default key (Id). Existing entities are returned as-is from DB;
-    /// missing ones are inserted. EntityCreatingEvent fires for all, EntityCreatedEvent only for new ones.
-    /// Returns (Created, Existing) tuple — call .Concat() for the flat list.
+    /// Get or create entities by default key (Id): missing ones are inserted, and every row comes back through the read
+    /// pipeline, so a row the caller may not read is left out. EntityCreatingEvent fires for the rows expected to be new,
+    /// EntityCreatedEvent for the rows inserted. Returns (Created, Existing) — <c>All</c> is the flat list.
     /// </summary>
     Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, CancellationToken token = default);
 
@@ -131,8 +131,7 @@ public interface ICreateRepository<TEntity, TKey> : IReadRepository<TEntity, TKe
     Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, string[] keys, CancellationToken token);
 
     /// <summary>
-    /// Get or create entities with optional filter. When filter.With is non-empty, results are
-    /// reloaded via EF Core with .Include() so navigation properties materialize.
+    /// Get or create entities with optional filter. Only filter.With applies: it includes navigations, as on a read.
     /// </summary>
     Task<GetOrCreateResult<TEntity>> GetOrCreateAsync(IEnumerable<TEntity> entities, string[] keys, Filter? filter, CancellationToken token = default);
 }

@@ -209,6 +209,16 @@ public class UpsertQueryBuilderTests
         Assert.Contains($"[{nameof(TestEntityWithNavProps.ChildId)}]", query);
     }
 
+    /// The only place a database-generated key is ever known. The repository reads the inserted rows back by it and
+    /// judges THEM as created; looked up by the body's empty key instead, the check saw no row and passed.
+    [Fact]
+    public void Build_EndsWithEachRowsActionAndKey()
+    {
+        var query = new UpsertQueryBuilder<TestEntity>(new UpsertCommand<TestEntity>(te => te.Id)).Build([_te]);
+
+        Assert.EndsWith($"OUTPUT $action, INSERTED.[Id]{Environment.NewLine};", query);
+    }
+
     /// Populates BOTH navigations: an unset collection would pass even against the old predicate.
     private static string BuildNavPropsQuery()
     {

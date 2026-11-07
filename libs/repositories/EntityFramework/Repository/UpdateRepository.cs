@@ -55,27 +55,43 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
 
     public Task<IEnumerable<TEntity>> Update(IEnumerable<TEntity> entities, CancellationToken token = default)
     {
+        // Materialise once: a lazy IEnumerable yields fresh instances on every pass, so what a handler stamps, what
+        // is created below and what is saved and returned would be different objects.
+        var rows = entities as IReadOnlyList<TEntity> ?? entities.ToList();
+
         return InTransaction<IEnumerable<TEntity>>(async () =>
         {
-            var query = entities.AsQueryable();
+            var query = rows.AsQueryable();
 
             // Pre-image: constraints are evaluated against current DB state, never
             // against the client-supplied objects (those can be forged to satisfy any
             // rule while targeting someone else's row). Handlers narrow DbEntities;
             // losing an existing row denies the whole batch.
-            var ids = entities.Select(e => e.Id).ToList();
+            var ids = rows.Select(e => e.Id).ToList();
             var dbQuery = DbContext.Set<TEntity>().AsNoTracking().Where(e => ids.Contains(e.Id));
 
+            // Every row posted, the ones about to be created too, so a handler can prepare those.
             var eventUpdating = new EntityUpdatingEvent<TEntity> { Entities = query, DbEntities = dbQuery };
             await D.Events.PublishAsync(eventUpdating, token);
             await ThrowIfNarrowed(eventUpdating.DbEntities, dbQuery, token);
 
-            await PersistUpdate(entities, token);
+            // A row whose generated key is unset matches neither image, and UpdateRange would INSERT it: any Update
+            // grant would add any row, past Create and its constraints. It is a create, so the create repository
+            // makes it, judged and announced as every create is, and Updated does not report it again. An entity
+            // with no create repository cannot gain a row here. Split first: a created row has its key after.
+            var byKey = rows.ToLookup(e => DbContext.Entry(e).IsKeySet);
+            var created = byKey[false].ToList();
+            var updated = byKey[true].ToList();
+            if (created.Count > 0)
+                await (R<ICreateRepository<TEntity, TKey>>() ?? throw new ForbiddenException($"{typeof(TEntity).Name} cannot be created."))
+                    .Create(created, token);
+
+            await PersistUpdate(updated, token);
 
             // Post-image: the same constraints must still hold after the write (a row
             // may not be moved out of the writer's permission scope). Read inside the
             // ambient transaction; a violation throws and the write rolls back.
-            var eventUpdated = new EntityUpdatedEvent<TEntity> { Entities = query, DbEntities = dbQuery };
+            var eventUpdated = new EntityUpdatedEvent<TEntity> { Entities = updated.AsQueryable(), DbEntities = dbQuery };
             await D.Events.PublishAsync(eventUpdated, token);
             await ThrowIfNarrowed(eventUpdated.DbEntities, dbQuery, token);
 

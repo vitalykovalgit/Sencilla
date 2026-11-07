@@ -7,7 +7,8 @@ namespace Sencilla.Component.Files.Tests;
 /// <summary>
 /// Tests for <see cref="FileStreamController"/>.
 ///
-/// Covers: resolution stream retrieval, missing resolution returns 400, valid resolution returns stream,
+/// Covers: resolution stream retrieval, missing resolution returns 400 — or the original when asked with
+/// <c>orig</c> — valid resolution returns stream (<c>orig</c> or not),
 /// and that DELETE delegates to the one shared <see cref="IFileRequestHandler"/> rather than deleting
 /// the original by itself (which used to leak every variant and derivative, and asked nobody).
 /// </summary>
@@ -83,6 +84,63 @@ public class FileStreamControllerTests
 
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Contains("999", badRequest.Value!.ToString());
+    }
+
+    [Fact]
+    public async Task GetFileStream_WithResThatDoesNotExistAndOrig_ReturnsTheOriginal()
+    {
+        // an admin's system file: uploaded alone, with no resized copies
+        var fileId = Guid.NewGuid();
+        var file = new File
+        {
+            Id = fileId,
+            Name = "corner.png",
+            MimeType = "image/png",
+            Path = "system/corners/corner.png",
+            Storage = 0,
+            Res = null
+        };
+
+        _fileRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(file);
+        _storage.Setup(s => s.ReadFileAsync(It.Is<File>(f => f.Path == "system/corners/corner.png"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream(new byte[100]));
+
+        var controller = CreateController();
+        var result = await controller.GetFileStream(fileId, dim: null, res: 1600, CancellationToken.None, orig: true);
+
+        Assert.IsType<FileStreamResult>(result);
+        _pathResolver.Verify(p => p.GetResolutionPath(It.IsAny<File>(), It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetFileStream_WithResThatExistsAndOrig_StillReturnsTheCopy()
+    {
+        var fileId = Guid.NewGuid();
+        var file = new File
+        {
+            Id = fileId,
+            Name = "photo.jpg",
+            MimeType = "image/jpeg",
+            Path = "test/photo.jpg",
+            Storage = 0,
+            Res = new Dictionary<string, ResolutionInfo>
+            {
+                ["1600"] = new ResolutionInfo()
+            }
+        };
+
+        _fileRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(file);
+        _pathResolver.Setup(p => p.GetResolutionPath(file, 1600)).Returns("test/photo_1600.jpg");
+        _storage.Setup(s => s.ReadFileAsync(It.Is<File>(f => f.Path == "test/photo_1600.jpg"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream(new byte[100]));
+
+        var controller = CreateController();
+        var result = await controller.GetFileStream(fileId, dim: null, res: 1600, CancellationToken.None, orig: true);
+
+        Assert.IsType<FileStreamResult>(result);
+        _storage.Verify(s => s.ReadFileAsync(It.Is<File>(f => f.Path == "test/photo.jpg"), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

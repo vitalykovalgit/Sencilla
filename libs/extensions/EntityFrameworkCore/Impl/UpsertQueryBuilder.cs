@@ -60,6 +60,7 @@ public class UpsertQueryBuilder<TEntity>
                 + _qp.ToUpdateMergeQuery(colVals[COLS]);
         }
 
+        query += Environment.NewLine + _qp.ToOutputMergeQuery();
         query += Environment.NewLine + ";";
 
         /*

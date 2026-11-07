@@ -74,4 +74,13 @@ public class MergeQueryBuilderTests
         Assert.DoesNotContain("[Computed]", query);
         Assert.Contains("[Name]", query);
     }
+
+    /// The upsert's contract (UpsertQueryBuilderTests): the inserted rows are read back by the keys this outputs.
+    [Fact]
+    public void Build_EndsWithEachRowsActionAndKey()
+    {
+        var query = new MergeQueryBuilder<TestEntity>(new MergeCommand<TestEntity>(te => te.Id)).Build([_te]);
+
+        Assert.EndsWith($"OUTPUT $action, INSERTED.[Id]{Environment.NewLine};", query);
+    }
 }

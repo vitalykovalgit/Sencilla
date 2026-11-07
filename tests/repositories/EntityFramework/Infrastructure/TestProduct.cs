@@ -6,6 +6,8 @@ namespace Sencilla.Repository.EntityFramework.Tests.Infrastructure;
 /// A full-featured test entity that implements all repository lifecycle interfaces.
 /// Used across all repository test suites.
 /// </summary>
+// The MERGE builders name the table after [Table] or the class; without it EF would name it after the DbSet.
+[Table(nameof(TestProduct))]
 public class TestProduct :
     IEntity<int>,
     IEntityCreateableTrack,   // IEntityCreateable + CreatedDate

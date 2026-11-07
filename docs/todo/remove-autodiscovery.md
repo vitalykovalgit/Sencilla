@@ -341,14 +341,14 @@ Extensions.EF  Web   Repository.EF   Repository.HttpClient
 ## C.5 Migration steps (in order)
 
 1. Create `libs/repositories/Core/` — `Sencilla.Repository.csproj` (classlib + ProjectReference → `..\..\core\Sencilla.Core.csproj`), `README.md`, `Bootstrap.cs` with the three global usings.
-2. `dotnet sln Sencilla.sln add libs/repositories/Core/Sencilla.Repository.csproj`.
+2. `dotnet sln Sencilla.slnx add libs/repositories/Core/Sencilla.Repository.csproj`.
 3. `git mv libs/core/Repository libs/repositories/Core/Repository`.
 4. `git mv libs/core/Filter libs/repositories/Core/Filter`.
 5. `git mv` the 8 event files + `GetOrCreateResult.cs` → `libs/repositories/Core/Events/` (delete now-empty `Entity/Readable/`).
 6. Add `<ProjectReference>` to the new package in every project that **directly uses** the moved types: extensions/EF, repositories/EF, repositories/HttpClient, web, webapi/Batch, components/Users, components/Security, components/I18n, files/Core, authentication/Core. (Tests get it transitively.) **No changes:** MinimalApi, ApiControllers, Config, Geography, Validation, files providers, messaging, scheduler, mappers, mobile, auth providers.
-7. Remove `libs/repositories/SqlMapper` from `Sencilla.sln` (dead; would otherwise fail to compile).
+7. Remove `libs/repositories/SqlMapper` from `Sencilla.slnx` (dead; would otherwise fail to compile).
 8. Bump `<Version>` in `libs/Directory.Build.Common.props` 10.0.0 → **11.0.0**.
-9. `dotnet build Sencilla.sln && dotnet test Sencilla.sln` — verify **all** projects (per the standing "verify before claiming fix" rule), not just the touched ones.
+9. `dotnet build Sencilla.slnx && dotnet test Sencilla.slnx` — verify **all** projects (per the standing "verify before claiming fix" rule), not just the touched ones.
 10. Docs sweep: `docs/core/{repositories,filtering,entities,README}.md`, `architecture.md`, `docs/repositories/*`, `index.md`, `getting-started.md`, `CLAUDE.md` links.
 11. External consumers (Photoboost etc.): on upgrading to 11.0.0, add `<PackageReference Include="Sencilla.Repository" />` where repo contracts/Filter/events are used; no source edits if the namespace is kept.
 

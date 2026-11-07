@@ -9,9 +9,16 @@ public class FileStreamController(
     IFilePathResolver pathResolver) : ApiController(provider)
 {
     // TODO: Move to config cache duration
+    /// <param name="orig">
+    /// With <paramref name="res"/>: a file that has no such copy — one uploaded without them, as an admin's system files
+    /// are — streams its original instead of answering 400, so a caller that cannot know which files have copies asks
+    /// once. Without it a missing copy stays a 400. The ETag still names <paramref name="res"/>
+    /// (<see cref="FileStreamCacheMiddleware"/>): a file without the copy only ever answers 400 at the plain URL, never
+    /// cached, so the two URLs cannot trade bytes.
+    /// </param>
     [HttpGet, Route("{fileId}")]
     [ResponseCache(Duration = 172000, Location = ResponseCacheLocation.Any)]
-    public async Task<IActionResult> GetFileStream(Guid fileId, int? dim, int? res, CancellationToken token)
+    public async Task<IActionResult> GetFileStream(Guid fileId, int? dim, int? res, CancellationToken token, bool orig = false)
     {
         // Dimension-based lookup (existing behavior)
         if (dim.HasValue)
@@ -27,7 +34,7 @@ public class FileStreamController(
         if (res.HasValue)
         {
             if (file.Res == null || !file.Res.ContainsKey(res.Value.ToString()))
-                return BadRequest($"File with resolution {res.Value} does not exist.");
+                return orig ? await RetriveFileStream(file, token) : BadRequest($"File with resolution {res.Value} does not exist.");
 
             var resPath = pathResolver.GetResolutionPath(file, res.Value);
             var resFile = new File

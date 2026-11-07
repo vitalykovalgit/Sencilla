@@ -29,11 +29,13 @@ public interface IUpdateRepository<TEntity, TKey> : IReadRepository<TEntity, TKe
     Task<IEnumerable<TEntity>> Update(params TEntity[] entities);
 
     /// <summary>
-    /// 
+    /// Updates the rows that exist. A row whose generated key is not set is created instead, through the entity's
+    /// create repository and judged as a create; an entity that has none refuses it. The Updating event carries every
+    /// row, so a handler can prepare one that will be created; the Updated event carries only the rows updated.
     /// </summary>
     /// <param name="entities"></param>
     /// <param name="token"></param>
-    /// <returns></returns>
+    /// <returns>The rows as saved, the created ones with their keys.</returns>
     Task<IEnumerable<TEntity>> Update(IEnumerable<TEntity> entities, CancellationToken token = default);
 
     void Detach(IEnumerable<TEntity> entities);

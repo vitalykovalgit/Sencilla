@@ -15,26 +15,15 @@ public class GetOrCreateQueryBuilder<TEntity>
         _keys = keys;
     }
 
+    /// <summary>
+    /// An insert-only MERGE that outputs the primary key of every row it inserts, then a SELECT of the primary key of
+    /// every row matching the keys. Both match on one condition, so a row is «existing» exactly when the MERGE found
+    /// it. Keys only, never rows: the caller reads the rows back itself, through whatever judges a read.
+    /// </summary>
     public (string MergeQuery, string SelectQuery) Build(List<TEntity> entities)
     {
         var props = GetMappedProperties();
         var keyProps = ResolveKeyProperties(props);
-        var targetTable = GetTargetTableName();
-        var colVals = GetColumnValues(entities, props);
-
-        return (BuildMerge(targetTable, colVals, keyProps), BuildSelect(targetTable, entities, keyProps));
-    }
-
-    /// <summary>
-    /// Variant that returns only primary-key ids in both result sets. Used by the include-path
-    /// of GetOrCreate, where the caller reloads entities via EF with .Include() — so the raw SQL
-    /// only needs to identify which rows are new (set 1) and which rows match (set 2).
-    /// </summary>
-    public (string MergeQuery, string SelectQuery) BuildIdsOnly(List<TEntity> entities)
-    {
-        var props = GetMappedProperties();
-        var keyProps = ResolveKeyProperties(props);
-        var pkProp = GetPrimaryKeyProperty(props);
         var targetTable = GetTargetTableName();
         var colVals = GetColumnValues(entities, props);
 
@@ -43,27 +32,22 @@ public class GetOrCreateQueryBuilder<TEntity>
                     $"\nAS s ({colVals[COLS]})" +
                     $"\nON {BuildCondition(keyProps)}" +
                     $"\nWHEN NOT MATCHED BY TARGET THEN\n{_qp.ToInsertMergeQuery(colVals[COLS], EntityColumnMap.IsDatabaseGeneratedKey(typeof(TEntity)))}" +
-                    $"\nOUTPUT INSERTED.{ColName(pkProp)};";
+                    $"\n{_qp.ToOutputMergeQuery()};";
 
         var keyValues = string.Join(", ", entities.Select(e =>
             "(" + string.Join(", ", keyProps.Select(p => _qp.ToSqlParameterValue(p, p.GetValue(e)))) + ")"));
         var keyCols = string.Join(", ", keyProps.Select(ColName));
 
-        var select = $"\nSELECT t.{ColName(pkProp)} FROM {targetTable} t" +
+        var select = $"\nSELECT t.{QueryProvider.KeyColumn} FROM {targetTable} t" +
                      $"\nINNER JOIN (VALUES {keyValues}) AS s({keyCols})" +
                      $"\nON {BuildCondition(keyProps)};";
 
         return (merge, select);
     }
 
-    public static PropertyInfo GetPrimaryKeyProperty(List<PropertyInfo> mappedProps) =>
-        mappedProps.FirstOrDefault(p => string.Equals(p.Name, "Id", StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException(
-                $"No 'Id' property found on {typeof(TEntity).Name}. Entity must implement IEntity<TKey>.");
-
     public List<PropertyInfo> GetMappedProperties() => EntityColumnMap.MappedProperties(typeof(TEntity));
 
-    public List<PropertyInfo> ResolveKeyProperties(List<PropertyInfo> mappedProps)
+    private List<PropertyInfo> ResolveKeyProperties(List<PropertyInfo> mappedProps)
     {
         var effectiveKeys = _keys.Length > 0 ? _keys : ["Id"];
 
@@ -72,29 +56,6 @@ public class GetOrCreateQueryBuilder<TEntity>
                 string.Equals(p.Name, key, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(p.GetCustomAttribute<ColumnAttribute>()?.Name, key, StringComparison.OrdinalIgnoreCase)))
             .ToList();
-    }
-
-    private string BuildMerge(string targetTable, Dictionary<string, string> colVals, List<PropertyInfo> keyProps)
-    {
-        var outputCols = string.Join(", ", keyProps.Select(p => $"INSERTED.{ColName(p)}"));
-
-        return $"\nMERGE {targetTable} WITH (HOLDLOCK) AS t" +
-               $"\nUSING (VALUES\n{colVals[VALS]}\n)" +
-               $"\nAS s ({colVals[COLS]})" +
-               $"\nON {BuildCondition(keyProps)}" +
-               $"\nWHEN NOT MATCHED BY TARGET THEN\n{_qp.ToInsertMergeQuery(colVals[COLS], EntityColumnMap.IsDatabaseGeneratedKey(typeof(TEntity)))}" +
-               $"\nOUTPUT {outputCols};";
-    }
-
-    private string BuildSelect(string targetTable, List<TEntity> entities, List<PropertyInfo> keyProps)
-    {
-        var keyValues = string.Join(", ", entities.Select(e =>
-            "(" + string.Join(", ", keyProps.Select(p => _qp.ToSqlParameterValue(p, p.GetValue(e)))) + ")"));
-        var keyCols = string.Join(", ", keyProps.Select(ColName));
-
-        return $"\nSELECT t.* FROM {targetTable} t" +
-               $"\nINNER JOIN (VALUES {keyValues}) AS s({keyCols})" +
-               $"\nON {BuildCondition(keyProps)};";
     }
 
     private string BuildCondition(List<PropertyInfo> keyProps) =>

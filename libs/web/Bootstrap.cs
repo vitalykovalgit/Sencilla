@@ -50,6 +50,7 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 o.JsonSerializerOptions.AddSencillaJsonConverters();
+                o.JsonSerializerOptions.IgnoreNavigationsInRequestBodies();
             });
 
             return builder;

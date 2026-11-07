@@ -130,7 +130,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
                     ((IEntityCreateableTrack)e).CreatedDate = DateTime.UtcNow;
             }
 
-            await DbContext.UpsertBulkAsync(entities, condition, insertAction, updateAction);
+            var insertedKeys = await DbContext.UpsertBulkAsync(entities, condition, insertAction, updateAction, token);
 
             if (updateQuery != null)
             {
@@ -139,8 +139,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
                 await ThrowIfNarrowed(eventUpdated.DbEntities, updateQuery, token);
             }
 
-            if (toCreate.Count > 0)
-                await PublishCreatedWithPostImage(toCreate, BuildKeyPredicate(keyProps, toCreate)!, token);
+            await PublishInserted(insertedKeys, token);
 
             // TODO: Think about returning values
             return entities;
@@ -215,7 +214,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
                 if (e is IEntityCreateableTrack)
                     ((IEntityCreateableTrack)e).CreatedDate = DateTime.UtcNow;
 
-            await DbContext.MergeBulkAsync(entities, condition, insertAction, updateAction);
+            var insertedKeys = await DbContext.MergeBulkAsync(entities, condition, insertAction, updateAction, token);
 
             if (updateQuery != null)
             {
@@ -227,8 +226,7 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
             if (hasRemovals)
                 await D.Events.PublishAsync(new EntityDeletedEvent<TEntity>(), token);
 
-            if (toCreate.Count > 0)
-                await PublishCreatedWithPostImage(toCreate, BuildKeyPredicate(keyProps, toCreate)!, token);
+            await PublishInserted(insertedKeys, token);
 
             // TODO: Think about returning values
             return entities;
@@ -258,19 +256,11 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
             if (entityList.Count == 0)
                 return new GetOrCreateResult<TEntity> { Created = [], Existing = [] };
 
-            // Per-row permission mapping: only rows that will actually be inserted
-            // are checked as CREATE — matching rows are just read back. With an extra
-            // match filter the probe can't predict the split, so all rows are checked
-            // (over-strict, never under-enforced).
-            var toCreate = entityList;
-            if (filter == null)
-            {
-                var keyProps = ResolveKeyProperties(keys);
-                var keyPredicate = BuildKeyPredicate(keyProps, entityList)!;
-                var existingKeys = (await DbContext.Set<TEntity>().AsNoTracking().Where(keyPredicate).ToListAsync(token))
-                    .Select(e => KeyOf(keyProps, e)).ToHashSet();
-                toCreate = entityList.Where(e => !existingKeys.Contains(KeyOf(keyProps, e))).ToList();
-            }
+            // Per-row permission mapping: only rows that will actually be inserted are checked as CREATE.
+            var keyProps = ResolveKeyProperties(keys);
+            var existingKeys = (await DbContext.Set<TEntity>().AsNoTracking().Where(BuildKeyPredicate(keyProps, entityList)!).ToListAsync(token))
+                .Select(e => KeyOf(keyProps, e)).ToHashSet();
+            var toCreate = entityList.Where(e => !existingKeys.Contains(KeyOf(keyProps, e))).ToList();
 
             if (toCreate.Count > 0)
                 await D.Events.PublishAsync(new EntityCreatingEvent<TEntity> { Entities = toCreate.AsQueryable() }, token);
@@ -279,15 +269,43 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
                 if (e is IEntityCreateableTrack trackable)
                     trackable.CreatedDate = DateTime.UtcNow;
 
-            var (created, existing) = await DbContext.GetOrCreateBulkAsync(entityList, keys, filter, token);
+            var (inserted, matched) = await DbContext.GetOrCreateBulkAsync(entityList, keys, token);
+            await PublishInserted(inserted, token);
 
-            var createdList = created.ToList();
-            if (createdList.Count > 0)
-                await PublishCreatedWithPostImage(createdList, BuildKeyPredicate(ResolveKeyProperties(keys), createdList)!, token);
+            // The answer is a read like any other, so the read pipeline decides what the caller sees: a row that matched
+            // the keys but is not theirs to read is left out, never handed back. Only the filter's includes apply — its
+            // paging would cut the answer before the ids do.
+            var created = KeysOf(inserted).ToHashSet();
+            var ids = KeysOf(matched).Union(created).ToList();
+            var answer = new Filter { With = filter?.With };
+            var rows = await (await QueryInternal(answer, token)).AsNoTracking().Where(e => ids.Contains(e.Id)).ToListAsync(token);
+            await PublishRead(rows, answer, token);
 
-            return new GetOrCreateResult<TEntity> { Created = createdList, Existing = existing };
+            return new GetOrCreateResult<TEntity>
+            {
+                Created = rows.Where(e => created.Contains(e.Id)).ToList(),
+                Existing = rows.Where(e => !created.Contains(e.Id)).ToList(),
+            };
         }, token);
     }
+
+    /// <summary>
+    /// <see cref="PublishCreatedWithPostImage"/> for a raw MERGE, which inserts past EF: its rows are read back by the
+    /// keys the database gave them, from the MERGE's OUTPUT. Looked up by the keys the body carried instead, a
+    /// database-generated key matched nothing, so the post-image was empty and passed every constraint.
+    /// </summary>
+    private async Task PublishInserted(IReadOnlyList<object> insertedKeys, CancellationToken token)
+    {
+        if (insertedKeys.Count == 0)
+            return;
+
+        var ids = KeysOf(insertedKeys);
+        var inserted = await DbContext.Set<TEntity>().AsNoTracking().Where(e => ids.Contains(e.Id)).ToListAsync(token);
+        await PublishCreatedWithPostImage(inserted, e => ids.Contains(e.Id), token);
+    }
+
+    /// <summary>The keys a hand-built statement read back, as <typeparamref name="TKey"/>: the reader hands a SMALLINT key over as an Int16.</summary>
+    private static List<TKey> KeysOf(IEnumerable<object> keys) => keys.Select(key => (TKey)Convert.ChangeType(key, typeof(TKey))).ToList();
 
     /// <summary>
     /// Publishes <see cref="EntityCreatedEvent{TEntity}"/> carrying a post-image DB
@@ -315,7 +333,8 @@ public class CreateRepository<TEntity, TContext, TKey> : ReadRepository<TEntity,
 
     // ── Per-row permission mapping for upsert-style operations ────────────────
     // Rows whose match key already exists in the DB are an UPDATE (pre+post image
-    // checks against DB state); the rest are a CREATE (in-memory validation).
+    // checks against DB state); the rest are a CREATE (applicability up front, the
+    // constraints on a post-image of what the MERGE inserted).
     // Checked separately so a create-only role can insert without update rights
     // and vice versa — and so an upsert can never mutate rows the caller could
     // not have updated directly.
