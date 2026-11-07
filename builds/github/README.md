@@ -40,9 +40,10 @@ Triggered when you push a version tag. This is how you release.
 6. `dotnet test`
 7. `dotnet pack` — produces `.nupkg` and `.snupkg` for ALL projects
 8. Upload packages as GitHub artifact
-9. `dotnet nuget push` → `https://api.nuget.org/v3/index.json`
-10. Push symbol packages (`.snupkg`)
-11. Create GitHub Release with auto-generated notes
+9. `NuGet/login` — trades the job's GitHub OIDC token for a NuGet API key valid for one hour (Trusted Publishing)
+10. `dotnet nuget push` → `https://api.nuget.org/v3/index.json`
+11. Push symbol packages (`.snupkg`)
+12. Create GitHub Release with auto-generated notes
 
 ---
 
@@ -80,14 +81,35 @@ NuGet.org marks anything with a pre-release suffix as a pre-release package auto
 
 ---
 
-## Required GitHub Secret
+## NuGet.org Trusted Publishing
 
-Before the release workflow can push to NuGet.org, you must add your API key as a repository secret:
+The release workflow publishes with [Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing):
+no API key is stored anywhere. On each run the `NuGet/login` step trades the job's GitHub OIDC token for a NuGet API
+key that expires after one hour. Two things have to exist for it to work.
 
-1. Go to **Settings → Secrets and variables → Actions** in your GitHub repository
-2. Click **New repository secret**
-3. Name: `NUGET_API_KEY`
-4. Value: your NuGet.org API key (get it from https://www.nuget.org/account/apikeys)
+**A Trusted Publishing policy on nuget.org.** Sign in, click your username → **Trusted Publishing**, and add a policy:
+
+| Field | Value |
+| ----- | ----- |
+| Repository Owner | `vitalykovalgit` |
+| Repository | `Sencilla` |
+| Workflow File | `release.yml` (the file name only, without `.github/workflows/`) |
+| Environment | empty (the workflow uses no GitHub environment) |
+| Scopes | both **Push new packages** and **Push new package versions** |
+| Glob pattern | `Sencilla.*` |
+
+The policy publishes only packages matching its glob pattern. Every package ID is its project name and all start with
+`Sencilla.`, so a new project publishes without touching the policy; a package named otherwise gets a 403 until the
+pattern covers it. Renaming `release.yml` breaks publishing until the policy is updated to the new name.
+
+**A `NUGET_USER` repository secret.** In **Settings → Secrets and variables → Actions**, add `NUGET_USER` with your
+nuget.org profile name (`vitaly.koval`), not your email address.
+
+The job declares `permissions: id-token: write` so GitHub issues the OIDC token, and `contents: write` because the
+release step creates the GitHub Release.
+
+`builds/publish-package.sh` is for publishing by hand from a terminal, where Trusted Publishing does not apply: it still
+takes an API key from https://www.nuget.org/account/apikeys.
 
 ---
 
