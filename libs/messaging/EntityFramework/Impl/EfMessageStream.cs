@@ -55,14 +55,7 @@ public class EfMessageStream(
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!Reclaimed)
-            {
-                await ReclaimOwnAsync(cancellationToken);
-                Reclaimed = true;
-            }
-
-            await RescueStuckAsync(cancellationToken);
-            await SweepRetentionAsync(cancellationToken);
+            await MaintainAsync(cancellationToken);
 
             var claimed = await ClaimAsync(cancellationToken);
             if (claimed != null)
@@ -202,6 +195,32 @@ public class EfMessageStream(
     }
 
     // ── Maintenance ───────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// The bookkeeping before each claim is best effort: whatever fails here runs again on the next read. It must not
+    /// throw out of <see cref="Read(CancellationToken)"/> — the consumer is a BackgroundService, and an exception there
+    /// stops the whole host. That happened under a burst of short tasks: the rescue seeks IX_Message_Claim and then the
+    /// row, while an Ack in a handler's transaction holds the row and then wants the index key, and SQL Server killed the
+    /// rescue as the deadlock victim.
+    /// </summary>
+    private async Task MaintainAsync(CancellationToken token)
+    {
+        try
+        {
+            if (!Reclaimed)
+            {
+                await ReclaimOwnAsync(token);
+                Reclaimed = true;
+            }
+
+            await RescueStuckAsync(token);
+            await SweepRetentionAsync(token);
+        }
+        catch (Exception ex) when (!token.IsCancellationRequested)
+        {
+            logger.LogWarning(ex, "Maintenance of stream {Stream} failed; it runs again on the next read", Name);
+        }
+    }
 
     /// <summary>A fresh process owns nothing in flight, so its own InProgress rows are crash debris.</summary>
     private async Task ReclaimOwnAsync(CancellationToken token)
