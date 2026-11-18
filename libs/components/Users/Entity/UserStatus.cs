@@ -7,4 +7,5 @@ public class UserStatus: IEntity<byte>
 {
     public byte Id { get; set; }
     public required string Name { get; set; }
+    public string? NameKey { get; set; }
 }

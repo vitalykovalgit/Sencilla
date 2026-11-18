@@ -7,6 +7,7 @@ CREATE TABLE [geo].[Country]
     [Code]      NVARCHAR(55)    NOT NULL,
     [PhoneCode] NVARCHAR(55)    NOT NULL,
     [UsaName]   NVARCHAR(255)   NULL,
+    [NameKey]   NVARCHAR(100)   NULL,
 
     CONSTRAINT [PK_Country] PRIMARY KEY CLUSTERED ([Id] ASC),
 )
