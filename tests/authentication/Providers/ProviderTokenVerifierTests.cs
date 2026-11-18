@@ -47,6 +47,8 @@ public class ProviderTokenVerifierTests
         ["email"] = "ada@example.com",
         ["email_verified"] = true,
         ["name"] = "Ada Lovelace",
+        ["given_name"] = "Augusta Ada",
+        ["family_name"] = "Lovelace",
         ["picture"] = "https://pic/ada.png",
     };
 
@@ -62,6 +64,8 @@ public class ProviderTokenVerifierTests
         Assert.Equal("ada@example.com", id.Email);
         Assert.True(id.EmailVerified);
         Assert.Equal("Ada Lovelace", id.Name);
+        Assert.Equal("Augusta Ada", id.GivenName);
+        Assert.Equal("Lovelace", id.FamilyName);
         Assert.Equal("https://pic/ada.png", id.Picture);
     }
 

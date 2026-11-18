@@ -53,7 +53,7 @@ public class ImpersonationMiddleware(RequestDelegate next)
     {
         var sysVars = services.GetRequiredService<ISystemVariable>();
 
-        // The real caller, as UserRegistrationMiddleware resolved them. Anonymous cannot impersonate.
+        // The real caller, as UseSencillaUser() loaded them from the session. Anonymous cannot impersonate.
         var actor = sysVars.GetCurrentUser();
         if (actor is null || actor.Id == Guid.Empty)
             return false;

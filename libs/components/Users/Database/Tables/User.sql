@@ -30,6 +30,8 @@ CREATE TABLE [sec].[User]
 	[CreatedDate]       DATETIME2  NOT NULL DEFAULT GETUTCDATE(),
     [UpdatedDate]       DATETIME2  NOT NULL DEFAULT GETUTCDATE(),
     [DeletedDate]       DATETIME2  NULL,
+    -- Last password set / reset / removal; sessions issued before it are rejected (Sencilla.Authentication cookie validator).
+    [CredentialsChangedAt] DATETIME2 NULL,
 
     CONSTRAINT [PK_User]         PRIMARY KEY CLUSTERED ([Id] ASC),
     CONSTRAINT [FK_User_Type]    FOREIGN KEY ([Type])   REFERENCES [sec].[UserType](Id),

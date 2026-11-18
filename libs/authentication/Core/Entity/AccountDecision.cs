@@ -8,24 +8,28 @@ public enum LinkAction
     /// <summary>No matching account — provision a new user from the external identity.</summary>
     Create,
 
-    /// <summary>Safe to attach the external login to an existing, already-proven account.</summary>
+    /// <summary>The provider identity is already this account's (or the signed-in user is attaching it to their own).</summary>
     Link,
 
-    /// <summary>A collision exists (e.g. same email) — require proof of control before linking.</summary>
-    Challenge,
+    /// <summary>
+    /// The provider verified the address, so the login is attached to the account that owns it; an
+    /// unverified password credential on that account is displaced, not merged with.
+    /// </summary>
+    LinkByEmail,
 
-    /// <summary>Refuse (e.g. account disabled, or an unsafe silent-link attempt).</summary>
+    /// <summary>Refuse (e.g. account disabled, or an unverified provider address that belongs to an account).</summary>
     Reject,
 }
 
 /// <summary>
-/// Pure decision produced by <see cref="IAccountLinkingPolicy"/>. The <see cref="Reason"/> is
-/// carried for telemetry and to drive the challenge experience.
+/// Pure decision produced by <see cref="IAccountLinkingPolicy"/>. A provider-verified address links to
+/// the account that owns it; an unverified address never does. The <see cref="Reason"/> is carried for
+/// telemetry and, on <see cref="LinkAction.Reject"/>, is the error code the caller receives.
 /// </summary>
 public sealed record AccountDecision(LinkAction Action, string? Reason = null)
 {
     public static AccountDecision Create(string? reason = null) => new(LinkAction.Create, reason);
     public static AccountDecision Link(string? reason = null) => new(LinkAction.Link, reason);
-    public static AccountDecision Challenge(string? reason = null) => new(LinkAction.Challenge, reason);
+    public static AccountDecision LinkByEmail(string? reason = null) => new(LinkAction.LinkByEmail, reason);
     public static AccountDecision Reject(string? reason = null) => new(LinkAction.Reject, reason);
 }

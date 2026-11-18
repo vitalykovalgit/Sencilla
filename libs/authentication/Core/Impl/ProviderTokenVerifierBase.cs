@@ -32,7 +32,9 @@ public abstract class ProviderTokenVerifierBase<TOptions> : IProviderTokenVerifi
         Email: ReadString(token, "email"),
         EmailVerified: ReadBool(token, "email_verified"),
         Name: ReadString(token, "name"),
-        Picture: ReadString(token, "picture"));
+        Picture: ReadString(token, "picture"),
+        GivenName: ReadString(token, "given_name"),
+        FamilyName: ReadString(token, "family_name"));
 
     public async Task<ExternalIdentity> Verify(string idToken, CancellationToken token = default)
     {

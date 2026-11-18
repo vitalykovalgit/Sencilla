@@ -2,27 +2,16 @@
 namespace Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
-/// 
+///
 /// </summary>
 public static class ApplicationBuilderEx
 {
     /// <summary>
-    /// 
+    /// Makes each request's current user the account its session carries (<see cref="CurrentUserMiddleware"/>).
+    /// Chain after <c>UseAuthentication()</c>.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <returns></returns>
     public static IApplicationBuilder UseSencillaUser(this IApplicationBuilder builder)
     {
-        return builder.UseUserRegistration();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="builder"></param>
-    /// <returns></returns>
-    public static IApplicationBuilder UseUserRegistration(this IApplicationBuilder builder)
-    {
-        return builder.UseMiddleware<UserRegistrationMiddleware>();                          
+        return builder.UseMiddleware<CurrentUserMiddleware>();
     }
 }

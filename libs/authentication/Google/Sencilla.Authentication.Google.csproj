@@ -4,4 +4,8 @@
     <ProjectReference Include="..\Core\Sencilla.Authentication.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
+  </ItemGroup>
+
 </Project>

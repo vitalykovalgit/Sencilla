@@ -30,6 +30,9 @@ public class UploadFileHandler(
             return;
         }
 
+        // Bytes go to storage, which asks nobody, so the caller must be allowed to change this file before one is written.
+        await fileUpdateRepository.DemandUpdateAsync(file.Id, token);
+
         // Check for resolution upload
         var resParam = context.Request.Query[nameof(File.Res)].ToString();
         if (int.TryParse(resParam, out var res))

@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+
 namespace Sencilla.Authentication.Jwt.Tests;
 
 public class JwtTokenIssuerTests
@@ -51,5 +54,17 @@ public class JwtTokenIssuerTests
         Assert.True(validation.IsValid);
         var jwt = (JsonWebToken)validation.SecurityToken;
         Assert.Equal(userId.ToString(), jwt.Subject);
+    }
+
+    [Fact]
+    public async Task SessionTransport_ReturnsTheTokenPairAsTheBody()
+    {
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(AuthClaims.Subject, Guid.NewGuid().ToString()) }, "test"));
+
+        var result = await new JwtSessionTransport(Build()).SignIn(new DefaultHttpContext(), principal, new SessionLifetime(Persistent: true));
+
+        var pair = Assert.IsType<Ok<TokenResponse>>(result).Value!;
+        Assert.False(string.IsNullOrEmpty(pair.AccessToken));
+        Assert.False(string.IsNullOrEmpty(pair.RefreshToken));
     }
 }

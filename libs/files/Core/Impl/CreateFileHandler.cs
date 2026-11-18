@@ -101,6 +101,8 @@ internal class CreateFileHandler(
             // never sends the body — a dropped connection then becomes permanent, silent data loss.
             // It also re-arms `Uploaded == Size` as the real completion test for FileUploadedEvent, which
             // otherwise fires on the empty placeholder and never on the bytes.
+            // FileSizeUpdate is a projection with its own grant; the caller must be allowed to change this file first.
+            await fileUpdateRepo.DemandUpdateAsync(dbFile.Id, token);
             await fileSizeRepo.Update(new FileSizeUpdate { Id = dbFile.Id, Size = uploadLength }, token);
             dbFile.Size = uploadLength;
         }

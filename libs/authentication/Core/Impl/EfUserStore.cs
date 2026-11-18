@@ -3,6 +3,10 @@ namespace Sencilla.Authentication;
 /// <summary>
 /// Default <see cref="IUserStore"/> over the <c>Sencilla.Component.Users</c> entities. The entities
 /// are <c>IEntity&lt;Guid&gt;</c>, so the two-parameter repository interfaces are used throughout.
+/// Every operation runs under <see cref="Access.Root"/>: the caller of register / login / reset is
+/// anonymous, and these rows are owned by the framework, not by the security matrix. Reads are
+/// non-tracking on purpose: a user found by <see cref="FindByEmail"/> is routinely updated a few
+/// calls later in the same request, and a tracked copy would make that update throw.
 /// </summary>
 public sealed class EfUserStore : IUserStore
 {
@@ -14,6 +18,7 @@ public sealed class EfUserStore : IUserStore
     private readonly IReadRepository<UserAuth, Guid> _authRead;
     private readonly ICreateRepository<UserAuth, Guid> _authCreate;
     private readonly IUpdateRepository<UserAuth, Guid> _authUpdate;
+    private readonly IDeleteRepository<UserAuth, Guid> _authDelete;
     private readonly IReadRepository<UserRole, Guid> _roleRead;
 
     public EfUserStore(
@@ -23,6 +28,7 @@ public sealed class EfUserStore : IUserStore
         IReadRepository<UserAuth, Guid> authRead,
         ICreateRepository<UserAuth, Guid> authCreate,
         IUpdateRepository<UserAuth, Guid> authUpdate,
+        IDeleteRepository<UserAuth, Guid> authDelete,
         IReadRepository<UserRole, Guid> roleRead)
     {
         _userRead = userRead;
@@ -31,16 +37,21 @@ public sealed class EfUserStore : IUserStore
         _authRead = authRead;
         _authCreate = authCreate;
         _authUpdate = authUpdate;
+        _authDelete = authDelete;
         _roleRead = roleRead;
     }
 
     public async Task<AuthUser?> FindById(Guid id, CancellationToken token = default)
-        => await _userRead.GetById(id, token) is { } user ? Map(user) : null;
+    {
+        using var _ = Access.Root();
+        return await _userRead.GetById(id, token) is { } user ? Map(user) : null;
+    }
 
     public async Task<AuthUser?> FindByEmail(string email, CancellationToken token = default)
     {
+        using var _ = Access.Root();
         var normalized = Normalize(email);
-        var user = await _userRead.Query.FirstOrDefaultAsync(u => u.Email == normalized, token);
+        var user = await _userRead.Query.AsNoTracking().FirstOrDefaultAsync(u => u.Email == normalized, token);
         return user is null ? null : Map(user);
     }
 
@@ -48,20 +59,26 @@ public sealed class EfUserStore : IUserStore
     {
         if (phone == 0)
             return null;
-        var user = await _userRead.Query.FirstOrDefaultAsync(u => u.Phone == phone, token);
+        using var _ = Access.Root();
+        var user = await _userRead.Query.AsNoTracking().FirstOrDefaultAsync(u => u.Phone == phone, token);
         return user is null ? null : Map(user);
     }
 
     public async Task<AuthUser?> FindByProviderKey(string provider, string providerKey, CancellationToken token = default)
     {
-        var auth = await _authRead.Query.FirstOrDefaultAsync(a => a.Auth == provider && a.ProviderKey == providerKey, token);
+        using var _ = Access.Root();
+        var key = provider.ToLowerInvariant();
+        // Provider keys are compared case-insensitively: rows written by the legacy first-login path
+        // carry the ASP.NET scheme name ("Google"), the token verifiers use "google".
+        var auth = await _authRead.Query.AsNoTracking().FirstOrDefaultAsync(a => a.Auth.ToLower() == key && a.ProviderKey == providerKey, token);
         return auth is null ? null : await FindById(auth.UserId, token);
     }
 
     public async Task<PasswordCredential?> FindPasswordCredential(string email, CancellationToken token = default)
     {
+        using var _ = Access.Root();
         var normalized = Normalize(email);
-        var auth = await _authRead.Query
+        var auth = await _authRead.Query.AsNoTracking()
             .FirstOrDefaultAsync(a => a.Auth == PasswordProvider && a.ProviderKey == normalized, token);
         if (auth?.PasswordHash is null)
             return null;
@@ -72,6 +89,7 @@ public sealed class EfUserStore : IUserStore
 
     public async Task<AuthUser> CreateWithPasswordCredential(AuthUser user, string passwordHash, CancellationToken token = default)
     {
+        using var _ = Access.Root();
         await using var transaction = await _userRead.BeginTransaction(token);
 
         var created = await CreateUser(user, token);
@@ -84,9 +102,10 @@ public sealed class EfUserStore : IUserStore
 
     public async Task<AuthUser> CreateWithExternalLogin(AuthUser user, ExternalIdentity identity, CancellationToken token = default)
     {
+        using var _ = Access.Root();
         await using var transaction = await _userRead.BeginTransaction(token);
 
-        var created = await CreateUser(user, token);
+        var created = await CreateUser(user, token, identity);
         await _authCreate.Create(
             NewAuth(created.Id, identity.Provider, identity.Subject, identity.Email), token);
 
@@ -96,7 +115,8 @@ public sealed class EfUserStore : IUserStore
 
     public async Task SetPasswordHash(Guid userId, string passwordHash, CancellationToken token = default)
     {
-        var auth = await _authRead.Query
+        using var _ = Access.Root();
+        var auth = await _authRead.Query.AsNoTracking()
             .FirstOrDefaultAsync(a => a.UserId == userId && a.Auth == PasswordProvider, token);
 
         if (auth is null)
@@ -110,14 +130,64 @@ public sealed class EfUserStore : IUserStore
             auth.PasswordHash = passwordHash;
             await _authUpdate.Update(auth, token);
         }
+
+        await TouchCredentials(userId, token);
+    }
+
+    public async Task<bool> HasPasswordCredential(Guid userId, CancellationToken token = default)
+    {
+        using var _ = Access.Root();
+        return await _authRead.Query.AsNoTracking().AnyAsync(a => a.UserId == userId && a.Auth == PasswordProvider && a.PasswordHash != null, token);
+    }
+
+    public async Task RemovePasswordCredential(Guid userId, CancellationToken token = default)
+    {
+        using var _ = Access.Root();
+        var rows = await _authRead.Query.AsNoTracking().Where(a => a.UserId == userId && a.Auth == PasswordProvider).ToListAsync(token);
+        if (rows.Count == 0)
+            return;
+
+        await _authDelete.Delete(rows, token);
+        await TouchCredentials(userId, token);
     }
 
     public async Task LinkProvider(Guid userId, ExternalIdentity identity, CancellationToken token = default)
-        => await _authCreate.Create(
-            NewAuth(userId, identity.Provider, identity.Subject, identity.Email), token);
+    {
+        using var _ = Access.Root();
+        var key = identity.Provider.ToLowerInvariant();
+        var rows = await _authRead.Query.AsNoTracking().Where(a => a.UserId == userId && a.Auth.ToLower() == key).ToListAsync(token);
+
+        if (rows.Any(a => a.ProviderKey == identity.Subject))
+            return;
+
+        // Adopt a row the legacy first-login path wrote without a subject (Auth = scheme name,
+        // ProviderKey NULL) instead of adding a second one for the same provider.
+        var legacy = rows.FirstOrDefault(a => a.ProviderKey is null);
+        if (legacy is not null)
+        {
+            legacy.ProviderKey = identity.Subject;
+            legacy.Email ??= identity.Email;
+            await _authUpdate.Update(legacy, token);
+            return;
+        }
+
+        await _authCreate.Create(NewAuth(userId, identity.Provider, identity.Subject, identity.Email), token);
+    }
+
+    public async Task UnlinkProvider(Guid userId, string provider, CancellationToken token = default)
+    {
+        using var _ = Access.Root();
+        var key = provider.ToLowerInvariant();
+        if (key == PasswordProvider)
+            return;
+        var rows = await _authRead.Query.AsNoTracking().Where(a => a.UserId == userId && a.Auth.ToLower() == key).ToListAsync(token);
+        if (rows.Count > 0)
+            await _authDelete.Delete(rows, token);
+    }
 
     public async Task SetEmailConfirmed(Guid userId, CancellationToken token = default)
     {
+        using var _ = Access.Root();
         if (await _userRead.GetById(userId, token) is not { } user)
             return;
         user.EmailConf = true;
@@ -126,23 +196,52 @@ public sealed class EfUserStore : IUserStore
 
     public async Task<IReadOnlyList<string>> GetRoles(Guid userId, CancellationToken token = default)
     {
-        var roles = await _roleRead.Query.Where(r => r.UserId == userId).ToListAsync(token);
+        using var _ = Access.Root();
+        var roles = await _roleRead.Query.AsNoTracking().Where(r => r.UserId == userId).ToListAsync(token);
         return roles.Select(r => r.Role ?? r.RoleId.ToString()).ToList();
     }
 
-    private async Task<User> CreateUser(AuthUser user, CancellationToken token)
+    /// <summary>Stamp the user so sessions issued before this moment can be rejected (see the cookie validator).</summary>
+    private async Task TouchCredentials(Guid userId, CancellationToken token)
     {
+        if (await _userRead.GetById(userId, token) is not { } user)
+            return;
+        user.CredentialsChangedAt = DateTime.UtcNow;
+        await _userUpdate.Update(user, token);
+    }
+
+    private async Task<User> CreateUser(AuthUser user, CancellationToken token, ExternalIdentity? identity = null)
+    {
+        var (first, last) = FirstAndLastNameOf(identity);
         var entity = new User
         {
             Id = user.Id == Guid.Empty ? Guid.NewGuid() : user.Id,
             Email = user.Email,
             EmailConf = user.EmailConfirmed,
             Phone = user.Phone ?? 0,
+            FirstName = first,
+            LastName = last,
+            Pic = identity?.Picture,
             Status = (byte)UserStatuses.Registered,
             CreatedDate = DateTime.UtcNow,
             UpdatedDate = DateTime.UtcNow,
         };
         return await _userCreate.Create(entity, token) ?? entity;
+    }
+
+    /// <summary>
+    /// The provider's given and family names as it sent them. A provider that sends only a display name
+    /// gets it split — first word, rest — which cuts a two-word given name, so it is only the fallback.
+    /// </summary>
+    private static (string? First, string? Last) FirstAndLastNameOf(ExternalIdentity? identity)
+    {
+        if (identity is { GivenName: not null } or { FamilyName: not null })
+            return (identity.GivenName, identity.FamilyName);
+        var trimmed = identity?.Name?.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+            return (null, null);
+        var space = trimmed.IndexOf(' ');
+        return space < 0 ? (trimmed, null) : (trimmed[..space], trimmed[(space + 1)..].Trim());
     }
 
     private static UserAuth NewAuth(Guid userId, string auth, string? providerKey, string? email, string? passwordHash = null) => new()
@@ -153,6 +252,7 @@ public sealed class EfUserStore : IUserStore
         ProviderKey = providerKey,
         Email = email,
         PasswordHash = passwordHash,
+        CreatedDate = DateTime.UtcNow,
     };
 
     private static AuthUser Map(User user) => new(
@@ -160,7 +260,8 @@ public sealed class EfUserStore : IUserStore
         user.Email,
         user.EmailConf,
         user.DeletedDate is null ? AuthUserStatus.Active : AuthUserStatus.Disabled,
-        user.Phone == 0 ? null : user.Phone);
+        user.Phone == 0 ? null : user.Phone,
+        user.CredentialsChangedAt);
 
     private static string Normalize(string? email) => (email ?? string.Empty).Trim().ToLowerInvariant();
 }

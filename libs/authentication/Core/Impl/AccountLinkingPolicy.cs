@@ -2,8 +2,10 @@ namespace Sencilla.Authentication;
 
 /// <summary>
 /// Default account-linking policy — pure and side-effect-free, so it is exhaustively unit-tested.
-/// Identity is keyed on the provider subject; a same-email account never silently merges, which is
-/// the pre-account-takeover defense.
+/// Identity is keyed on the provider subject. A provider-verified address links to the account that
+/// owns it (the provider proved the caller controls it, and an unverified password credential there is
+/// displaced); an unverified address on somebody's account is refused, because anyone can put any
+/// address on a social profile.
 /// </summary>
 public sealed class AccountLinkingPolicy : IAccountLinkingPolicy
 {
@@ -25,17 +27,19 @@ public sealed class AccountLinkingPolicy : IAccountLinkingPolicy
         if (authenticatedUserId is not null)
             return AccountDecision.Link("authenticated-link");
 
-        // 3) Anonymous caller, first time with this provider identity. Only treat a same-email
-        //    account as a collision when the provider asserts a verified email; otherwise the
-        //    email is untrusted and identity is keyed on the subject.
-        if (incoming.EmailVerified && byEmail is not null)
+        // 3) Anonymous caller, first time with this provider identity, and the address is an account's.
+        //    Only the provider's word that the caller owns the address may attach the login to it.
+        if (byEmail is not null)
         {
-            return IsUsable(byEmail.Status)
-                ? AccountDecision.Challenge("email-collision-requires-proof")
-                : AccountDecision.Reject("account-not-active");
+            if (!IsUsable(byEmail.Status))
+                return AccountDecision.Reject("account-not-active");
+
+            return incoming.EmailVerified
+                ? AccountDecision.LinkByEmail("provider-verified-email")
+                : AccountDecision.Reject("email-not-verified");
         }
 
-        // 4) No collision — provision a new account from the external identity.
+        // 4) Nobody has this address — provision a new account from the external identity.
         return AccountDecision.Create("new-account");
     }
 

@@ -2,7 +2,7 @@ namespace Sencilla.Component.Audit;
 
 /// <summary>
 /// Per-request audit attribution. The actor is resolved lazily from the current user (set by
-/// UserRegistrationMiddleware, re-pointed by ImpersonationMiddleware) so it reflects the user regardless of
+/// CurrentUserMiddleware, re-pointed by ImpersonationMiddleware) so it reflects the user regardless of
 /// construction order; the reason is set by <see cref="AuditReasonMiddleware"/>; the correlation id is fresh
 /// per request.
 /// </summary>

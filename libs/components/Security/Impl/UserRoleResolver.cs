@@ -29,8 +29,7 @@ public class UserRoleResolver(
         foreach (var role in user.Roles ?? [])
             roleIds.Add(role.RoleId);
 
-        // Any authenticated identity gets the User role — even before its DB record exists
-        // (first-login self-registration), so the insert is authorised as User rather than Anonymous.
+        // Any identified user (an email or a phone) holds the User role.
         roleIds.Add((int)RoleType.User);
 
         // Persisted role assignments (e.g. Admin in sec.UserRole) require a real Id.

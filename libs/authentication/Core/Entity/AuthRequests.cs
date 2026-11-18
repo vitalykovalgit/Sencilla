@@ -10,12 +10,14 @@ public sealed record RegisterRequest
 
 /// <summary>
 /// Input for password login. <see cref="Login"/> is an email address or a phone number; phone
-/// resolution only happens when the app opted in via <c>UseAppAccounts(o =&gt; o.AllowPhoneLogin())</c>.
+/// resolution only happens when the app opted in via <c>UseAppAccounts(o =&gt; o.PhoneLoginEnabled = true)</c>.
+/// <see cref="RememberMe"/> asks for a persistent session; only the cookie session transport honours it.
 /// </summary>
 public sealed record LoginRequest
 {
     public required string Login { get; init; }
     public required string Password { get; init; }
+    public bool RememberMe { get; init; }
 }
 
 /// <summary>Input for a social token-exchange: a provider <c>id_token</c> and its provider key.</summary>
@@ -43,6 +45,34 @@ public sealed record ResetPasswordRequest
     public required string Token { get; init; }
     public required string NewPassword { get; init; }
 }
+
+/// <summary>Input for the verify-email flow — the raw token from the emailed link.</summary>
+public sealed record VerifyEmailRequest
+{
+    public required string Token { get; init; }
+}
+
+/// <summary>
+/// Deliberately empty bodies. A JSON body parameter makes the endpoint reject anything that is not
+/// <c>application/json</c> (415), which is what keeps a cross-site HTML form post — which rides the
+/// cookie — away from state-changing endpoints that otherwise need no input.
+/// </summary>
+public sealed record LogoutRequest;
+
+public sealed record ResendVerificationRequest;
+
+/// <summary>Input for an authenticated password change.</summary>
+public sealed record ChangePasswordRequest
+{
+    public required string CurrentPassword { get; init; }
+    public required string NewPassword { get; init; }
+}
+
+/// <summary>
+/// How the session an <see cref="ISessionTransport"/> starts should behave. The cookie transport honours
+/// <see cref="Persistent"/>; the token transport ignores it (the refresh policy sets the pair's lifetime).
+/// </summary>
+public sealed record SessionLifetime(bool Persistent = false);
 
 /// <summary>Issued token pair for the token-API / embedded path.</summary>
 public sealed record TokenResponse

@@ -26,7 +26,7 @@ public interface IPermissionChecker
     Task<bool> HasAsync(string resource, Action action, CancellationToken token);
 
     /// <summary>
-    /// <see cref="HasAsync"/>, throwing <see cref="ForbiddenException"/> (→ 403) instead of returning
+    /// <see cref="HasAsync"/>, throwing <see cref="ForbiddenException"/> (→ 403; 401 without a session) instead of returning
     /// false. The default for endpoints: a denied call must not reach the handler, so a forgotten
     /// <c>if</c> around a bool cannot silently permit the operation.
     /// </summary>

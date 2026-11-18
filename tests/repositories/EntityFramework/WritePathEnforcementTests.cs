@@ -185,6 +185,35 @@ public class WritePathEnforcementTests : IDisposable
         Assert.Single(_db.Products.AsNoTracking());
     }
 
+    // ── DemandUpdate: the pre-image check alone, for a write outside the database ──
+
+    [Fact]
+    public async Task DemandUpdate_ReturnsQuietlyAndWritesNothing_WhenNoHandlerNarrows()
+    {
+        var seeded = new TestProduct { Id = 1, Name = "mine", Stock = 10, UpdatedDate = new DateTime(2020, 1, 1) };
+        await Seed(seeded);
+        var repo = new TestUpdateRepository(Dependency, _db);
+
+        await repo.DemandUpdateAsync(1);
+
+        var row = DbRow(1);
+        Assert.Equal((seeded.Name, seeded.Stock, seeded.UpdatedDate), (row.Name, row.Stock, row.UpdatedDate));
+        _events.Verify(x => x.PublishAsync(It.IsAny<EntityUpdatingEvent<TestProduct>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _events.Verify(x => x.PublishAsync(It.IsAny<EntityUpdatedEvent<TestProduct>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DemandUpdate_Forbidden_WhenAHandlerNarrowsTheRowAway()
+    {
+        await Seed(new TestProduct { Id = 1, Name = "theirs" });
+        NarrowUpdating(q => q.Where(p => p.Name == "mine"));
+        var repo = new TestUpdateRepository(Dependency, _db);
+
+        await Assert.ThrowsAsync<ForbiddenException>(() => repo.DemandUpdateAsync(1));
+
+        _events.Verify(x => x.PublishAsync(It.IsAny<EntityUpdatedEvent<TestProduct>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     // ── Delete by ids ────────────────────────────────────────────────────────
 
     [Fact]

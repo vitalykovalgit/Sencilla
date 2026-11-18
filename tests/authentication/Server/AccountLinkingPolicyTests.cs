@@ -61,21 +61,22 @@ public class AccountLinkingPolicyTests
     }
 
     [Fact]
-    public void NewProvider_Anonymous_VerifiedEmailCollision_Challenges()
+    public void NewProvider_Anonymous_VerifiedEmailCollision_LinksByEmail()
     {
+        // The provider proved the caller owns the address, so the login joins the account that owns it.
         var collidingAccount = User();
         var decision = _policy.Decide(byProvider: null, byEmail: collidingAccount, Identity(emailVerified: true), authenticatedUserId: null);
-        Assert.Equal(LinkAction.Challenge, decision.Action);
-        Assert.Equal("email-collision-requires-proof", decision.Reason);
+        Assert.Equal(LinkAction.LinkByEmail, decision.Action);
     }
 
     [Fact]
-    public void NewProvider_Anonymous_UnverifiedEmailCollision_CreatesInstead()
+    public void NewProvider_Anonymous_UnverifiedEmailCollision_Rejects()
     {
-        // An unverified provider email is untrusted, so identity is keyed on the subject — no merge.
+        // Whoever can put an address on a social profile must not get the account that owns it.
         var collidingAccount = User();
         var decision = _policy.Decide(byProvider: null, byEmail: collidingAccount, Identity(emailVerified: false), authenticatedUserId: null);
-        Assert.Equal(LinkAction.Create, decision.Action);
+        Assert.Equal(LinkAction.Reject, decision.Action);
+        Assert.Equal("email-not-verified", decision.Reason);
     }
 
     [Fact]
@@ -84,5 +85,6 @@ public class AccountLinkingPolicyTests
         var disabled = User(AuthUserStatus.Disabled);
         var decision = _policy.Decide(byProvider: null, byEmail: disabled, Identity(emailVerified: true), authenticatedUserId: null);
         Assert.Equal(LinkAction.Reject, decision.Action);
+        Assert.Equal("account-not-active", decision.Reason);
     }
 }

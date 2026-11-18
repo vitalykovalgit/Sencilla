@@ -48,6 +48,23 @@ public class BaseRepository<TContext> : Resolveable, IBaseRepository where TCont
     }
 
     /// <summary>
+    /// The pre-image check of an update of one row: handlers of the Updating event narrow the row's database
+    /// query, and losing the row is forbidden. Returns that query, for the post-image check of a write that follows.
+    /// </summary>
+    protected async Task<IQueryable<TEntity>> DemandUpdate<TEntity, TKey>(TKey id, CancellationToken token)
+        where TEntity : class, IEntity<TKey>
+    {
+        var ids = new[] { id };
+        var dbQuery = DbContext.Set<TEntity>().AsNoTracking().Where(e => ids.Contains(e.Id));
+
+        var eventUpdating = new EntityUpdatingEvent<TEntity> { DbEntities = dbQuery };
+        await D.Events.PublishAsync(eventUpdating, token);
+        await ThrowIfNarrowed(eventUpdating.DbEntities, dbQuery, token);
+
+        return dbQuery;
+    }
+
+    /// <summary>
     /// Runs a write operation inside an ambient transaction so the -ing event,
     /// the save and the -ed handlers commit or roll back as one unit.
     /// Reuses the caller's transaction when one is already open (the caller owns

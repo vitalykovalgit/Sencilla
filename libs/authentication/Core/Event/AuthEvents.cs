@@ -43,6 +43,9 @@ public sealed class PasswordResetRequested : Event
 public sealed class PasswordChanged : Event
 {
     public Guid UserId { get; init; }
+
+    /// <summary><c>changed</c> (by the user), <c>reset</c> (via an emailed link) or <c>removed</c> (a verified social login displaced an unverified password credential).</summary>
+    public string Reason { get; init; } = "changed";
 }
 
 public sealed class ProviderLinked : Event

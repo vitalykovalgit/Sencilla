@@ -4,12 +4,16 @@ public class SencillaExceptionHandlerTests
 {
     class CustomValidationException(string? message = null) : BadRequestException(message);
 
-    static async Task<(bool Handled, HttpContext Context, JsonDocument? Body)> Handle(Exception exception)
+    static readonly System.Security.Claims.ClaimsPrincipal SignedIn = new(new System.Security.Claims.ClaimsIdentity(authenticationType: "Cookies"));
+
+    static async Task<(bool Handled, HttpContext Context, JsonDocument? Body)> Handle(Exception exception, System.Security.Claims.ClaimsPrincipal? user = null)
     {
         var context = new DefaultHttpContext
         {
             RequestServices = new ServiceCollection().AddLogging().BuildServiceProvider(),
         };
+        if (user != null)
+            context.User = user;
         context.Response.Body = new MemoryStream();
 
         var handled = await new SencillaExceptionHandler().TryHandleAsync(context, exception, CancellationToken.None);
@@ -23,15 +27,39 @@ public class SencillaExceptionHandlerTests
     [InlineData(typeof(BadRequestException), StatusCodes.Status400BadRequest)]
     [InlineData(typeof(UnauthorizedException), StatusCodes.Status401Unauthorized)]
     [InlineData(typeof(ForbiddenException), StatusCodes.Status403Forbidden)]
+    [InlineData(typeof(ConflictException), StatusCodes.Status409Conflict)]
     [InlineData(typeof(InternalServerErrorException), StatusCodes.Status500InternalServerError)]
     [InlineData(typeof(SencillaException), StatusCodes.Status500InternalServerError)]
-    public async Task Maps_Sencilla_Exceptions_To_Status_Codes(Type exceptionType, int expectedStatus)
+    public async Task Maps_Sencilla_Exceptions_To_Status_Codes_For_A_Signed_In_Caller(Type exceptionType, int expectedStatus)
     {
-        var (handled, context, body) = await Handle((Exception)Activator.CreateInstance(exceptionType, [null])!);
+        var (handled, context, body) = await Handle((Exception)Activator.CreateInstance(exceptionType, [null])!, SignedIn);
 
         Assert.True(handled);
         Assert.Equal(expectedStatus, context.Response.StatusCode);
         Assert.Equal(expectedStatus, body!.RootElement.GetProperty("status").GetInt32());
+    }
+
+    [Theory]
+    [InlineData(typeof(ForbiddenException))]
+    [InlineData(typeof(UnauthorizedException))]
+    public async Task Refusal_Without_A_Session_Answers_401(Type exceptionType)
+    {
+        var (handled, context, body) = await Handle((Exception)Activator.CreateInstance(exceptionType, [null])!);
+
+        Assert.True(handled);
+        Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
+        Assert.Equal(StatusCodes.Status401Unauthorized, body!.RootElement.GetProperty("status").GetInt32());
+        Assert.Equal("Unauthorized", body.RootElement.GetProperty("title").GetString());
+    }
+
+    [Fact]
+    public async Task Forbidden_For_A_Signed_In_Caller_Keeps_Its_Message_And_403_Title()
+    {
+        var (_, context, body) = await Handle(new ForbiddenException("not yours"), SignedIn);
+
+        Assert.Equal(StatusCodes.Status403Forbidden, context.Response.StatusCode);
+        Assert.Equal("Forbidden", body!.RootElement.GetProperty("title").GetString());
+        Assert.Equal("not yours", body.RootElement.GetProperty("detail").GetString());
     }
 
     [Fact]

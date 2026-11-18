@@ -93,4 +93,19 @@ public class RefreshTokenServiceTests
         var stillValid = await service.Redeem(rotated.Token!);
         Assert.Equal(RefreshOutcome.Rotated, stillValid.Outcome);
     }
+
+    [Fact]
+    public async Task RevokeUser_BurnsEveryTokenOfTheUser()
+    {
+        var store = new InMemoryRefreshTokenStore();
+        var service = new RefreshTokenService(store, Options.Create(new RefreshTokenOptions()));
+        var userId = Guid.NewGuid();
+        var mine = await service.Issue(userId);
+        var other = await service.Issue(Guid.NewGuid());
+
+        await store.RevokeUser(userId);
+
+        Assert.Equal(RefreshOutcome.Invalid, (await service.Redeem(mine)).Outcome);
+        Assert.Equal(RefreshOutcome.Rotated, (await service.Redeem(other)).Outcome);
+    }
 }

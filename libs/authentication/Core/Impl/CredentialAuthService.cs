@@ -13,38 +13,36 @@ public sealed class CredentialAuthService : ICredentialAuthService
 
     private readonly IUserStore _users;
     private readonly IPasswordHasher _hasher;
-    private readonly IClaimsPrincipalFactory _principals;
-    private readonly ITokenIssuer _issuer;
     private readonly IEventDispatcher _events;
+    private readonly IAccountRecoveryService _recovery;
     private readonly PasswordPolicyOptions _policy;
     private readonly AppAccountsOptions _accounts;
 
     public CredentialAuthService(
         IUserStore users,
         IPasswordHasher hasher,
-        IClaimsPrincipalFactory principals,
-        ITokenIssuer issuer,
         IEventDispatcher events,
+        IAccountRecoveryService recovery,
         IOptions<PasswordPolicyOptions> policy,
         IOptions<AppAccountsOptions> accounts)
     {
         _users = users;
         _hasher = hasher;
-        _principals = principals;
-        _issuer = issuer;
         _events = events;
+        _recovery = recovery;
         _policy = policy.Value;
         _accounts = accounts.Value;
     }
 
-    public async Task<TokenResponse> Register(RegisterRequest request, CancellationToken token = default)
+    public async Task<AuthUser> Register(RegisterRequest request, CancellationToken token = default)
     {
         if (string.IsNullOrWhiteSpace(request.Email))
             throw new BadRequestException("email-required");
-        if (request.Password is null || request.Password.Length < _policy.MinLength)
-            throw new BadRequestException("password-too-short");
+        PasswordPolicy.Validate(request.Password, _policy);
 
         var email = Normalize(request.Email);
+        if (!IsPlainAddress(email))
+            throw new BadRequestException("email-invalid");
         if (await _users.FindByEmail(email, token) is not null)
             throw new BadRequestException("email-already-registered");
 
@@ -53,12 +51,15 @@ public sealed class CredentialAuthService : ICredentialAuthService
 
         await _events.PublishAsync(new UserRegistered { UserId = created.Id, Email = created.Email, Method = "password" }, token);
 
-        return await IssueFor(created, token);
+        if (_accounts.VerifyEmailOnRegister)
+            await _recovery.RequestEmailVerification(created.Id, token);
+
+        return created;
     }
 
-    public async Task<TokenResponse> Login(LoginRequest request, CancellationToken token = default)
+    public async Task<AuthUser> Login(LoginRequest request, CancellationToken token = default)
     {
-        // Resolve the login identifier (email, or phone when AllowPhoneLogin is enabled) to an email.
+        // Resolve the login identifier (email, or phone when PhoneLoginEnabled is on) to an email.
         var email = await ResolveLoginEmail(request.Login, token);
         var credential = email is null ? null : await _users.FindPasswordCredential(email, token);
 
@@ -68,8 +69,14 @@ public sealed class CredentialAuthService : ICredentialAuthService
 
         if (credential is null || !valid)
         {
-            await _events.PublishAsync(new LoginFailed { Email = email ?? request.Login, Reason = "invalid-credentials" }, token);
-            throw new UnauthorizedException("invalid-credentials");
+            var reason = "invalid-credentials";
+            if (_accounts.DetailedLoginErrors)
+                reason = credential is not null ? "invalid-password"
+                       : email is not null && await _users.FindByEmail(email, token) is not null ? "password-not-set"
+                       : "account-not-found";
+
+            await _events.PublishAsync(new LoginFailed { Email = email ?? request.Login, Reason = reason }, token);
+            throw new UnauthorizedException(reason);
         }
 
         if (credential.User.Status is AuthUserStatus.Locked or AuthUserStatus.Disabled)
@@ -80,13 +87,12 @@ public sealed class CredentialAuthService : ICredentialAuthService
 
         await _events.PublishAsync(new LoginSucceeded { UserId = credential.User.Id, Method = "password" }, token);
 
-        return await IssueFor(credential.User, token);
+        return credential.User;
     }
 
     public async Task ChangePassword(Guid userId, string currentPassword, string newPassword, CancellationToken token = default)
     {
-        if (newPassword is null || newPassword.Length < _policy.MinLength)
-            throw new BadRequestException("password-too-short");
+        PasswordPolicy.Validate(newPassword, _policy);
 
         var user = await _users.FindById(userId, token) ?? throw new UnauthorizedException("user-not-found");
         if (string.IsNullOrEmpty(user.Email))
@@ -97,13 +103,7 @@ public sealed class CredentialAuthService : ICredentialAuthService
             throw new UnauthorizedException("invalid-credentials");
 
         await _users.SetPasswordHash(userId, _hasher.Hash(newPassword), token);
-        await _events.PublishAsync(new PasswordChanged { UserId = userId }, token);
-    }
-
-    private async Task<TokenResponse> IssueFor(AuthUser user, CancellationToken token)
-    {
-        var principal = await _principals.Create(user, scopes: null, token);
-        return await _issuer.Issue(principal, token);
+        await _events.PublishAsync(new PasswordChanged { UserId = userId, Reason = "changed" }, token);
     }
 
     /// <summary>
@@ -131,4 +131,14 @@ public sealed class CredentialAuthService : ICredentialAuthService
     }
 
     private static string Normalize(string email) => email.Trim().ToLowerInvariant();
+
+    /// <summary>
+    /// One bare address, nothing else: no display-name form (<c>Name &lt;a@b&gt;</c>), no room to overflow the
+    /// 255-character columns. What is stored becomes the login key and the mail recipient.
+    /// </summary>
+    internal static bool IsPlainAddress(string email)
+        => email.Length <= 254
+        && System.Net.Mail.MailAddress.TryCreate(email, out var parsed)
+        && string.Equals(parsed.Address, email, StringComparison.Ordinal)
+        && parsed.Host.Contains('.');
 }

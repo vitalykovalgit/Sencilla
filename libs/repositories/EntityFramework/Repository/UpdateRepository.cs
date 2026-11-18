@@ -147,18 +147,15 @@ public class UpdateRepository<TEntity, TContext, TKey>(RepositoryDependency depe
             : $"{typeof(TEntity).Name} no longer exists; re-read before updating it.");
     }
 
+    public Task DemandUpdateAsync(TKey id, CancellationToken token = default) => DemandUpdate<TEntity, TKey>(id, token);
+
     public Task<int> JsonMergeAsync<TValue>(TKey id,Expression<Func<TEntity, IDictionary<string, TValue>?>> property, string key, TValue value, CancellationToken token = default)
     {
         return InTransaction(async () =>
         {
             // A JSON patch is an UPDATE: pre-image constraint on the target row,
             // post-image re-check inside the ambient transaction.
-            var ids = new[] { id };
-            var dbQuery = DbContext.Set<TEntity>().AsNoTracking().Where(e => ids.Contains(e.Id));
-
-            var eventUpdating = new EntityUpdatingEvent<TEntity> { DbEntities = dbQuery };
-            await D.Events.PublishAsync(eventUpdating, token);
-            await ThrowIfNarrowed(eventUpdating.DbEntities, dbQuery, token);
+            var dbQuery = await DemandUpdate<TEntity, TKey>(id, token);
 
             var count = await DbContext.JsonMergeAsync(id, property, key, value, token);
 

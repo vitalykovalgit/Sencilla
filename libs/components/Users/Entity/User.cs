@@ -33,6 +33,9 @@ public class User : IEntity<Guid>, IEntityCreateableTrack, IEntityUpdateableTrac
     public DateTime UpdatedDate { get; set; }
     public DateTime? DeletedDate { get; set; }
 
+    /// <summary>Last password set / reset / removal. A session issued before it is rejected by the authentication family's cookie validator.</summary>
+    public DateTime? CredentialsChangedAt { get; set; }
+
     [SkipUpsert]
     public ICollection<UserRole>? Roles { get; set; }
 
@@ -52,8 +55,14 @@ public class User : IEntity<Guid>, IEntityCreateableTrack, IEntityUpdateableTrac
         return this;
     }
 
-    public bool IsAnonymous() 
+    public bool IsAnonymous()
     {
         return string.IsNullOrEmpty(Email) && Phone == 0;
+    }
+
+    /// <summary>The user a request runs as when its session carries no account: no id, the Anonymous role.</summary>
+    public static User CreateAnonymous()
+    {
+        return new User { Status = (byte?)UserStatuses.NotRegistered }.AddRole((int)RoleType.Anonymous);
     }
 }

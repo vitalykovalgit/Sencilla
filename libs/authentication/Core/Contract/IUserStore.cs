@@ -13,7 +13,7 @@ public interface IUserStore
 
     Task<AuthUser?> FindByEmail(string email, CancellationToken token = default);
 
-    /// <summary>Resolve a user by phone number — backs phone sign-in (<c>AllowPhoneLogin</c>).</summary>
+    /// <summary>Resolve a user by phone number — backs phone sign-in (<c>AppAccountsOptions.PhoneLoginEnabled</c>).</summary>
     Task<AuthUser?> FindByPhone(long phone, CancellationToken token = default);
 
     Task<AuthUser?> FindByProviderKey(string provider, string providerKey, CancellationToken token = default);
@@ -32,6 +32,14 @@ public interface IUserStore
     Task LinkProvider(Guid userId, ExternalIdentity identity, CancellationToken token = default);
 
     Task SetEmailConfirmed(Guid userId, CancellationToken token = default);
+
+    Task<bool> HasPasswordCredential(Guid userId, CancellationToken token = default);
+
+    /// <summary>Delete the <c>password</c> credential row (bumps <see cref="AuthUser.CredentialsChangedAt"/>).</summary>
+    Task RemovePasswordCredential(Guid userId, CancellationToken token = default);
+
+    /// <summary>Delete the external-login rows of one provider.</summary>
+    Task UnlinkProvider(Guid userId, string provider, CancellationToken token = default);
 
     Task<IReadOnlyList<string>> GetRoles(Guid userId, CancellationToken token = default);
 }

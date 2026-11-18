@@ -55,6 +55,70 @@ public class UploadFileHandlerTests
         Assert.Equal("1024", context.Response.Headers[FileHeaders.UploadOffset].ToString());
     }
 
+    /// <summary>
+    /// Storage asks nobody, so the right to change the file is demanded before the first byte: the FileUpload
+    /// projection asked after the write is its own resource and would let a reader overwrite the file.
+    /// </summary>
+    [Fact]
+    public async Task Handle_DemandsUpdateOfTheFile_BeforeWritingTheChunk()
+    {
+        var fileId = Guid.NewGuid();
+        var file = new File { Id = fileId, Name = "photo.jpg", Size = 2048 };
+        var context = CreatePatchContext(fileId, 0, new byte[1024]);
+        var steps = new List<string>();
+
+        _readRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>())).ReturnsAsync(file);
+        _resMergeRepo.Setup(r => r.DemandUpdateAsync(fileId, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add("demand")).Returns(Task.CompletedTask);
+        _storage.Setup(s => s.WriteFileAsync(file, It.IsAny<Stream>(), 0, 1024, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add("write")).ReturnsAsync(1024L);
+        _uploadRepo.Setup(u => u.Update(It.IsAny<FileUpload>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FileUpload { Id = fileId, Uploaded = 1024 });
+
+        await CreateHandler().Handle(context, CancellationToken.None);
+
+        Assert.Equal(["demand", "write"], steps);
+    }
+
+    [Fact]
+    public async Task Handle_UpdateOfTheFileRefused_WritesNothing()
+    {
+        var fileId = Guid.NewGuid();
+        var file = new File { Id = fileId, Name = "clipart.png", Size = 2048 };
+        var context = CreatePatchContext(fileId, 0, new byte[1024]);
+
+        _readRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>())).ReturnsAsync(file);
+        _resMergeRepo.Setup(r => r.DemandUpdateAsync(fileId, It.IsAny<CancellationToken>())).ThrowsAsync(new ForbiddenException());
+
+        await Assert.ThrowsAsync<ForbiddenException>(() => CreateHandler().Handle(context, CancellationToken.None));
+
+        _storage.Verify(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<Stream>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+        _uploadRepo.Verify(u => u.Update(It.IsAny<FileUpload>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ResUploadUpdateOfTheFileRefused_WritesNothing()
+    {
+        var fileId = Guid.NewGuid();
+        var file = new File
+        {
+            Id = fileId,
+            Name = "clipart.png",
+            Path = "test/path.png",
+            Size = 2048,
+            Res = new Dictionary<string, ResolutionInfo> { ["600"] = new ResolutionInfo { S = 5000, U = 0 } }
+        };
+        var context = CreatePatchContext(fileId, 0, new byte[1024], res: 600);
+
+        _readRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>())).ReturnsAsync(file);
+        _pathResolver.Setup(p => p.GetResolutionPath(file, 600)).Returns("test/path_600.png");
+        _resMergeRepo.Setup(r => r.DemandUpdateAsync(fileId, It.IsAny<CancellationToken>())).ThrowsAsync(new ForbiddenException());
+
+        await Assert.ThrowsAsync<ForbiddenException>(() => CreateHandler().Handle(context, CancellationToken.None));
+
+        _storage.Verify(s => s.WriteFileAsync(It.IsAny<File>(), It.IsAny<Stream>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Fact]
     public async Task Handle_MissingUploadOffset_Returns400()
     {

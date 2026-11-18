@@ -210,7 +210,7 @@ public class SecurityConstraintHandler<TEntity>
 
             // if operation is not allowed throw forbid exception. Held rows count as
             // applicable for an identified user — no holdings then means an empty
-            // result, not a 403 (anonymous callers cannot hold, so they still 403).
+            // result, not a refusal (anonymous callers cannot hold, so they are still refused).
             if (globalRows.Count == 0 && heldRows.Count == 0 && applicableRules.Count == 0)
                 throw new ForbiddenException();
 

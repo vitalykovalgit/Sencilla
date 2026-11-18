@@ -4,8 +4,9 @@ namespace Sencilla.Authentication;
 /// The single fluent entry point for the authentication family. Each <c>Use*</c> plugs a
 /// component (issuer, password accounts, social provider, user store); <c>AcceptBearer</c> declares
 /// what tokens this app validates; <c>UseApi</c> governs the built-in HTTP endpoints. Calls only
-/// <em>record</em> intent — <see cref="Build"/> runs once at the end to apply defaults, reuse the
-/// shared signing key, validate the combination, and register everything (so call order is
+/// <em>record</em> intent into options objects (bound from configuration when first created, then
+/// handed to the caller's lambda) — <see cref="Build"/> runs once at the end to apply defaults, reuse
+/// the shared signing key, validate the combination, and register everything (so call order is
 /// irrelevant). <see cref="Services"/> and <see cref="Configuration"/> are exposed as an escape
 /// hatch for custom <c>Use*</c> extensions.
 /// </summary>
@@ -20,12 +21,13 @@ public sealed class AuthenticationConfig
     /// <summary>True when <c>ASPNETCORE_ENVIRONMENT</c> is <c>Development</c>.</summary>
     public bool IsDevelopment { get; }
 
-    internal JwtTokenConfig? Issuer { get; private set; }
-    internal AppAccountsConfig? AppAccounts { get; private set; }
+    internal JwtIssuerOptions? Issuer { get; private set; }
+    internal AppAccountsOptions? AppAccounts { get; private set; }
     internal List<ProviderRegistration> Providers { get; } = [];
     internal Action<IServiceCollection>? UserStore { get; set; }
-    internal BearerConfig? Bearer { get; private set; }
-    internal AuthApiConfig Api { get; } = new();
+    internal BearerOptions? Bearer { get; private set; }
+    internal CookieSessionOptions? CookieSession { get; private set; }
+    internal AuthApiOptions Api { get; } = new();
 
     internal AuthenticationConfig(IServiceCollection services, IConfiguration configuration)
     {
@@ -37,9 +39,19 @@ public sealed class AuthenticationConfig
 
     // ── recording seams used by the Use*/Accept* extensions (same assembly) ──────────────────
 
-    internal JwtTokenConfig GetOrAddIssuer() => Issuer ??= new JwtTokenConfig();
-    internal AppAccountsConfig GetOrAddAppAccounts() => AppAccounts ??= new AppAccountsConfig();
-    internal BearerConfig GetOrAddBearer() => Bearer ??= new BearerConfig();
+    // Configuration binds when the options are created; the caller's lambda, run right after, overrides it.
+    internal JwtIssuerOptions GetOrAddIssuer() => Issuer ??= Configuration.GetSection("Jwt").Get<JwtIssuerOptions>() ?? new();
+    internal BearerOptions GetOrAddBearer() => Bearer ??= new BearerOptions();
+    internal CookieSessionOptions GetOrAddCookieSession() => CookieSession ??= new CookieSessionOptions();
+
+    internal AppAccountsOptions GetOrAddAppAccounts()
+    {
+        if (AppAccounts is not null)
+            return AppAccounts;
+        AppAccounts = new AppAccountsOptions();
+        Configuration.GetSection("Authentication:Password").Bind(AppAccounts.Password);
+        return AppAccounts;
+    }
 
     /// <summary>
     /// Register a social provider verifier and bind its options from <paramref name="section"/>.
@@ -77,43 +89,83 @@ public sealed class AuthenticationConfig
 
     internal void Build()
     {
-        var issuerOptions = BuildIssuer();
+        if (Issuer is not null && CookieSession is not null)
+            throw new InvalidOperationException(
+                "UseCookieSession and UseJwtToken are mutually exclusive: an app issues its sessions through one transport, a cookie or a token pair.");
+
+        if (!Api.Disabled && (AppAccounts is not null || Providers.Count > 0) && Issuer is null && CookieSession is null)
+            throw new InvalidOperationException(
+                "The built-in sign-in endpoints need a session transport: call UseJwtToken() or UseCookieSession(), "
+                + "or disable the built-in endpoints with UseApi(o => o.Disabled = true).");
+
+        BuildIssuer();
+        BuildCookieSession();
         BuildAppAccounts();
         BuildProviders();
         UserStore?.Invoke(Services);
-        BuildBearer(issuerOptions);
+        BuildLinking();
+        BuildBearer();
         BuildEndpoints();
     }
 
-    private JwtIssuerOptions? BuildIssuer()
+    private void BuildCookieSession()
+    {
+        if (CookieSession is null)
+            return;
+
+        var options = CookieSession;
+
+        Services.AddSingleton<IOptions<CookieSessionOptions>>(Microsoft.Extensions.Options.Options.Create(options));
+        Services.AddTransient<ISessionTransport, CookieSessionTransport>();
+        Services.TryAddTransient<IClaimsPrincipalFactory, ClaimsPrincipalFactory>();
+
+        // Chain onto the host's own cookie events (its AddCookie(...) configure runs before PostConfigure):
+        // every sign-in stamps when its session starts (and counts it validated then), and a disabled account
+        // or a credential change after that start ends the session at its next check.
+        Services.AddOptions<CookieAuthenticationOptions>(options.Scheme).PostConfigure(cookie =>
+        {
+            var previousSigningIn = cookie.Events.OnSigningIn;
+            cookie.Events.OnSigningIn = async context =>
+            {
+                await previousSigningIn(context);
+                CookieSessionValidator.RecordSessionStartAsValidated(context.Properties);
+            };
+
+            var previousValidatePrincipal = cookie.Events.OnValidatePrincipal;
+            cookie.Events.OnValidatePrincipal = async context =>
+            {
+                await previousValidatePrincipal(context);
+                if (context.Principal is not null)
+                    await CookieSessionValidator.Validate(context, options);
+            };
+        });
+    }
+
+    private void BuildLinking()
+    {
+        if (AppAccounts is null && Providers.Count == 0 && CookieSession is null)
+            return;
+
+        Services.TryAddTransient<IAccountLinkService, AccountLinkService>();
+    }
+
+    private void BuildIssuer()
     {
         if (Issuer is null)
-            return null;
+            return;
 
-        // Resolve effective issuer options eagerly so AcceptBearer can reuse the symmetric key.
-        var options = new JwtIssuerOptions();
-        var section = Configuration.GetSection("Jwt");
-        if (section.Exists())
-            section.Bind(options);
-        Issuer.OverrideOptions?.Invoke(options);
+        // Applied before BuildBearer, which reuses the symmetric key.
+        if (string.IsNullOrEmpty(Issuer.SigningKey) && IsDevelopment)
+            Issuer.SigningKey = DevSigningKey;
 
-        if (string.IsNullOrEmpty(options.SigningKey) && IsDevelopment)
-            options.SigningKey = DevSigningKey;
-
-        Services.AddSingleton<IOptions<JwtIssuerOptions>>(Microsoft.Extensions.Options.Options.Create(options));
+        Services.AddSingleton<IOptions<JwtIssuerOptions>>(Microsoft.Extensions.Options.Options.Create(Issuer));
+        Services.AddSingleton<IOptions<RefreshTokenOptions>>(Microsoft.Extensions.Options.Options.Create(Issuer.Refresh));
         Services.AddTransient<ITokenIssuer, JwtTokenIssuer>();
+        Services.AddTransient<ISessionTransport, JwtSessionTransport>();
         Services.AddTransient<RefreshTokenService>();
         Services.TryAddTransient<IClaimsPrincipalFactory, ClaimsPrincipalFactory>();
 
-        var refresh = Issuer.RefreshConfig;
-        Services.Configure<RefreshTokenOptions>(o =>
-        {
-            if (refresh.LifetimeDaysValue is { } days) o.LifetimeDays = days;
-            if (refresh.RotateValue is { } rotate) o.Rotate = rotate;
-            if (refresh.DetectReuseValue is { } detect) o.DetectReuse = detect;
-        });
-
-        if (refresh.Storage == RefreshStorage.EntityFramework)
+        if (Issuer.Refresh.Storage == RefreshStorage.EntityFramework)
         {
             // Make the EF repository layer aware of RefreshTokenEntity so DbRefreshTokenStore can
             // resolve its ICreate/IUpdate repositories — independent of whether the host called
@@ -127,8 +179,6 @@ public sealed class AuthenticationConfig
         }
         else
             Services.TryAddSingleton<IRefreshTokenStore, InMemoryRefreshTokenStore>();
-
-        return options;
     }
 
     private void BuildAppAccounts()
@@ -140,18 +190,9 @@ public sealed class AuthenticationConfig
             throw new InvalidOperationException(
                 "UseAppAccounts requires a user store. Call UseUsers(u => u.EntityFrameworkStore()) (or a custom store).");
 
-        var section = Configuration.GetSection("Authentication:Password");
-        Services.Configure<PasswordPolicyOptions>(o =>
-        {
-            if (section.Exists()) section.Bind(o);
-            AppAccounts.PasswordOverride?.Invoke(o);
-        });
-        Services.Configure<LockoutOptions>(o => AppAccounts.LockoutOverride?.Invoke(o));
-        Services.Configure<AppAccountsOptions>(o =>
-        {
-            o.PhoneLoginEnabled = AppAccounts.PhoneLogin;
-            o.DefaultRoles = AppAccounts.DefaultRoles.ToList();
-        });
+        Services.AddSingleton<IOptions<AppAccountsOptions>>(Microsoft.Extensions.Options.Options.Create(AppAccounts));
+        Services.AddSingleton<IOptions<PasswordPolicyOptions>>(Microsoft.Extensions.Options.Options.Create(AppAccounts.Password));
+        Services.AddSingleton<IOptions<LockoutOptions>>(Microsoft.Extensions.Options.Options.Create(AppAccounts.Lockout));
 
         Services.TryAddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
         Services.TryAddTransient<IClaimsPrincipalFactory, ClaimsPrincipalFactory>();
@@ -180,24 +221,24 @@ public sealed class AuthenticationConfig
         Services.TryAddTransient<IExternalAuthService, ExternalAuthService>();
     }
 
-    private void BuildBearer(JwtIssuerOptions? issuerOptions)
+    private void BuildBearer()
     {
         if (Bearer is null)
             return;
 
-        var authority = Bearer.AuthorityValue;
-        var metadata = Bearer.MetadataAddressValue;
-        var signingKey = Bearer.SigningKeyValue ?? issuerOptions?.SigningKey;
-        var issuer = Bearer.IssuerValue ?? issuerOptions?.Issuer;
-        var audiences = Bearer.AudiencesValue.Count > 0
-            ? Bearer.AudiencesValue.ToList()
-            : issuerOptions?.Audience is { Length: > 0 } aud ? [aud] : [];
-        var requireHttps = Bearer.RequireHttpsValue ?? !IsDevelopment;
+        var authority = Bearer.Authority;
+        var metadata = Bearer.MetadataAddress;
+        var signingKey = Bearer.SigningKey ?? Issuer?.SigningKey;
+        var issuer = Bearer.Issuer ?? Issuer?.Issuer;
+        var audiences = Bearer.Audiences.Count > 0
+            ? Bearer.Audiences.ToList()
+            : Issuer?.Audience is { Length: > 0 } aud ? [aud] : [];
+        var requireHttps = Bearer.RequireHttps ?? !IsDevelopment;
 
         if (string.IsNullOrEmpty(authority) && string.IsNullOrEmpty(metadata) && string.IsNullOrEmpty(signingKey))
             throw new InvalidOperationException(
                 "AcceptBearer needs an Authority/MetadataAddress (external IDP) or a signing key. "
-                + "Call UseJwtToken(...) to issue+validate embedded tokens, or AcceptBearer(b => b.SigningKey(...)/b.Authority(...)).");
+                + "Call UseJwtToken(...) to issue+validate embedded tokens, or AcceptBearer(b => b.SigningKey = ... / b.Authority = ...).");
 
         Services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -229,10 +270,11 @@ public sealed class AuthenticationConfig
 
     private void BuildEndpoints()
     {
-        if (Api.Options.Disabled)
+        if (Api.Disabled)
             return;
 
-        Services.AddSingleton<IOptions<AuthApiOptions>>(Microsoft.Extensions.Options.Options.Create(Api.Options));
+        Services.AddSingleton<IOptions<AuthApiOptions>>(Microsoft.Extensions.Options.Options.Create(Api));
+        Services.TryAddSingleton<AuthRateLimiter>();
 
         if (AppAccounts is not null)
         {
@@ -243,7 +285,9 @@ public sealed class AuthenticationConfig
             Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, SessionEndpoint>());
         if (Providers.Count > 0)
             Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, ExternalEndpoint>());
-        if (Bearer is not null && Api.Options.MeEnabled)
+        if (CookieSession is not null)
+            Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, CookieSessionEndpoint>());
+        if ((Bearer is not null || CookieSession is not null) && Api.MeEnabled)
             Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, MeEndpoint>());
     }
 }

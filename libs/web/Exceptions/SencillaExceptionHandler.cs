@@ -3,7 +3,10 @@ namespace Sencilla.Web;
 /// <summary>
 /// Central HTTP mapping for the <see cref="SencillaException"/> family
 /// (BadRequest→400, Unauthorized→401, Forbidden→403, Conflict→409, anything else→500),
-/// written as a ProblemDetails body. Registered by AddSencillaWeb; the host
+/// written as a ProblemDetails body. Forbidden answers 401 instead when the request
+/// carries no authenticated session: the caller is not known, so it is told to sign in
+/// (an expired or ended session included), and 403 stays for a known caller who is not
+/// allowed. Registered by AddSencillaWeb; the host
 /// enables it with app.UseSencillaExceptionHandler(). Endpoints and services
 /// can throw these exceptions and need no try/catch of their own.
 /// Non-Sencilla exceptions are left unhandled so the host default
@@ -20,6 +23,7 @@ public class SencillaExceptionHandler : IExceptionHandler
         {
             BadRequestException => StatusCodes.Status400BadRequest,
             UnauthorizedException => StatusCodes.Status401Unauthorized,
+            ForbiddenException when context.User.Identity?.IsAuthenticated != true => StatusCodes.Status401Unauthorized,
             ForbiddenException => StatusCodes.Status403Forbidden,
             ConflictException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status500InternalServerError,

@@ -101,6 +101,27 @@ public class CreateFileHandlerTests
         _sizeRepo.Verify(r => r.Update(It.Is<FileSizeUpdate>(u => u.Id == fileId && u.Size == 2048), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// FileSizeUpdate is a projection with its own grant: recording the size of someone else's placeholder
+    /// needs the right to change that file, asked first.
+    /// </summary>
+    [Fact]
+    public async Task Handle_ExistingPlaceholderRowUpdateRefused_LeavesSizeAlone()
+    {
+        var fileId = Guid.NewGuid();
+        var existingFile = new File { Id = fileId, Name = "photo.jpg", Size = 0 };
+        var metadata = EncodeMetadata(("id", fileId.ToString()), ("name", "photo.jpg"), ("size", "0"));
+        var context = CreateHttpContext(2048, metadata);
+
+        _createRepo.Setup(r => r.GetById(fileId, It.IsAny<CancellationToken>())).ReturnsAsync(existingFile);
+        _pathResolver.Setup(p => p.GetFullPath(It.IsAny<File>())).Returns("test/path.jpg");
+        _resMergeRepo.Setup(r => r.DemandUpdateAsync(fileId, It.IsAny<CancellationToken>())).ThrowsAsync(new ForbiddenException());
+
+        await Assert.ThrowsAsync<ForbiddenException>(() => CreateHandler().Handle(context, CancellationToken.None));
+
+        _sizeRepo.Verify(r => r.Update(It.IsAny<FileSizeUpdate>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     /// <summary>A row that already knows its size is never rewritten — the first upload's length wins.</summary>
     [Fact]
     public async Task Handle_ExistingSizedRow_LeavesSizeAlone()

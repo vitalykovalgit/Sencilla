@@ -13,7 +13,7 @@ namespace Sencilla.Component.Security;
 public static class PermissionEndpointEx
 {
     /// <summary>
-    /// Denies the request with 403 unless the caller holds <paramref name="action"/> on
+    /// Denies the request with 403 (401 when it carries no session) unless the caller holds <paramref name="action"/> on
     /// <paramref name="resource"/>.
     ///
     /// <code>

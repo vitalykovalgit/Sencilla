@@ -50,4 +50,11 @@ public interface IUpdateRepository<TEntity, TKey> : IReadRepository<TEntity, TKe
     Task<int> JsonMergeAsync<TValue>(TKey id, Expression<Func<TEntity, IDictionary<string, TValue>?>> property,
         string key, TValue value, CancellationToken token = default);
 
+    /// <summary>
+    /// Throws <see cref="ForbiddenException"/> unless the caller may update the row identified by
+    /// <paramref name="id"/>: the pre-image check an update runs, with nothing written. For a write that lands
+    /// outside the database (a blob), which has to be refused before it starts.
+    /// </summary>
+    Task DemandUpdateAsync(TKey id, CancellationToken token = default);
+
 }

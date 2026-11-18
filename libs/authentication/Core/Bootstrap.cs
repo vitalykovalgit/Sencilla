@@ -5,6 +5,7 @@ global using System.Security.Cryptography;
 global using System.Text;
 
 global using Microsoft.AspNetCore.Authentication;
+global using Microsoft.AspNetCore.Authentication.Cookies;
 global using Microsoft.AspNetCore.Authentication.JwtBearer;
 global using Microsoft.AspNetCore.Builder;
 global using Microsoft.AspNetCore.Http;
@@ -27,6 +28,8 @@ using Sencilla.Authentication;
 
 [assembly: InternalsVisibleTo("Sencilla.Authentication.Providers.Tests")]
 [assembly: InternalsVisibleTo("Sencilla.Authentication.Jwt.Tests")]
+[assembly: InternalsVisibleTo("Sencilla.Authentication.Server.Tests")]
+[assembly: InternalsVisibleTo("Sencilla.Authentication.Integration.Tests")]
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -48,10 +51,12 @@ public static class Bootstrap
     }
 
     /// <summary>
-    /// Issue embedded HMAC access tokens and rotating refresh tokens. Identity binds from the
-    /// <c>"Jwt"</c> section. Owns the <c>/refresh</c> and <c>/logout</c> endpoints.
+    /// Issue embedded HMAC access tokens and rotating refresh tokens; sign-in endpoints return the token
+    /// pair. The options bind from the <c>"Jwt"</c> section, then <paramref name="configure"/> overrides
+    /// them (refresh policy and storage under <c>o.Refresh</c>). Owns the <c>/refresh</c> and
+    /// <c>/logout</c> endpoints.
     /// </summary>
-    public static AuthenticationConfig UseJwtToken(this AuthenticationConfig config, Action<JwtTokenConfig>? configure = null)
+    public static AuthenticationConfig UseJwtToken(this AuthenticationConfig config, Action<JwtIssuerOptions>? configure = null)
     {
         var issuer = config.GetOrAddIssuer();
         configure?.Invoke(issuer);
@@ -60,12 +65,26 @@ public static class Bootstrap
 
     /// <summary>
     /// Enable email/password local accounts: register + login endpoints, password and lockout
-    /// policy, optional phone login, and default roles for new users.
+    /// policy, optional phone login, and default roles for new users. <c>o.Password</c> binds from the
+    /// <c>"Authentication:Password"</c> section, then <paramref name="configure"/> overrides it.
     /// </summary>
-    public static AuthenticationConfig UseAppAccounts(this AuthenticationConfig config, Action<AppAccountsConfig>? configure = null)
+    public static AuthenticationConfig UseAppAccounts(this AuthenticationConfig config, Action<AppAccountsOptions>? configure = null)
     {
         var accounts = config.GetOrAddAppAccounts();
         configure?.Invoke(accounts);
+        return config;
+    }
+
+    /// <summary>
+    /// Keep the session in the host's cookie scheme instead of a token pair: login / register /
+    /// reset / external sign the principal in and return the user projection, <c>/logout</c> signs
+    /// out, and the cookie principal is re-validated against the user store every few minutes.
+    /// Mutually exclusive with <see cref="UseJwtToken"/>; do not call <see cref="AcceptBearer"/>.
+    /// </summary>
+    public static AuthenticationConfig UseCookieSession(this AuthenticationConfig config, Action<CookieSessionOptions>? configure = null)
+    {
+        var session = config.GetOrAddCookieSession();
+        configure?.Invoke(session);
         return config;
     }
 
@@ -81,10 +100,10 @@ public static class Bootstrap
 
     /// <summary>
     /// Validate incoming bearer tokens. With no arguments it validates the embedded HMAC tokens this
-    /// app issues (reusing the <c>UseJwtToken</c> key/issuer/audience); pass <c>b =&gt; b.Authority(...)</c>
+    /// app issues (reusing the <c>UseJwtToken</c> key/issuer/audience); pass <c>b =&gt; b.Authority = "..."</c>
     /// to validate an external IDP's tokens via its JWKS.
     /// </summary>
-    public static AuthenticationConfig AcceptBearer(this AuthenticationConfig config, Action<BearerConfig>? configure = null)
+    public static AuthenticationConfig AcceptBearer(this AuthenticationConfig config, Action<BearerOptions>? configure = null)
     {
         var bearer = config.GetOrAddBearer();
         configure?.Invoke(bearer);
@@ -92,7 +111,7 @@ public static class Bootstrap
     }
 
     /// <summary>Shape the built-in authentication endpoints (base path, opt-out, optional <c>/me</c>).</summary>
-    public static AuthenticationConfig UseApi(this AuthenticationConfig config, Action<AuthApiConfig> configure)
+    public static AuthenticationConfig UseApi(this AuthenticationConfig config, Action<AuthApiOptions> configure)
     {
         configure(config.Api);
         return config;

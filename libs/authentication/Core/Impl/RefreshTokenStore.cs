@@ -20,6 +20,9 @@ public interface IRefreshTokenStore
     Task<RefreshToken?> Find(string token, CancellationToken cancellation = default);
     Task Update(RefreshToken token, CancellationToken cancellation = default);
     Task RevokeFamily(Guid familyId, CancellationToken cancellation = default);
+
+    /// <summary>Revoke every live token of a user — after a password reset, nobody else keeps a session.</summary>
+    Task RevokeUser(Guid userId, CancellationToken cancellation = default);
 }
 
 /// <summary>Default in-memory store for embedded single-instance use.</summary>
@@ -45,6 +48,13 @@ public sealed class InMemoryRefreshTokenStore : IRefreshTokenStore
     public Task RevokeFamily(Guid familyId, CancellationToken cancellation = default)
     {
         foreach (var token in _tokens.Values.Where(t => t.FamilyId == familyId))
+            token.Revoked = true;
+        return Task.CompletedTask;
+    }
+
+    public Task RevokeUser(Guid userId, CancellationToken cancellation = default)
+    {
+        foreach (var token in _tokens.Values.Where(t => t.UserId == userId))
             token.Revoked = true;
         return Task.CompletedTask;
     }

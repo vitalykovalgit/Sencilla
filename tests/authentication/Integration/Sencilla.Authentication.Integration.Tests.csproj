@@ -2,11 +2,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\libs\authentication\Core\Sencilla.Authentication.csproj" />
+    <ProjectReference Include="..\..\..\libs\authentication\Google\Sencilla.Authentication.Google.csproj" />
     <ProjectReference Include="..\..\..\libs\repositories\EntityFramework\Sencilla.Repository.EntityFramework.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
   </ItemGroup>
 
 </Project>
