@@ -12,4 +12,5 @@ public class Country : IEntity
     public required string Code { get; set; }
     public required string PhoneCode { get; set; }
     public required string UsaName { get; set; }
+    public string? NameKey { get; set; }
 }
