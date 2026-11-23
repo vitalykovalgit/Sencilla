@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -54,11 +55,68 @@ public sealed class CookieSessionFlowTests
         _store.Verify(s => s.FindById(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    private static HttpRequestMessage WhoAmIWithTheCookieOf(HttpResponseMessage signIn)
+    [Fact]
+    public async Task ResendVerification_PassesATypedAddressOn_AndAnswersARefusalWith400AndItsCode()
     {
-        var whoami = new HttpRequestMessage(HttpMethod.Get, "/whoami");
-        whoami.Headers.Add("Cookie", string.Join("; ", signIn.Headers.GetValues("Set-Cookie").Select(c => c.Split(';')[0])));
-        return whoami;
+        var user = new AuthUser(Guid.NewGuid(), Email: null, EmailConfirmed: false, AuthUserStatus.Active);
+        _recovery.Setup(r => r.RequestEmailVerification(user.Id, "taken@example.com", It.IsAny<CancellationToken>()))
+                 .ThrowsAsync(new BadRequestException("email-taken"));
+        await using var app = await StartHost();
+        var client = app.GetTestClient();
+        var signIn = await SignIn(client, user);
+
+        var typed = await client.SendAsync(WithTheCookieOf(signIn, PostJson("/api/v1/auth/resend-verification", new { email = "new@example.com" })));
+        var none = await client.SendAsync(WithTheCookieOf(signIn, PostJson("/api/v1/auth/resend-verification", new { })));
+        var taken = await client.SendAsync(WithTheCookieOf(signIn, PostJson("/api/v1/auth/resend-verification", new { email = "taken@example.com" })));
+
+        Assert.Equal(HttpStatusCode.OK, typed.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, none.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, taken.StatusCode);
+        Assert.Equal("""{"error":"email-taken"}""", await taken.Content.ReadAsStringAsync());
+        _recovery.Verify(r => r.RequestEmailVerification(user.Id, "new@example.com", It.IsAny<CancellationToken>()), Times.Once);
+        _recovery.Verify(r => r.RequestEmailVerification(user.Id, null, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task PendingEmail_AnswersTheSignedInAccountsPendingAddress_OrNull_AndNothingWithoutASession()
+    {
+        var user = new AuthUser(Guid.NewGuid(), Email: null, EmailConfirmed: false, AuthUserStatus.Active);
+        _recovery.SetupSequence(r => r.FindPendingEmail(user.Id, It.IsAny<CancellationToken>()))
+                 .ReturnsAsync("new@example.com")
+                 .ReturnsAsync((string?)null);
+        await using var app = await StartHost();
+        var client = app.GetTestClient();
+        var signIn = await SignIn(client, user);
+
+        var pending = await client.SendAsync(WithTheCookieOf(signIn, new HttpRequestMessage(HttpMethod.Get, "/api/v1/auth/pending-email")));
+        var none = await client.SendAsync(WithTheCookieOf(signIn, new HttpRequestMessage(HttpMethod.Get, "/api/v1/auth/pending-email")));
+        var anonymous = await client.GetAsync("/api/v1/auth/pending-email");
+
+        Assert.Equal("""{"email":"new@example.com"}""", await pending.Content.ReadAsStringAsync());
+        Assert.Equal("""{"email":null}""", await none.Content.ReadAsStringAsync());
+        // Without a session the cookie scheme's challenge answers (a host maps it to 401 for /api).
+        Assert.NotEqual(HttpStatusCode.OK, anonymous.StatusCode);
+        _recovery.Verify(r => r.FindPendingEmail(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    /// <summary>A cookie session for <paramref name="user"/>, started by the reset endpoint over the faked recovery service.</summary>
+    private async Task<HttpResponseMessage> SignIn(HttpClient client, AuthUser user)
+    {
+        _recovery.Setup(r => r.ResetPassword("reset-token", "N3wSecret!!", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var reset = await client.PostAsJsonAsync("/api/v1/auth/reset-password", new { token = "reset-token", newPassword = "N3wSecret!!" });
+        reset.EnsureSuccessStatusCode();
+        return reset;
+    }
+
+    private static HttpRequestMessage PostJson(string path, object body) => new(HttpMethod.Post, path) { Content = JsonContent.Create(body) };
+
+    private static HttpRequestMessage WhoAmIWithTheCookieOf(HttpResponseMessage signIn)
+        => WithTheCookieOf(signIn, new HttpRequestMessage(HttpMethod.Get, "/whoami"));
+
+    private static HttpRequestMessage WithTheCookieOf(HttpResponseMessage signIn, HttpRequestMessage request)
+    {
+        request.Headers.Add("Cookie", string.Join("; ", signIn.Headers.GetValues("Set-Cookie").Select(c => c.Split(';')[0])));
+        return request;
     }
 
     private async Task<WebApplication> StartHost(Action<CookieSessionOptions>? cookieSession = null)
@@ -68,6 +126,7 @@ public sealed class CookieSessionFlowTests
         builder.WebHost.UseTestServer();
         builder.Services.AddDataProtection().UseEphemeralDataProtectionProvider();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+        builder.Services.AddAuthorization();
         builder.Services.AddSencillaAuthentication(builder.Configuration, a => a
             .UseCookieSession(cookieSession)
             .UseAppAccounts()
@@ -77,6 +136,7 @@ public sealed class CookieSessionFlowTests
 
         var app = builder.Build();
         app.UseAuthentication();
+        app.UseAuthorization();
         app.MapSencillaEndpoints();
         app.MapGet("/whoami", (HttpContext http) => http.User.FindFirst(AuthClaims.Subject)?.Value ?? "anonymous");
         await app.StartAsync();

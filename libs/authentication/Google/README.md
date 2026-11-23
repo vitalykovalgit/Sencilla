@@ -4,8 +4,10 @@ Google sign-in for the Sencilla authentication family, in two shapes that resolv
 
 - **Token exchange** (always on): an `IProviderTokenVerifier` that validates a Google `id_token` against
   Google's JWKS and the configured audiences, for `POST {BasePath}/external` and native apps.
-- **Redirect sign-in** (`RedirectSignIn = true`): ASP.NET's Google handler on `/signin-google`, signing into
-  the host's default sign-in scheme (usually its cookie). The library owns the handler's events.
+- **Redirect sign-in** (`RedirectSignIn = true`): ASP.NET's Google handler, scheme `Google`, on `/signin-google`
+  (register `https://<domain>/signin-google` as an authorized redirect URI of the OAuth client), signing into the
+  host's default sign-in scheme (usually its cookie). The library owns the handler's events — the shared binding of
+  `Sencilla.Authentication` (its README, «Redirect sign-in»), connect included.
 
 ```csharp
 services.AddSencillaAuthentication(configuration, c => c
@@ -18,6 +20,8 @@ services.AddSencillaAuthentication(configuration, c => c
   "Google": {
     "ClientId": "<web-client-id>",          // folded into Audiences; the redirect handler's client id
     "ClientSecret": "<web-client-secret>",  // redirect sign-in only
+    "RedirectSignIn": true,                 // or in the UseGoogle lambda
+    "SignInFailedUrl": "https://example.com/login",
     "Audiences": [ "<ios-client-id>" ]      // extra id_token audiences (native apps)
   }
 }
@@ -34,13 +38,17 @@ Both shapes go through `IExternalAuthService` and `IAccountLinkingPolicy`:
 2. An address nobody owns → a new account.
 3. An address an account owns, and Google says it is **verified** → the login is linked to that account. A
    password credential on it whose address was never confirmed is removed (`PasswordChanged`, reason
-   `removed`): the provider proved who owns the address, so whoever registered that password did not.
+   `removed`, `Provider` = `google`): the provider proved who owns the address, so whoever registered that password
+   did not.
 4. An address an account owns, but Google says it is **not verified** → refused (`email-not-verified`).
 
 On the redirect flow the session carries the account's id as `sub` (not Google's subject), the account's
-email, and is persistent. A refusal never creates a session: it is thrown from the ticket event and lands on
-`{SignInFailedUrl}?error={code}` — the refusal code (`account-not-active`, `email-not-verified`) or
-`google-failed` for anything else. Without `SignInFailedUrl` the failure surfaces as the framework's error.
+email, and is persistent. A refusal never creates a session: it lands on `{SignInFailedUrl}?error={code}` — the
+refusal code (`account-not-active`, `email-not-verified`) or `google-failed` for anything else. Without
+`SignInFailedUrl` the failure surfaces as the framework's error.
+
+The identity is read from Google's user-info answer: `sub`, `email`, `email_verified`, `name`, `given_name`,
+`family_name`, `picture`.
 
 ## License
 

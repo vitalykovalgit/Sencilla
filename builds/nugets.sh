@@ -51,6 +51,8 @@ declare -a packagesInfo=(
     "Sencilla.Authentication.Google:authentication/Google"
     "Sencilla.Authentication.Apple:authentication/Apple"
     "Sencilla.Authentication.Facebook:authentication/Facebook"
+    "Sencilla.Authentication.Telegram:authentication/Telegram"
+    "Sencilla.Authentication.Instagram:authentication/Instagram"
 )
 
 printf "\033[1;33mCleaning old packages...\033[0m\n"

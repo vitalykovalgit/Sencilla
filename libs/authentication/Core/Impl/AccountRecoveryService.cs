@@ -21,24 +21,72 @@ public sealed class AccountRecoveryService(
     private readonly PasswordPolicyOptions _policy = policy.Value;
     private readonly AppAccountsOptions _accounts = accounts.Value;
 
-    public async Task RequestEmailVerification(Guid userId, CancellationToken token = default)
+    public async Task RequestEmailVerification(Guid userId, string? email = null, CancellationToken token = default)
     {
         var user = await users.FindById(userId, token);
-        if (user is null || string.IsNullOrEmpty(user.Email) || user.EmailConfirmed)
+        if (user is null)
             return;
 
-        var rawToken = await IssueToken(user.Id, TokenPurpose.Verify, _accounts.VerificationTokenLifetime, token);
+        var typed = string.IsNullOrWhiteSpace(email) ? null : email.Trim().ToLowerInvariant();
+        if (typed is not null && !CredentialAuthService.IsPlainAddress(typed))
+            throw new BadRequestException("email-invalid");
+        if (string.Equals(typed, user.Email, StringComparison.OrdinalIgnoreCase))
+            typed = null;
 
-        await events.PublishAsync(
-            new EmailVerificationRequested { UserId = user.Id, Email = user.Email, Token = rawToken },
-            token);
+        if (typed is null)
+        {
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                if (!user.EmailConfirmed)
+                    await SendVerificationLink(user.Id, user.Email, isPendingAddress: false, token);
+            }
+            else if (await FindPendingEmail(user.Id, token) is { } pending)
+            {
+                await SendVerificationLink(user.Id, pending, isPendingAddress: true, token);
+            }
+            return;
+        }
+
+        // Changing an existing address is not this flow: a password credential's login key is that address.
+        if (!string.IsNullOrEmpty(user.Email))
+            throw new BadRequestException("email-already-set");
+        if (await users.FindByEmail(typed, token) is not null)
+            throw new BadRequestException("email-taken");
+
+        await SendVerificationLink(user.Id, typed, isPendingAddress: true, token);
+    }
+
+    public async Task<string?> FindPendingEmail(Guid userId, CancellationToken token = default)
+    {
+        using var _ = Access.Root();
+        return await create.Query.AsNoTracking()
+            .Where(t => t.UserId == userId && t.Purpose == TokenPurpose.Verify && t.UsedAt == null && t.Email != null)
+            .OrderByDescending(t => t.ExpiresAt)
+            .Select(t => t.Email)
+            .FirstOrDefaultAsync(token);
     }
 
     public async Task<AuthUser> ConfirmEmail(string verificationToken, CancellationToken token = default)
     {
         var entity = await Consume(verificationToken, TokenPurpose.Verify, token);
-        await users.SetEmailConfirmed(entity.UserId, token);
+        if (entity.Email is null)
+            await users.SetEmailConfirmed(entity.UserId, token);
+        else
+            await users.SetConfirmedEmail(entity.UserId, entity.Email, token);
         return await users.FindById(entity.UserId, token) ?? throw new BadRequestException("token-invalid");
+    }
+
+    /// <summary>
+    /// Mint a verify token for <paramref name="address"/> — carrying it when it is a pending address, not yet the
+    /// account's — and hand the link to the host's mailer.
+    /// </summary>
+    private async Task SendVerificationLink(Guid userId, string address, bool isPendingAddress, CancellationToken token)
+    {
+        var rawToken = await IssueToken(userId, TokenPurpose.Verify, _accounts.VerificationTokenLifetime, token, isPendingAddress ? address : null);
+
+        await events.PublishAsync(
+            new EmailVerificationRequested { UserId = userId, Email = address, Token = rawToken },
+            token);
     }
 
     public async Task RequestPasswordReset(string email, CancellationToken token = default)
@@ -82,7 +130,7 @@ public sealed class AccountRecoveryService(
     }
 
     /// <summary>Retire every open token of this purpose for the user, then mint a fresh one.</summary>
-    private async Task<string> IssueToken(Guid userId, string purpose, TimeSpan lifetime, CancellationToken token)
+    private async Task<string> IssueToken(Guid userId, string purpose, TimeSpan lifetime, CancellationToken token, string? email = null)
     {
         var rawToken = GenerateToken();
         var now = DateTime.UtcNow;
@@ -105,6 +153,7 @@ public sealed class AccountRecoveryService(
                 TokenHash = Hash(rawToken),
                 ExpiresAt = now.Add(lifetime),
                 Purpose = purpose,
+                Email = email,
             }, token);
         }
 

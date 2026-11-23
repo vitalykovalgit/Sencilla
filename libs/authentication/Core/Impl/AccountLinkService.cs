@@ -24,6 +24,14 @@ public sealed class AccountLinkService(
         await events.PublishAsync(new ProviderLinked { UserId = userId, Provider = identity.Provider }, token);
     }
 
-    public Task UnlinkProvider(Guid userId, string provider, CancellationToken token = default)
-        => users.UnlinkProvider(userId, provider, token);
+    public async Task UnlinkProvider(Guid userId, string provider, CancellationToken token = default)
+    {
+        var providers = await users.GetLinkedProviders(userId, token);
+        var isOnlyWayIn = providers.Count == 1 && providers[0].Equals(provider, StringComparison.OrdinalIgnoreCase)
+                          && !await users.HasPasswordCredential(userId, token);
+        if (isOnlyWayIn)
+            throw new BadRequestException("last-sign-in-method");
+
+        await users.UnlinkProvider(userId, provider, token);
+    }
 }

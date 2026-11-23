@@ -18,7 +18,13 @@
   <Folder Name="/libs/Authentication/Google/">
     <Project Path="libs/authentication/Google/Sencilla.Authentication.Google.csproj" />
   </Folder>
+  <Folder Name="/libs/Authentication/Instagram/">
+    <Project Path="libs/authentication/Instagram/Sencilla.Authentication.Instagram.csproj" />
+  </Folder>
   <Folder Name="/libs/Authentication/Server/" />
+  <Folder Name="/libs/Authentication/Telegram/">
+    <Project Path="libs/authentication/Telegram/Sencilla.Authentication.Telegram.csproj" />
+  </Folder>
   <Folder Name="/libs/components/">
     <Project Path="libs/components/Config/Sencilla.Component.Config.csproj" />
     <Project Path="libs/components/Geography/Sencilla.Component.Geography.csproj" />

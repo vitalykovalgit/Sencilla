@@ -7,6 +7,8 @@ CREATE TABLE [sec].[PasswordResetToken]
     [UsedAt]    DATETIME2        NULL,
     -- 'reset' or 'verify' — a reset link can never confirm an address and vice versa.
     [Purpose]   NVARCHAR (16)    NOT NULL CONSTRAINT [DF_PasswordResetToken_Purpose] DEFAULT ('reset'),
+    -- The address a 'verify' token proves when it is not yet the account's; NULL = the account's own.
+    [Email]     NVARCHAR (255)   NULL,
 
     CONSTRAINT [PK_PasswordResetToken] PRIMARY KEY CLUSTERED ([Id] ASC),
 

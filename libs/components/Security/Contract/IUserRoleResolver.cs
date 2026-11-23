@@ -10,7 +10,7 @@ namespace Sencilla.Component.Security;
 public interface IUserRoleResolver
 {
     /// <summary>
-    /// Roles held DIRECTLY: Anonymous for everyone, User for any authenticated identity, plus the
+    /// Roles held DIRECTLY: Anonymous for everyone, User for any account, plus the
     /// persisted <c>sec.UserRole</c> assignments. Deliberately NOT expanded through the parent chain —
     /// callers that need the break-glass <see cref="RoleType.Root"/> check must see it before
     /// inheritance widens the set.

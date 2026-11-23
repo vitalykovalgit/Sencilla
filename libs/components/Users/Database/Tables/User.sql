@@ -4,7 +4,7 @@ CREATE TABLE [sec].[User]
 	[Id]                UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
 
     -- NOT NULL, because the entity is: User.Phone is a non-nullable `long` and 0 is «no phone»
-    -- everywhere (ToUser, EfUserStore, IsAnonymous). A NULL here is not a missing phone, it is a
+    -- everywhere (ToUser, EfUserStore). A NULL here is not a missing phone, it is a
     -- SqlNullValueException from the materializer — for that user on EVERY request, and for
     -- every list that pages over the row. Only raw SQL ever wrote one; now it cannot.
     [Phone]             BIGINT NOT NULL DEFAULT 0,
@@ -38,8 +38,8 @@ CREATE TABLE [sec].[User]
     CONSTRAINT [FK_User_Status]  FOREIGN KEY ([Status]) REFERENCES [sec].[UserStatus](Id),
     CONSTRAINT [FK_User_Gender]  FOREIGN KEY ([Gender]) REFERENCES [sec].[UserGender](Id),
 
-	-- it can come as 0 let's disable for now
-    --CONSTRAINT [UC_User_Phone] UNIQUE ([Phone]),
+    -- A confirmed phone belongs to one account; a typed (unconfirmed) phone may repeat, 0 «no phone» too.
+    INDEX [UX_User_Phone] UNIQUE NONCLUSTERED ([Phone]) WHERE [PhoneConf] = 1,
 
     -- Email is optional (social-only accounts may have none / a relay); unique only when present.
     INDEX [UX_User_Email] UNIQUE NONCLUSTERED ([Email]) WHERE [Email] IS NOT NULL,

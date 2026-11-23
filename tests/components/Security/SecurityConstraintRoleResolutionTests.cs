@@ -30,21 +30,30 @@ public class SecurityConstraintRoleResolutionTests
     [Fact]
     public void AnonymousUser_GetsAnonymousOnly()
     {
-        // No email and phone 0 → IsAnonymous().
+        // No account id → IsAnonymous().
         var roles = Resolver().Resolve(new User());
         Assert.Equal(new HashSet<int> { (int)RoleType.Anonymous }, roles);
     }
 
     [Fact]
-    public void AuthenticatedUser_WithoutPersistedId_GetsUserRole()
+    public void AnEmailWithoutAnAccountId_IsStillTheVisitor()
     {
-        // First-login self-registration: verified identity (email) but no DB Id yet.
-        // Regression guard — previously the empty Id stripped the User role, leaving
-        // only Anonymous, which forbade the registration insert (403).
-        var user = new User { Email = "new@example.com", Id = Guid.Empty };
+        // Since the session carries an account id, a contact alone is nobody's account.
+        var user = new User { Email = "new@example.com", Phone = 380501234567, Id = Guid.Empty };
+
+        Assert.True(user.IsAnonymous());
+        Assert.Equal(new HashSet<int> { (int)RoleType.Anonymous }, Resolver().Resolve(user));
+    }
+
+    [Fact]
+    public void AnAccountWithNeitherAnEmailNorAPhone_GetsTheUserRole()
+    {
+        // A social sign-in that gave no contact (Instagram, Telegram without the phone) is still an account.
+        var user = new User { Id = Guid.NewGuid() };
 
         var roles = Resolver().Resolve(user);
 
+        Assert.False(user.IsAnonymous());
         Assert.Contains((int)RoleType.Anonymous, roles);
         Assert.Contains((int)RoleType.User, roles);
     }
@@ -57,7 +66,7 @@ public class SecurityConstraintRoleResolutionTests
         var closure = new Mock<IRoleClosure>();
         closure.Setup(c => c.Expand(It.IsAny<HashSet<int>>())).Returns([9999]);
 
-        var roles = Resolver(closure.Object).Resolve(new User { Email = "a@b.c", Id = Guid.Empty });
+        var roles = Resolver(closure.Object).Resolve(new User { Email = "a@b.c", Id = Guid.NewGuid() });
 
         Assert.DoesNotContain(9999, roles);
         closure.Verify(c => c.Expand(It.IsAny<HashSet<int>>()), Times.Never);

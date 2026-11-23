@@ -8,8 +8,11 @@ public enum LinkAction
     /// <summary>No matching account — provision a new user from the external identity.</summary>
     Create,
 
-    /// <summary>The provider identity is already this account's (or the signed-in user is attaching it to their own).</summary>
+    /// <summary>The provider identity is already this account's.</summary>
     Link,
+
+    /// <summary>A signed-in user attaches this new provider identity to their own account (a connect).</summary>
+    Connect,
 
     /// <summary>
     /// The provider verified the address, so the login is attached to the account that owns it; an
@@ -30,6 +33,7 @@ public sealed record AccountDecision(LinkAction Action, string? Reason = null)
 {
     public static AccountDecision Create(string? reason = null) => new(LinkAction.Create, reason);
     public static AccountDecision Link(string? reason = null) => new(LinkAction.Link, reason);
+    public static AccountDecision Connect(string? reason = null) => new(LinkAction.Connect, reason);
     public static AccountDecision LinkByEmail(string? reason = null) => new(LinkAction.LinkByEmail, reason);
     public static AccountDecision Reject(string? reason = null) => new(LinkAction.Reject, reason);
 }

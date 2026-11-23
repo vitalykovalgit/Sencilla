@@ -29,9 +29,20 @@ public interface IUserStore
 
     Task SetPasswordHash(Guid userId, string passwordHash, CancellationToken token = default);
 
+    /// <summary>
+    /// Attach a provider login to an existing account. A provider-verified phone confirms the account's number when it
+    /// is that number, or is written, confirmed, when the account has none — never over a different one, and not
+    /// confirmed while another account has it confirmed.
+    /// </summary>
     Task LinkProvider(Guid userId, ExternalIdentity identity, CancellationToken token = default);
 
     Task SetEmailConfirmed(Guid userId, CancellationToken token = default);
+
+    /// <summary>
+    /// Put an address the user has just proven (a followed verification link) on the account, confirmed.
+    /// Refuses with <c>email-taken</c> when another account holds it by then.
+    /// </summary>
+    Task SetConfirmedEmail(Guid userId, string email, CancellationToken token = default);
 
     Task<bool> HasPasswordCredential(Guid userId, CancellationToken token = default);
 
@@ -40,6 +51,12 @@ public interface IUserStore
 
     /// <summary>Delete the external-login rows of one provider.</summary>
     Task UnlinkProvider(Guid userId, string provider, CancellationToken token = default);
+
+    /// <summary>The providers the account signs in with, lower-cased, each once — a password is not one (<see cref="HasPasswordCredential"/>).</summary>
+    Task<IReadOnlyList<string>> GetLinkedProviders(Guid userId, CancellationToken token = default);
+
+    /// <summary>Whether the account's phone is confirmed and another live account has the same number (typed, as a confirmed phone belongs to one account).</summary>
+    Task<bool> IsConfirmedPhoneOnAnotherAccount(Guid userId, CancellationToken token = default);
 
     Task<IReadOnlyList<string>> GetRoles(Guid userId, CancellationToken token = default);
 }

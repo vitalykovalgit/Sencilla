@@ -8,13 +8,10 @@ namespace Sencilla.Authentication;
 /// handed to the caller's lambda) — <see cref="Build"/> runs once at the end to apply defaults, reuse
 /// the shared signing key, validate the combination, and register everything (so call order is
 /// irrelevant). <see cref="Services"/> and <see cref="Configuration"/> are exposed as an escape
-/// hatch for custom <c>Use*</c> extensions.
+/// hatch for custom <c>Use*</c> extensions. This part records; <c>AuthenticationConfig.Build.cs</c> registers.
 /// </summary>
-public sealed class AuthenticationConfig
+public sealed partial class AuthenticationConfig
 {
-    // A clearly-marked development fallback so a dev host without a configured key still boots.
-    private const string DevSigningKey = "sencilla-dev-only-signing-key-change-me-please!!";
-
     public IServiceCollection Services { get; }
     public IConfiguration Configuration { get; }
 
@@ -24,6 +21,7 @@ public sealed class AuthenticationConfig
     internal JwtIssuerOptions? Issuer { get; private set; }
     internal AppAccountsOptions? AppAccounts { get; private set; }
     internal List<ProviderRegistration> Providers { get; } = [];
+    internal List<RedirectSignInRegistration> RedirectSignIns { get; } = [];
     internal Action<IServiceCollection>? UserStore { get; set; }
     internal BearerOptions? Bearer { get; private set; }
     internal CookieSessionOptions? CookieSession { get; private set; }
@@ -85,212 +83,43 @@ public sealed class AuthenticationConfig
         return this;
     }
 
-    // ── materialization ──────────────────────────────────────────────────────────────────────
-
-    internal void Build()
+    /// <summary>
+    /// Read a provider's redirect sign-in from <paramref name="section"/>, then <paramref name="configure"/>: null while
+    /// its <see cref="RedirectSignInOptions.RedirectSignIn"/> is off, otherwise the options the provider registers its
+    /// handler from — after refusing at startup while a setting it needs is missing. Records the provider for
+    /// <c>GET {BasePath}/providers</c> and binds the <paramref name="scheme"/> handler's events to the account graph
+    /// (<see cref="RedirectSignInBinding"/>): a provider supplies only <paramref name="readIdentity"/>, how to read its
+    /// answer — the handler's principal — into an <see cref="ExternalIdentity"/>. The one extension point a redirect
+    /// provider needs, as <see cref="AddProvider{TVerifier, TOptions}"/> is for a verifier.
+    /// </summary>
+    public TOptions? AddRedirectSignIn<TOptions, THandlerOptions>(
+        string provider, string scheme, string section, Action<TOptions>? configure, Func<ClaimsPrincipal, ExternalIdentity> readIdentity)
+        where TOptions : RedirectSignInOptions, new()
+        where THandlerOptions : RemoteAuthenticationOptions
     {
-        if (Issuer is not null && CookieSession is not null)
+        var options = new TOptions();
+        Configuration.GetSection(section).Bind(options);
+        configure?.Invoke(options);
+        if (!options.RedirectSignIn)
+            return null;
+
+        var missing = options.FindMissingRedirectSettings().ToList();
+        if (missing.Count > 0)
             throw new InvalidOperationException(
-                "UseCookieSession and UseJwtToken are mutually exclusive: an app issues its sessions through one transport, a cookie or a token pair.");
+                $"{scheme} RedirectSignIn needs {string.Join(", ", missing)} ({section} or the Use{scheme} lambda).");
 
-        if (!Api.Disabled && (AppAccounts is not null || Providers.Count > 0) && Issuer is null && CookieSession is null)
-            throw new InvalidOperationException(
-                "The built-in sign-in endpoints need a session transport: call UseJwtToken() or UseCookieSession(), "
-                + "or disable the built-in endpoints with UseApi(o => o.Disabled = true).");
-
-        BuildIssuer();
-        BuildCookieSession();
-        BuildAppAccounts();
-        BuildProviders();
-        UserStore?.Invoke(Services);
-        BuildLinking();
-        BuildBearer();
-        BuildEndpoints();
-    }
-
-    private void BuildCookieSession()
-    {
-        if (CookieSession is null)
-            return;
-
-        var options = CookieSession;
-
-        Services.AddSingleton<IOptions<CookieSessionOptions>>(Microsoft.Extensions.Options.Options.Create(options));
-        Services.AddTransient<ISessionTransport, CookieSessionTransport>();
-        Services.TryAddTransient<IClaimsPrincipalFactory, ClaimsPrincipalFactory>();
-
-        // Chain onto the host's own cookie events (its AddCookie(...) configure runs before PostConfigure):
-        // every sign-in stamps when its session starts (and counts it validated then), and a disabled account
-        // or a credential change after that start ends the session at its next check.
-        Services.AddOptions<CookieAuthenticationOptions>(options.Scheme).PostConfigure(cookie =>
-        {
-            var previousSigningIn = cookie.Events.OnSigningIn;
-            cookie.Events.OnSigningIn = async context =>
-            {
-                await previousSigningIn(context);
-                CookieSessionValidator.RecordSessionStartAsValidated(context.Properties);
-            };
-
-            var previousValidatePrincipal = cookie.Events.OnValidatePrincipal;
-            cookie.Events.OnValidatePrincipal = async context =>
-            {
-                await previousValidatePrincipal(context);
-                if (context.Principal is not null)
-                    await CookieSessionValidator.Validate(context, options);
-            };
-        });
-    }
-
-    private void BuildLinking()
-    {
-        if (AppAccounts is null && Providers.Count == 0 && CookieSession is null)
-            return;
-
-        Services.TryAddTransient<IAccountLinkService, AccountLinkService>();
-    }
-
-    private void BuildIssuer()
-    {
-        if (Issuer is null)
-            return;
-
-        // Applied before BuildBearer, which reuses the symmetric key.
-        if (string.IsNullOrEmpty(Issuer.SigningKey) && IsDevelopment)
-            Issuer.SigningKey = DevSigningKey;
-
-        Services.AddSingleton<IOptions<JwtIssuerOptions>>(Microsoft.Extensions.Options.Options.Create(Issuer));
-        Services.AddSingleton<IOptions<RefreshTokenOptions>>(Microsoft.Extensions.Options.Options.Create(Issuer.Refresh));
-        Services.AddTransient<ITokenIssuer, JwtTokenIssuer>();
-        Services.AddTransient<ISessionTransport, JwtSessionTransport>();
-        Services.AddTransient<RefreshTokenService>();
-        Services.TryAddTransient<IClaimsPrincipalFactory, ClaimsPrincipalFactory>();
-
-        if (Issuer.Refresh.Storage == RefreshStorage.EntityFramework)
-        {
-            // Make the EF repository layer aware of RefreshTokenEntity so DbRefreshTokenStore can
-            // resolve its ICreate/IUpdate repositories — independent of whether the host called
-            // AddSencillaRepositoryForEF before or after us. We register the CRUD repos against the
-            // dynamic context and add the entity to the model so sec.RefreshToken is mapped.
-            Services.RegisterEFRepositoriesForType(typeof(RefreshTokenEntity), out _);
-            if (!RepositoryEntityFrameworkBootstrap.Entities.Contains(typeof(RefreshTokenEntity)))
-                RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(RefreshTokenEntity));
-
-            Services.AddTransient<IRefreshTokenStore, DbRefreshTokenStore>();
-        }
-        else
-            Services.TryAddSingleton<IRefreshTokenStore, InMemoryRefreshTokenStore>();
-    }
-
-    private void BuildAppAccounts()
-    {
-        if (AppAccounts is null)
-            return;
-
-        if (UserStore is null)
-            throw new InvalidOperationException(
-                "UseAppAccounts requires a user store. Call UseUsers(u => u.EntityFrameworkStore()) (or a custom store).");
-
-        Services.AddSingleton<IOptions<AppAccountsOptions>>(Microsoft.Extensions.Options.Options.Create(AppAccounts));
-        Services.AddSingleton<IOptions<PasswordPolicyOptions>>(Microsoft.Extensions.Options.Options.Create(AppAccounts.Password));
-        Services.AddSingleton<IOptions<LockoutOptions>>(Microsoft.Extensions.Options.Options.Create(AppAccounts.Lockout));
-
-        Services.TryAddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
-        Services.TryAddTransient<IClaimsPrincipalFactory, ClaimsPrincipalFactory>();
-        Services.TryAddTransient<ICredentialAuthService, CredentialAuthService>();
-        Services.TryAddTransient<IAccountRecoveryService, AccountRecoveryService>();
-
-        // PasswordResetToken needs its EF repository wired just like RefreshTokenEntity.
-        Services.RegisterEFRepositoriesForType(typeof(PasswordResetToken), out _);
-        if (!RepositoryEntityFrameworkBootstrap.Entities.Contains(typeof(PasswordResetToken)))
-            RepositoryEntityFrameworkBootstrap.Entities.Add(typeof(PasswordResetToken));
-
-        if (AppAccounts.DefaultRoles.Count > 0)
-            Services.AddTransient<IEventHandlerBase<UserRegistered>, DefaultRoleAssigner>();
-    }
-
-    private void BuildProviders()
-    {
-        if (Providers.Count == 0)
-            return;
-
-        foreach (var provider in Providers)
-            provider.Register();
-
-        Services.TryAddTransient<IAccountLinkingPolicy, AccountLinkingPolicy>();
-        Services.TryAddTransient<IClaimsPrincipalFactory, ClaimsPrincipalFactory>();
-        Services.TryAddTransient<IExternalAuthService, ExternalAuthService>();
-    }
-
-    private void BuildBearer()
-    {
-        if (Bearer is null)
-            return;
-
-        var authority = Bearer.Authority;
-        var metadata = Bearer.MetadataAddress;
-        var signingKey = Bearer.SigningKey ?? Issuer?.SigningKey;
-        var issuer = Bearer.Issuer ?? Issuer?.Issuer;
-        var audiences = Bearer.Audiences.Count > 0
-            ? Bearer.Audiences.ToList()
-            : Issuer?.Audience is { Length: > 0 } aud ? [aud] : [];
-        var requireHttps = Bearer.RequireHttps ?? !IsDevelopment;
-
-        if (string.IsNullOrEmpty(authority) && string.IsNullOrEmpty(metadata) && string.IsNullOrEmpty(signingKey))
-            throw new InvalidOperationException(
-                "AcceptBearer needs an Authority/MetadataAddress (external IDP) or a signing key. "
-                + "Call UseJwtToken(...) to issue+validate embedded tokens, or AcceptBearer(b => b.SigningKey = ... / b.Authority = ...).");
-
-        Services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(jwt =>
-            {
-                jwt.RequireHttpsMetadata = requireHttps;
-
-                if (!string.IsNullOrEmpty(authority))
-                    jwt.Authority = authority;
-                if (!string.IsNullOrEmpty(metadata))
-                    jwt.MetadataAddress = metadata;
-
-                jwt.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = !string.IsNullOrEmpty(issuer),
-                    ValidIssuer = issuer,
-                    ValidateAudience = audiences.Count > 0,
-                    ValidAudiences = audiences,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    NameClaimType = AuthClaims.Subject,
-                };
-
-                if (!string.IsNullOrEmpty(signingKey))
-                    jwt.TokenValidationParameters.IssuerSigningKey =
-                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
-            });
-    }
-
-    private void BuildEndpoints()
-    {
-        if (Api.Disabled)
-            return;
-
-        Services.AddSingleton<IOptions<AuthApiOptions>>(Microsoft.Extensions.Options.Options.Create(Api));
-        Services.TryAddSingleton<AuthRateLimiter>();
-
-        if (AppAccounts is not null)
-        {
-            Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, AppAccountsEndpoint>());
-            Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, RecoveryEndpoint>());
-        }
-        if (Issuer is not null)
-            Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, SessionEndpoint>());
-        if (Providers.Count > 0)
-            Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, ExternalEndpoint>());
-        if (CookieSession is not null)
-            Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, CookieSessionEndpoint>());
-        if ((Bearer is not null || CookieSession is not null) && Api.MeEnabled)
-            Services.TryAddEnumerable(ServiceDescriptor.Transient<IEndpoint, MeEndpoint>());
+        // A post-configure: the library owns these two events, whatever the host's own configure set. Registered at
+        // Build, after the provider's Add*, whose TryAdd of its own post-configure (Apple's) would otherwise see this
+        // one and skip.
+        RedirectSignIns.Add(new RedirectSignInRegistration(new RedirectSignInProvider(provider, scheme), () => Services
+            .AddOptions<THandlerOptions>(scheme)
+            .PostConfigure(handler => RedirectSignInBinding.Bind(handler, provider, options.SignInFailedUrl, readIdentity))));
+        return options;
     }
 }
 
 /// <summary>A recorded social-provider registration (verifier + options binding).</summary>
 internal sealed record ProviderRegistration(string Provider, Action Register);
+
+/// <summary>A recorded redirect sign-in: what <c>/providers</c> lists, and the binding of its handler's events.</summary>
+internal sealed record RedirectSignInRegistration(RedirectSignInProvider Provider, Action Bind);

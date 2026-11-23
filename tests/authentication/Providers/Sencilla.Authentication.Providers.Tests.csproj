@@ -4,6 +4,8 @@
     <ProjectReference Include="..\..\..\libs\authentication\Google\Sencilla.Authentication.Google.csproj" />
     <ProjectReference Include="..\..\..\libs\authentication\Apple\Sencilla.Authentication.Apple.csproj" />
     <ProjectReference Include="..\..\..\libs\authentication\Facebook\Sencilla.Authentication.Facebook.csproj" />
+    <ProjectReference Include="..\..\..\libs\authentication\Telegram\Sencilla.Authentication.Telegram.csproj" />
+    <ProjectReference Include="..\..\..\libs\authentication\Instagram\Sencilla.Authentication.Instagram.csproj" />
   </ItemGroup>
 
 </Project>

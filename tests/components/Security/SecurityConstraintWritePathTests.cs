@@ -155,7 +155,7 @@ public class SecurityConstraintWritePathTests
     public async Task RootRole_BypassesChecks_EvenWithEmptyMatrix()
     {
         GrantNothing();
-        var root = new User { Email = "root@example.com" };
+        var root = new User { Id = Guid.NewGuid(), Email = "root@example.com" };
         root.AddRole((int)RoleType.Root);
         var sysVars = Mock.Of<ISystemVariable>(s => s.Get<User>("user") == root);
 

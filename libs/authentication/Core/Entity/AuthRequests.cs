@@ -53,13 +53,21 @@ public sealed record VerifyEmailRequest
 }
 
 /// <summary>
-/// Deliberately empty bodies. A JSON body parameter makes the endpoint reject anything that is not
+/// A deliberately empty body. A JSON body parameter makes the endpoint reject anything that is not
 /// <c>application/json</c> (415), which is what keeps a cross-site HTML form post — which rides the
 /// cookie — away from state-changing endpoints that otherwise need no input.
 /// </summary>
 public sealed record LogoutRequest;
 
-public sealed record ResendVerificationRequest;
+/// <summary>
+/// Input for resending the verification link — a JSON body for the reason <see cref="LogoutRequest"/> gives.
+/// <see cref="Email"/> is an address typed for an account that has none: the link goes there and the address
+/// stays pending until it is followed. Omitted: the account's own address, or its pending one.
+/// </summary>
+public sealed record ResendVerificationRequest
+{
+    public string? Email { get; init; }
+}
 
 /// <summary>Input for an authenticated password change.</summary>
 public sealed record ChangePasswordRequest

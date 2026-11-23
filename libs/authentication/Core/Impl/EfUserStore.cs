@@ -6,9 +6,10 @@ namespace Sencilla.Authentication;
 /// Every operation runs under <see cref="Access.Root"/>: the caller of register / login / reset is
 /// anonymous, and these rows are owned by the framework, not by the security matrix. Reads are
 /// non-tracking on purpose: a user found by <see cref="FindByEmail"/> is routinely updated a few
-/// calls later in the same request, and a tracked copy would make that update throw.
+/// calls later in the same request, and a tracked copy would make that update throw. This part holds the account rows;
+/// <c>EfUserStore.Logins.cs</c> the login rows (password, providers), <c>EfUserStore.Phone.cs</c> the confirmed phone.
 /// </summary>
-public sealed class EfUserStore : IUserStore
+public sealed partial class EfUserStore : IUserStore
 {
     private const string PasswordProvider = "password";
 
@@ -74,19 +75,6 @@ public sealed class EfUserStore : IUserStore
         return auth is null ? null : await FindById(auth.UserId, token);
     }
 
-    public async Task<PasswordCredential?> FindPasswordCredential(string email, CancellationToken token = default)
-    {
-        using var _ = Access.Root();
-        var normalized = Normalize(email);
-        var auth = await _authRead.Query.AsNoTracking()
-            .FirstOrDefaultAsync(a => a.Auth == PasswordProvider && a.ProviderKey == normalized, token);
-        if (auth?.PasswordHash is null)
-            return null;
-
-        var user = await _userRead.GetById(auth.UserId, token);
-        return user is null ? null : new PasswordCredential(Map(user), auth.PasswordHash);
-    }
-
     public async Task<AuthUser> CreateWithPasswordCredential(AuthUser user, string passwordHash, CancellationToken token = default)
     {
         using var _ = Access.Root();
@@ -113,83 +101,25 @@ public sealed class EfUserStore : IUserStore
         return Map(created);
     }
 
-    public async Task SetPasswordHash(Guid userId, string passwordHash, CancellationToken token = default)
-    {
-        using var _ = Access.Root();
-        var auth = await _authRead.Query.AsNoTracking()
-            .FirstOrDefaultAsync(a => a.UserId == userId && a.Auth == PasswordProvider, token);
-
-        if (auth is null)
-        {
-            var user = await _userRead.GetById(userId, token);
-            await _authCreate.Create(
-                NewAuth(userId, PasswordProvider, Normalize(user?.Email), user?.Email, passwordHash), token);
-        }
-        else
-        {
-            auth.PasswordHash = passwordHash;
-            await _authUpdate.Update(auth, token);
-        }
-
-        await TouchCredentials(userId, token);
-    }
-
-    public async Task<bool> HasPasswordCredential(Guid userId, CancellationToken token = default)
-    {
-        using var _ = Access.Root();
-        return await _authRead.Query.AsNoTracking().AnyAsync(a => a.UserId == userId && a.Auth == PasswordProvider && a.PasswordHash != null, token);
-    }
-
-    public async Task RemovePasswordCredential(Guid userId, CancellationToken token = default)
-    {
-        using var _ = Access.Root();
-        var rows = await _authRead.Query.AsNoTracking().Where(a => a.UserId == userId && a.Auth == PasswordProvider).ToListAsync(token);
-        if (rows.Count == 0)
-            return;
-
-        await _authDelete.Delete(rows, token);
-        await TouchCredentials(userId, token);
-    }
-
-    public async Task LinkProvider(Guid userId, ExternalIdentity identity, CancellationToken token = default)
-    {
-        using var _ = Access.Root();
-        var key = identity.Provider.ToLowerInvariant();
-        var rows = await _authRead.Query.AsNoTracking().Where(a => a.UserId == userId && a.Auth.ToLower() == key).ToListAsync(token);
-
-        if (rows.Any(a => a.ProviderKey == identity.Subject))
-            return;
-
-        // Adopt a row the legacy first-login path wrote without a subject (Auth = scheme name,
-        // ProviderKey NULL) instead of adding a second one for the same provider.
-        var legacy = rows.FirstOrDefault(a => a.ProviderKey is null);
-        if (legacy is not null)
-        {
-            legacy.ProviderKey = identity.Subject;
-            legacy.Email ??= identity.Email;
-            await _authUpdate.Update(legacy, token);
-            return;
-        }
-
-        await _authCreate.Create(NewAuth(userId, identity.Provider, identity.Subject, identity.Email), token);
-    }
-
-    public async Task UnlinkProvider(Guid userId, string provider, CancellationToken token = default)
-    {
-        using var _ = Access.Root();
-        var key = provider.ToLowerInvariant();
-        if (key == PasswordProvider)
-            return;
-        var rows = await _authRead.Query.AsNoTracking().Where(a => a.UserId == userId && a.Auth.ToLower() == key).ToListAsync(token);
-        if (rows.Count > 0)
-            await _authDelete.Delete(rows, token);
-    }
-
     public async Task SetEmailConfirmed(Guid userId, CancellationToken token = default)
     {
         using var _ = Access.Root();
         if (await _userRead.GetById(userId, token) is not { } user)
             return;
+        user.EmailConf = true;
+        await _userUpdate.Update(user, token);
+    }
+
+    public async Task SetConfirmedEmail(Guid userId, string email, CancellationToken token = default)
+    {
+        using var _ = Access.Root();
+        var normalized = Normalize(email);
+        // The unique index UX_User_Email backs this check against a write landing between the two.
+        if (await _userRead.Query.AsNoTracking().AnyAsync(u => u.Email == normalized && u.Id != userId, token))
+            throw new BadRequestException("email-taken");
+        if (await _userRead.GetById(userId, token) is not { } user)
+            return;
+        user.Email = normalized;
         user.EmailConf = true;
         await _userUpdate.Update(user, token);
     }
@@ -201,24 +131,18 @@ public sealed class EfUserStore : IUserStore
         return roles.Select(r => r.Role ?? r.RoleId.ToString()).ToList();
     }
 
-    /// <summary>Stamp the user so sessions issued before this moment can be rejected (see the cookie validator).</summary>
-    private async Task TouchCredentials(Guid userId, CancellationToken token)
-    {
-        if (await _userRead.GetById(userId, token) is not { } user)
-            return;
-        user.CredentialsChangedAt = DateTime.UtcNow;
-        await _userUpdate.Update(user, token);
-    }
-
     private async Task<User> CreateUser(AuthUser user, CancellationToken token, ExternalIdentity? identity = null)
     {
         var (first, last) = FirstAndLastNameOf(identity);
+        var id = user.Id == Guid.Empty ? Guid.NewGuid() : user.Id;
+        var (phone, isPhoneConfirmed) = await PhoneWithProvidersNumber(id, identity?.Phone ?? user.Phone ?? 0, isConfirmed: false, identity, token);
         var entity = new User
         {
-            Id = user.Id == Guid.Empty ? Guid.NewGuid() : user.Id,
+            Id = id,
             Email = user.Email,
             EmailConf = user.EmailConfirmed,
-            Phone = user.Phone ?? 0,
+            Phone = phone,
+            PhoneConf = isPhoneConfirmed,
             FirstName = first,
             LastName = last,
             Pic = identity?.Picture,
@@ -243,17 +167,6 @@ public sealed class EfUserStore : IUserStore
         var space = trimmed.IndexOf(' ');
         return space < 0 ? (trimmed, null) : (trimmed[..space], trimmed[(space + 1)..].Trim());
     }
-
-    private static UserAuth NewAuth(Guid userId, string auth, string? providerKey, string? email, string? passwordHash = null) => new()
-    {
-        Id = Guid.NewGuid(),
-        UserId = userId,
-        Auth = auth,
-        ProviderKey = providerKey,
-        Email = email,
-        PasswordHash = passwordHash,
-        CreatedDate = DateTime.UtcNow,
-    };
 
     private static AuthUser Map(User user) => new(
         user.Id,

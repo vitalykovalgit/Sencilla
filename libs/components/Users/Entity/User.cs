@@ -55,10 +55,12 @@ public class User : IEntity<Guid>, IEntityCreateableTrack, IEntityUpdateableTrac
         return this;
     }
 
-    public bool IsAnonymous()
-    {
-        return string.IsNullOrEmpty(Email) && Phone == 0;
-    }
+    /// <summary>
+    /// The visitor: a caller with no account. The session carries an account id, so the id decides — not a
+    /// contact: an account with neither an email nor a phone (a social sign-in that gave no contact) is still
+    /// an account, with an account's rights.
+    /// </summary>
+    public bool IsAnonymous() => Id == Guid.Empty;
 
     /// <summary>The user a request runs as when its session carries no account: no id, the Anonymous role.</summary>
     public static User CreateAnonymous()

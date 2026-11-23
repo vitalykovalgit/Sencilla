@@ -29,12 +29,8 @@ public class UserRoleResolver(
         foreach (var role in user.Roles ?? [])
             roleIds.Add(role.RoleId);
 
-        // Any identified user (an email or a phone) holds the User role.
+        // Any account holds the User role.
         roleIds.Add((int)RoleType.User);
-
-        // Persisted role assignments (e.g. Admin in sec.UserRole) require a real Id.
-        if (user.Id == Guid.Empty)
-            return roleIds;
 
         var dbRoles = cache.GetOrCreate($"sec_user_roles_{user.Id}", entry =>
         {

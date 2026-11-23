@@ -16,4 +16,10 @@ public class PasswordResetToken : IEntity<Guid>, IEntityCreateable, IEntityUpdat
     public DateTime ExpiresAt { get; set; }
     public DateTime? UsedAt { get; set; }
     public string Purpose { get; set; } = TokenPurpose.Reset;
+
+    /// <summary>
+    /// The address a <see cref="TokenPurpose.Verify"/> token proves when it is not yet the account's: it reaches
+    /// the account only when the link is followed. Null = the account's own address.
+    /// </summary>
+    public string? Email { get; set; }
 }

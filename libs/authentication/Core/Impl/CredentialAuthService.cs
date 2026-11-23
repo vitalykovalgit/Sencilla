@@ -52,7 +52,7 @@ public sealed class CredentialAuthService : ICredentialAuthService
         await _events.PublishAsync(new UserRegistered { UserId = created.Id, Email = created.Email, Method = "password" }, token);
 
         if (_accounts.VerifyEmailOnRegister)
-            await _recovery.RequestEmailVerification(created.Id, token);
+            await _recovery.RequestEmailVerification(created.Id, token: token);
 
         return created;
     }

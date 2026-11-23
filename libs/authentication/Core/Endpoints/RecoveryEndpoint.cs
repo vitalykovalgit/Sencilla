@@ -3,7 +3,8 @@ namespace Sencilla.Authentication;
 /// <summary>
 /// Password-recovery and address-verification endpoints — registered by <c>UseAppAccounts</c>,
 /// mounted under <see cref="AuthApiOptions.BasePath"/>. Always returns 200 for forgot-password
-/// (enumeration protection); returns 400 with a structured error code when a token is rejected.
+/// (enumeration protection); returns 400 with a structured error code when a token or a typed address
+/// is rejected.
 /// A successful reset signs the user in through the configured <see cref="ISessionTransport"/>.
 /// </summary>
 public sealed class RecoveryEndpoint(IOptions<AuthApiOptions> api, AuthRateLimiter limiter) : IEndpoint
@@ -19,6 +20,10 @@ public sealed class RecoveryEndpoint(IOptions<AuthApiOptions> api, AuthRateLimit
         app.MapPost(api.Value.BasePath + "/resend-verification", ResendVerification)
            .RequireAuthorization()
            .WithName("AuthResendVerification");
+
+        app.MapGet(api.Value.BasePath + "/pending-email", PendingEmail)
+           .RequireAuthorization()
+           .WithName("AuthPendingEmail");
     }
 
     public async Task<IResult> ForgotPassword(HttpContext http, ForgotPasswordRequest request, IAccountRecoveryService recovery, CancellationToken token)
@@ -59,7 +64,22 @@ public sealed class RecoveryEndpoint(IOptions<AuthApiOptions> api, AuthRateLimit
             return Results.Unauthorized();
         if (!limiter.AllowsMail(http, userId.ToString()))
             return AuthResults.RateLimited();
-        await recovery.RequestEmailVerification(userId, token);
-        return Results.Ok();
+        try
+        {
+            await recovery.RequestEmailVerification(userId, request.Email, token);
+            return Results.Ok();
+        }
+        catch (BadRequestException ex)
+        {
+            return AuthResults.BadRequest(ex);
+        }
+    }
+
+    /// <summary>The address the signed-in account's open verification link proves, while it is not yet the account's: <c>{ "email": string | null }</c>.</summary>
+    public async Task<IResult> PendingEmail(HttpContext http, IAccountRecoveryService recovery, CancellationToken token)
+    {
+        if (http.User.GetUserId() is not { } userId)
+            return Results.Unauthorized();
+        return Results.Ok(new { email = await recovery.FindPendingEmail(userId, token) });
     }
 }

@@ -4,9 +4,10 @@ namespace Sencilla.Authentication.Integration.Tests;
 /// End-to-end token-API path over the real EF bridge (InMemory): the Users bridge + Argon2id hasher
 /// + claims factory + HMAC issuer wired exactly as a host would, exercising register / login /
 /// external-exchange / recovery / verification and validating the access token issued for the user
-/// the services return.
+/// the services return. This part holds the fixture, password accounts and recovery; the external identities are in
+/// <c>TokenApiFlowTests.External.cs</c>, the pending address in <c>TokenApiFlowTests.PendingEmail.cs</c>.
 /// </summary>
-public sealed class TokenApiFlowTests : IDisposable
+public sealed partial class TokenApiFlowTests : IDisposable
 {
     private const string SigningKey = "integration-test-signing-key-32-bytes!!";
 
@@ -60,7 +61,7 @@ public sealed class TokenApiFlowTests : IDisposable
 
         _credentials = new CredentialAuthService(_store, hasher, _events, _recovery, policy, Options.Create(_accounts));
         _external = new ExternalAuthService(
-            new IProviderTokenVerifier[] { new FakeGoogleVerifier() }, _store, new AccountLinkingPolicy(), _events);
+            new IProviderTokenVerifier[] { new FakeGoogleVerifier() }, _store, new AccountLinkingPolicy(), _events, _recovery);
     }
 
     [Fact]
@@ -94,26 +95,6 @@ public sealed class TokenApiFlowTests : IDisposable
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
             _credentials.Register(new RegisterRequest { Email = email, Password = "Sup3rSecret!" }));
         Assert.Equal("email-invalid", ex.Message);
-    }
-
-    [Fact]
-    public async Task ExternalExchange_KeepsNameAndPicture()
-    {
-        await _external.Exchange("google", "fake-id-token");
-        var row = _db.Users.AsNoTracking().Single(u => u.Email == "ext@example.com");
-        Assert.Equal("Ext", row.FirstName);
-        Assert.Equal("User", row.LastName);
-    }
-
-    [Fact]
-    public async Task ExternalSignIn_KeepsACompoundGivenNameWhole_AndTheFamilyNameAsTheLastName()
-    {
-        await _external.ResolveAccount(new ExternalIdentity("google", "google-sub-anna", "anna@example.com", EmailVerified: true,
-            Name: "Anna Maria Koval", GivenName: "Anna Maria", FamilyName: "Koval"));
-
-        var row = _db.Users.AsNoTracking().Single(u => u.Email == "anna@example.com");
-        Assert.Equal("Anna Maria", row.FirstName);
-        Assert.Equal("Koval", row.LastName);
     }
 
     [Fact]
@@ -190,7 +171,7 @@ public sealed class TokenApiFlowTests : IDisposable
         Assert.Null(before.CredentialsChangedAt);
         await _credentials.Login(new LoginRequest { Login = "fay@example.com", Password = "N3wSecret!!" });
         await Assert.ThrowsAsync<UnauthorizedException>(() => _credentials.Login(new LoginRequest { Login = "fay@example.com", Password = "Sup3rSecret!" }));
-        Assert.Contains(_events.Of<PasswordChanged>(), e => e.Reason == "reset");
+        Assert.Contains(_events.Of<PasswordChanged>(), e => e is { Reason: "reset", Provider: null });
 
         // The session issued at registration is gone.
         var found = await _refreshStore.Find(registered.RefreshToken!);
@@ -213,38 +194,6 @@ public sealed class TokenApiFlowTests : IDisposable
     {
         await _recovery.RequestPasswordReset("nobody@example.com");
         Assert.Empty(_events.Of<PasswordResetRequested>());
-    }
-
-    [Fact]
-    public async Task ExternalExchange_CreatesUser_ThenLinksSameAccount()
-    {
-        var first = await _external.Exchange("google", "fake-id-token");
-
-        var linked = await _store.FindByProviderKey("google", "google-sub-xyz");
-        Assert.NotNull(linked);
-        Assert.Equal(linked!.Id, first.Id);
-        Assert.Equal("ext@example.com", linked.Email);
-
-        // Signing in again with the same provider identity resolves to the same account.
-        var second = await _external.Exchange("google", "fake-id-token");
-        Assert.Equal(first.Id, second.Id);
-    }
-
-    [Fact]
-    public async Task LinkProvider_AdoptsALegacyRowInsteadOfDuplicating()
-    {
-        // What the first-login middleware wrote for years: scheme name, no subject.
-        var user = _db.Users.Add(new User { Id = Guid.NewGuid(), Email = "legacy@example.com", EmailConf = true, Status = 2 }).Entity;
-        _db.UserAuths.Add(new UserAuth { Id = Guid.NewGuid(), UserId = user.Id, Auth = "Google", Email = user.Email });
-        await _db.SaveChangesAsync();
-        NewRequest();
-
-        await _store.LinkProvider(user.Id, new ExternalIdentity("google", "sub-legacy", "legacy@example.com", true));
-
-        var rows = _db.UserAuths.Where(a => a.UserId == user.Id).ToList();
-        Assert.Single(rows);
-        Assert.Equal("sub-legacy", rows[0].ProviderKey);
-        Assert.NotNull(await _store.FindByProviderKey("google", "sub-legacy"));
     }
 
     [Fact]

@@ -10,8 +10,10 @@ public class ExternalAuthServiceTests
     private static readonly ExternalIdentity Google = new("google", "sub-1", "Ada@Example.com", EmailVerified: true, "Ada");
 
     private readonly Mock<IUserStore> _store = new(MockBehavior.Strict);
+    private readonly Mock<IAccountRecoveryService> _recovery = new(MockBehavior.Strict);
     private readonly List<IEvent> _events = new();
     private readonly ExternalAuthService _service;
+    private readonly ExternalAuthService _serviceWithAppAccounts;
 
     public ExternalAuthServiceTests()
     {
@@ -20,6 +22,8 @@ public class ExternalAuthServiceTests
               .Callback<IEvent, CancellationToken>((e, _) => _events.Add(e))
               .Returns(Task.CompletedTask);
         _service = new ExternalAuthService(Array.Empty<IProviderTokenVerifier>(), _store.Object, new AccountLinkingPolicy(), events.Object);
+        _serviceWithAppAccounts = new ExternalAuthService(
+            Array.Empty<IProviderTokenVerifier>(), _store.Object, new AccountLinkingPolicy(), events.Object, _recovery.Object);
     }
 
     [Fact]
@@ -32,7 +36,36 @@ public class ExternalAuthServiceTests
         var result = await _service.ResolveAccount(Google);
 
         Assert.Equal(user.Id, result.Id);
-        Assert.IsType<LoginSucceeded>(Assert.Single(_events));
+        Assert.Same(Google, Assert.IsType<LoginSucceeded>(Assert.Single(_events)).ExternalIdentity);
+    }
+
+    [Fact]
+    public async Task KnownSubject_WhoseProviderVerifiedTheAccountsOwnAddress_ConfirmsIt()
+    {
+        var user = new AuthUser(Guid.NewGuid(), "ada@example.com", EmailConfirmed: false, AuthUserStatus.Active);
+        _store.Setup(s => s.FindByProviderKey("google", "sub-1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _store.Setup(s => s.FindByEmail("ada@example.com", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _store.Setup(s => s.SetEmailConfirmed(user.Id, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _store.Setup(s => s.FindById(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user with { EmailConfirmed = true });
+
+        var result = await _service.ResolveAccount(Google);   // "Ada@Example.com", verified
+
+        Assert.True(result.EmailConfirmed);
+        _store.Verify(s => s.SetEmailConfirmed(user.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task KnownSubject_WithADifferentVerifiedAddress_LeavesTheAccountsAddressUnconfirmed()
+    {
+        // The provider proved it owns ada@, which says nothing about me@.
+        var user = new AuthUser(Guid.NewGuid(), "me@example.com", EmailConfirmed: false, AuthUserStatus.Active);
+        _store.Setup(s => s.FindByProviderKey("google", "sub-1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _store.Setup(s => s.FindByEmail("ada@example.com", It.IsAny<CancellationToken>())).ReturnsAsync((AuthUser?)null);
+
+        var result = await _service.ResolveAccount(Google);
+
+        Assert.False(result.EmailConfirmed);
+        _store.Verify(s => s.SetEmailConfirmed(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -82,7 +115,7 @@ public class ExternalAuthServiceTests
 
         Assert.True(result.EmailConfirmed);
         _store.Verify(s => s.RemovePasswordCredential(user.Id, It.IsAny<CancellationToken>()), Times.Once);
-        Assert.Contains(_events, e => e is PasswordChanged p && p.Reason == "removed");
+        Assert.Contains(_events, e => e is PasswordChanged { Reason: "removed", Provider: "google" });
     }
 
     [Fact]
@@ -111,7 +144,122 @@ public class ExternalAuthServiceTests
 
         var result = await _service.ResolveAccount(unverified);
 
+        // Without app accounts there is no link to send: the address is dropped, never put on the account.
+        Assert.Null(result.Email);
         Assert.False(result.EmailConfirmed);
+    }
+
+    [Fact]
+    public async Task UnverifiedProviderEmail_OnAFreshAddress_CreatesTheAccountWithoutIt_AndMailsOurLinkThere()
+    {
+        // Facebook's address: no verified flag, so it waits for our own link as a pending address.
+        var facebook = new ExternalIdentity("facebook", "fb-1", "Ada@Example.com", EmailVerified: false, "Ada");
+        AuthUser? created = null;
+        _store.Setup(s => s.FindByProviderKey("facebook", "fb-1", It.IsAny<CancellationToken>())).ReturnsAsync((AuthUser?)null);
+        _store.Setup(s => s.FindByEmail("ada@example.com", It.IsAny<CancellationToken>())).ReturnsAsync((AuthUser?)null);
+        _store.Setup(s => s.CreateWithExternalLogin(It.IsAny<AuthUser>(), facebook, It.IsAny<CancellationToken>()))
+              .ReturnsAsync((AuthUser u, ExternalIdentity _, CancellationToken _) => created = u);
+        _recovery.Setup(r => r.RequestEmailVerification(It.IsAny<Guid>(), "ada@example.com", It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        var result = await _serviceWithAppAccounts.ResolveAccount(facebook);
+
+        Assert.Null(result.Email);
+        Assert.False(result.EmailConfirmed);
+        _recovery.Verify(r => r.RequestEmailVerification(created!.Id, "ada@example.com", It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Contains(_events, e => e is LoginSucceeded);
+    }
+
+    [Fact]
+    public async Task UnverifiedProviderEmail_WhosePendingLinkIsRefused_StillSignsIn()
+    {
+        var facebook = new ExternalIdentity("facebook", "fb-2", "not an address", EmailVerified: false);
+        _store.Setup(s => s.FindByProviderKey("facebook", "fb-2", It.IsAny<CancellationToken>())).ReturnsAsync((AuthUser?)null);
+        _store.Setup(s => s.FindByEmail("not an address", It.IsAny<CancellationToken>())).ReturnsAsync((AuthUser?)null);
+        _store.Setup(s => s.CreateWithExternalLogin(It.IsAny<AuthUser>(), facebook, It.IsAny<CancellationToken>()))
+              .ReturnsAsync((AuthUser u, ExternalIdentity _, CancellationToken _) => u);
+        _recovery.Setup(r => r.RequestEmailVerification(It.IsAny<Guid>(), "not an address", It.IsAny<CancellationToken>()))
+                 .ThrowsAsync(new BadRequestException("email-invalid"));
+
+        var result = await _serviceWithAppAccounts.ResolveAccount(facebook);
+
+        Assert.Null(result.Email);
+        Assert.Contains(_events, e => e is LoginSucceeded);
+    }
+
+    [Fact]
+    public async Task Connect_LinksTheNewProviderToTheSignedInAccount()
+    {
+        var account = new AuthUser(Guid.NewGuid(), Email: null, EmailConfirmed: false, AuthUserStatus.Active);
+        var telegram = new ExternalIdentity("telegram", "tg-1", Email: null, EmailVerified: false);
+        _store.Setup(s => s.FindByProviderKey("telegram", "tg-1", It.IsAny<CancellationToken>())).ReturnsAsync((AuthUser?)null);
+        _store.Setup(s => s.FindById(account.Id, It.IsAny<CancellationToken>())).ReturnsAsync(account);
+        _store.Setup(s => s.GetLinkedProviders(account.Id, It.IsAny<CancellationToken>())).ReturnsAsync(["google"]);
+        _store.Setup(s => s.LinkProvider(account.Id, telegram, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        var result = await _service.ResolveAccount(telegram, connectTo: account.Id);   // another provider than the one it has
+
+        Assert.Equal(account.Id, result.Id);
+        _store.Verify(s => s.LinkProvider(account.Id, telegram, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Contains(_events, e => e is ProviderLinked { Provider: "telegram" } linked && linked.UserId == account.Id);
+        Assert.Contains(_events, e => e is LoginSucceeded { ExternalIdentity: not null } login && login.UserId == account.Id);
+    }
+
+    [Fact]
+    public async Task Connect_OfASecondSubjectOfAProviderTheAccountHas_IsRefused()
+    {
+        var account = new AuthUser(Guid.NewGuid(), "me@example.com", EmailConfirmed: true, AuthUserStatus.Active);
+        _store.Setup(s => s.FindByProviderKey("google", "sub-1", It.IsAny<CancellationToken>())).ReturnsAsync((AuthUser?)null);
+        _store.Setup(s => s.FindByEmail("ada@example.com", It.IsAny<CancellationToken>())).ReturnsAsync((AuthUser?)null);
+        _store.Setup(s => s.FindById(account.Id, It.IsAny<CancellationToken>())).ReturnsAsync(account);
+        _store.Setup(s => s.GetLinkedProviders(account.Id, It.IsAny<CancellationToken>())).ReturnsAsync(["google"]);
+
+        var ex = await Assert.ThrowsAsync<UnauthorizedException>(() => _service.ResolveAccount(Google, connectTo: account.Id));
+
+        Assert.Equal("provider-already-connected", ex.Message);
+        _store.Verify(s => s.LinkProvider(It.IsAny<Guid>(), It.IsAny<ExternalIdentity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Connect_OfTheSameSubjectAgain_SignsInWithoutLinkingTwice()
+    {
+        var account = new AuthUser(Guid.NewGuid(), "ada@example.com", EmailConfirmed: true, AuthUserStatus.Active);
+        _store.Setup(s => s.FindByProviderKey("google", "sub-1", It.IsAny<CancellationToken>())).ReturnsAsync(account);
+        _store.Setup(s => s.FindByEmail("ada@example.com", It.IsAny<CancellationToken>())).ReturnsAsync(account);
+        _store.Setup(s => s.FindById(account.Id, It.IsAny<CancellationToken>())).ReturnsAsync(account);
+
+        var result = await _service.ResolveAccount(Google, connectTo: account.Id);
+
+        Assert.Equal(account.Id, result.Id);
+        _store.Verify(s => s.LinkProvider(It.IsAny<Guid>(), It.IsAny<ExternalIdentity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Connect_OfAProviderIdentityThatIsAnotherAccounts_IsRefused()
+    {
+        var account = new AuthUser(Guid.NewGuid(), "me@example.com", EmailConfirmed: true, AuthUserStatus.Active);
+        var other = new AuthUser(Guid.NewGuid(), "ada@example.com", EmailConfirmed: true, AuthUserStatus.Active);
+        _store.Setup(s => s.FindByProviderKey("google", "sub-1", It.IsAny<CancellationToken>())).ReturnsAsync(other);
+        _store.Setup(s => s.FindByEmail("ada@example.com", It.IsAny<CancellationToken>())).ReturnsAsync(other);
+        _store.Setup(s => s.FindById(account.Id, It.IsAny<CancellationToken>())).ReturnsAsync(account);
+
+        var ex = await Assert.ThrowsAsync<UnauthorizedException>(() => _service.ResolveAccount(Google, connectTo: account.Id));
+
+        Assert.Equal("provider-linked-to-another-account", ex.Message);
+    }
+
+    [Fact]
+    public async Task Connect_WhileTheAccountsOwnAddressIsUnconfirmed_IsRefused()
+    {
+        var account = new AuthUser(Guid.NewGuid(), "me@example.com", EmailConfirmed: false, AuthUserStatus.Active);
+        _store.Setup(s => s.FindByProviderKey("google", "sub-1", It.IsAny<CancellationToken>())).ReturnsAsync((AuthUser?)null);
+        _store.Setup(s => s.FindByEmail("ada@example.com", It.IsAny<CancellationToken>())).ReturnsAsync((AuthUser?)null);
+        _store.Setup(s => s.FindById(account.Id, It.IsAny<CancellationToken>())).ReturnsAsync(account);
+        _store.Setup(s => s.GetLinkedProviders(account.Id, It.IsAny<CancellationToken>())).ReturnsAsync([]);
+
+        var ex = await Assert.ThrowsAsync<UnauthorizedException>(() => _service.ResolveAccount(Google, connectTo: account.Id));
+
+        Assert.Equal("confirm-email-first", ex.Message);
+        _store.Verify(s => s.LinkProvider(It.IsAny<Guid>(), It.IsAny<ExternalIdentity>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

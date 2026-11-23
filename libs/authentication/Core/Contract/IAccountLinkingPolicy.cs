@@ -5,8 +5,8 @@ namespace Sencilla.Authentication;
 /// the <c>/external</c> token exchange and a host-side redirect sign-in. Identity is keyed on the
 /// provider subject; an address only matters when no account has that subject yet: a provider-verified
 /// address links to the account that owns it (displacing an unverified password credential there), and
-/// an unverified address never does. The default implementation is registered when any social provider
-/// (<c>UseGoogle</c>/<c>UseFacebook</c>/<c>UseApple</c>) is configured.
+/// an unverified address never does. A connect attaches a new provider identity to the signed-in account. The
+/// default implementation is registered when any social provider (a verifier or a redirect sign-in) is configured.
 /// </summary>
 public interface IAccountLinkingPolicy
 {
@@ -16,8 +16,12 @@ public interface IAccountLinkingPolicy
     /// provider verified the address; the policy decides what an unverified one means.
     /// </param>
     /// <param name="incoming">The verified external identity.</param>
-    /// <param name="authenticatedUserId">
-    /// The signed-in user's id when this is an explicit link flow, otherwise <c>null</c>.
+    /// <param name="connecting">
+    /// The signed-in account a connect attaches the provider to, otherwise <c>null</c> (a sign-in).
     /// </param>
-    AccountDecision Decide(AuthUser? byProvider, AuthUser? byEmail, ExternalIdentity incoming, Guid? authenticatedUserId);
+    /// <param name="isProviderOnConnecting">
+    /// Whether <paramref name="connecting"/> already signs in with <paramref name="incoming"/>'s provider — under
+    /// another subject, as the same one is <paramref name="byProvider"/>.
+    /// </param>
+    AccountDecision Decide(AuthUser? byProvider, AuthUser? byEmail, ExternalIdentity incoming, AuthUser? connecting, bool isProviderOnConnecting);
 }

@@ -128,6 +128,30 @@ public class ProviderTokenVerifierTests
     }
 
     [Fact]
+    public async Task Facebook_AnAddressTheTokenCallsVerified_IsStillNotVerified()
+    {
+        var verifier = new FacebookTokenVerifier(Options.Create(
+            new FacebookProviderOptions
+            {
+                Audiences = { "fb-app-id" },
+                Issuers = new List<string> { FacebookIssuer },
+                ConfigurationManager = Config(FacebookIssuer, SigningKey),
+            }));
+
+        var token = Mint(SigningKey, FacebookIssuer, "fb-app-id", new Dictionary<string, object>
+        {
+            ["sub"] = "fb-sub-4",
+            ["email"] = "victim@example.com",
+            ["email_verified"] = true,
+        });
+
+        var id = await verifier.Verify(token);
+
+        Assert.Equal("victim@example.com", id.Email);
+        Assert.False(id.EmailVerified);
+    }
+
+    [Fact]
     public async Task Facebook_NoEmail_MapsWithUnverifiedEmail()
     {
         var verifier = new FacebookTokenVerifier(Options.Create(
