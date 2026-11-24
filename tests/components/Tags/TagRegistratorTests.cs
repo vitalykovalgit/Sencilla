@@ -51,8 +51,8 @@ public class TagRegistratorTests
         new TagRegistrator().Register(services, typeof(SharedThing));
         new TagRegistrator().Register(services, typeof(SharedThing));
 
-        Assert.Single(services.Where(d => d.ServiceType == typeof(ITagRepository<SharedThing, int>)));
-        Assert.Single(services.Where(d => d.ServiceType == typeof(IEventHandlerBase<EntityReadingEvent<SharedThing>>)));
+        Assert.Single(services, d => d.ServiceType == typeof(ITagRepository<SharedThing, int>));
+        Assert.Single(services, d => d.ServiceType == typeof(IEventHandlerBase<EntityReadingEvent<SharedThing>>));
     }
 
     [Fact]

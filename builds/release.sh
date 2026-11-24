@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Usage: ./builds/release.sh 10.0.8
+# Usage: ./builds/release.sh 11.0.8
 
 if [ -z "$1" ]; then
     echo "Usage: ./builds/release.sh <version>"
-    echo "Example: ./builds/release.sh 10.0.8"
+    echo "Example: ./builds/release.sh 11.0.8"
     exit 1
 fi
 

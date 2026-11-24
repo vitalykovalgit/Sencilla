@@ -128,6 +128,7 @@
     <Project Path="tests/files/AmazonS3/Sencilla.Component.Files.AmazonS3.Tests.csproj" />
     <Project Path="tests/files/AzureStorage/Sencilla.Component.Files.AzureStorage.Tests.csproj" />
     <Project Path="tests/files/Core/Sencilla.Component.Files.Tests.csproj" />
+    <Project Path="tests/files/LocalDrive/Sencilla.Component.Files.LocalDrive.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/extensions/">
     <Project Path="tests/extensions/EntityFramework.Extension.Tests/Sencilla.Repository.EntityFramework.Extension.Tests.csproj" />

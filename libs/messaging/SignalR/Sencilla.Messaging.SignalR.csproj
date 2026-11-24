@@ -4,10 +4,4 @@
     <ProjectReference Include="..\Core\Sencilla.Messaging.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" />
-    <PackageReference Include="Microsoft.AspNetCore.WebSockets" />
-    <PackageReference Include="System.Text.RegularExpressions" />
-  </ItemGroup>
-
 </Project>

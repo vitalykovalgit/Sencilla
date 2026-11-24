@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq.Dynamic.Core;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -126,6 +127,28 @@ public class EntityModelConfiguratorTests : IDisposable
         Assert.Null(untagged.Tags);
     }
 
+    /// <summary>
+    /// A <c>[Column]</c> attribute is the one way a collection reaches the reflection mapper's own
+    /// <c>c.Property(...)</c> branch. Since EF Core 11 <c>Property()</c> always configures a scalar, so the
+    /// mapper has to keep such a column a primitive collection itself — renamed, and still queryable.
+    /// </summary>
+    [Fact]
+    public async Task ColumnAttribute_OnAListOfString_KeepsThePrimitiveCollection()
+    {
+        var tags = _context.Model.FindEntityType(typeof(RenamedProbeEntity))!.FindProperty(nameof(RenamedProbeEntity.Tags));
+
+        Assert.NotNull(tags!.GetElementType());
+        Assert.Equal("TagList", tags.GetColumnName());
+
+        _context.AddRange(
+            new RenamedProbeEntity { Tags = ["summer"] },
+            new RenamedProbeEntity { Tags = ["winter"] });
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        Assert.Single(await _context.Set<RenamedProbeEntity>().Where(t => t.Tags!.Contains("summer")).ToListAsync());
+    }
+
     private async Task SeedAsync()
     {
         _context.AddRange(
@@ -151,11 +174,24 @@ public class EntityModelConfiguratorTests : IDisposable
         public List<string>? Tags { get; set; }
     }
 
-    /// <summary>Stands in for the tags component's configurator: bound the collection column.</summary>
+    /// <summary>The same collection under a <c>[Column]</c> rename — the shape that makes the mapper configure it.</summary>
+    private class RenamedProbeEntity : IEntity<int>
+    {
+        public int Id { get; set; }
+
+        [Column("TagList")]
+        public List<string>? Tags { get; set; }
+    }
+
+    /// <summary>
+    /// Stands in for the tags component's configurator: bound the collection column. Through
+    /// <c>PrimitiveCollection()</c>, as the component does — since EF Core 11 <c>Property()</c> would demote the
+    /// column to a scalar.
+    /// </summary>
     private sealed class MaxLengthConfigurator : IEntityModelConfigurator
     {
         public void Configure(EntityTypeBuilder builder, Type entityType)
-            => builder.Property(nameof(ProbeEntity.Tags)).HasMaxLength(4000);
+            => builder.PrimitiveCollection(nameof(ProbeEntity.Tags)).HasMaxLength(4000);
     }
 
     /// <summary>The other half: a component whose storage lives elsewhere removes the phantom column.</summary>
@@ -200,6 +236,7 @@ public class EntityModelConfiguratorTests : IDisposable
         {
             using var probe = new DynamicDbContext(new DbContextOptionsBuilder<DynamicDbContext>().Options, configurators);
             probe.BuildModelForEntity(modelBuilder, typeof(ProbeEntity));
+            probe.BuildModelForEntity(modelBuilder, typeof(RenamedProbeEntity));
         }
 
         public override void Dispose()

@@ -3,7 +3,7 @@
 # Packs every SQL (.sqlproj) package under libs/ in dependency order.
 #
 # Usage:   ./builds/pack-sql.sh <output-dir> [extra dotnet pack args...]
-# Example: ./builds/pack-sql.sh ./artifacts/nuget --configuration Release /p:Version=10.0.65
+# Example: ./builds/pack-sql.sh ./artifacts/nuget --configuration Release /p:Version=11.0.65
 #
 # SQL packages reference each other at $(Version) (e.g. Notifications -> Security -> Users),
 # so a package can only restore once everything it references is already packed into

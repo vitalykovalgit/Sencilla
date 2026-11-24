@@ -19,14 +19,17 @@ public class TagsModelConfigurator : IEntityModelConfigurator
     /// strategy:
     /// <list type="bullet">
     /// <item><b>Inline</b> — that column IS the storage, so bound it: without a max length EF sends
-    /// <c>nvarchar(-1)</c> parameters at the <c>NVARCHAR(4000)</c> column the dacpac declares.</item>
+    /// <c>nvarchar(-1)</c> parameters at the <c>NVARCHAR(4000)</c> column the dacpac declares. It is bounded
+    /// through <c>PrimitiveCollection()</c>, never <c>Property()</c>: since EF Core 11 <c>Property()</c> always
+    /// configures a scalar, which would turn the column into an opaque blob and break the <c>Contains</c>
+    /// translation the tag filter relies on.</item>
     /// <item><b>Linked / Shared</b> — the rows live in a side table, so the phantom column must not exist.</item>
     /// </list>
     /// </summary>
     public void Configure(EntityTypeBuilder builder, Type entityType)
     {
         if (typeof(IEntityTaggableInline).IsAssignableFrom(entityType))
-            builder.Property(nameof(IEntityTaggable.Tags)).HasMaxLength(TagName.MaxSetLength);
+            builder.PrimitiveCollection(nameof(IEntityTaggable.Tags)).HasMaxLength(TagName.MaxSetLength);
         else if (typeof(IEntityTaggable).IsAssignableFrom(entityType))
             builder.Ignore(nameof(IEntityTaggable.Tags));
     }

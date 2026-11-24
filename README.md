@@ -2,19 +2,19 @@
 
 [![NuGet](https://img.shields.io/nuget/v/Sencilla.Core?label=Sencilla.Core&color=004880)](https://www.nuget.org/packages/Sencilla.Core)
 [![Build](https://github.com/vitalykovalgit/Sencilla/actions/workflows/build.yml/badge.svg)](https://github.com/vitalykovalgit/Sencilla/actions/workflows/build.yml)
-[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+[![.NET](https://img.shields.io/badge/.NET-11.0-512BD4)](https://dotnet.microsoft.com/en-us/download/dotnet/11.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > [!CAUTION]
 > Sencilla is currently in **beta**. APIs are subject to change between releases without prior notice. Use in production at your own risk.
 
-> A comprehensive, modular .NET 10 framework that provides battle-tested patterns — repository, CQRS, messaging, scheduling, and more — so you can focus on your business logic.
+> A comprehensive, modular .NET 11 framework that provides battle-tested patterns — repository, CQRS, messaging, scheduling, and more — so you can focus on your business logic.
 
 ---
 
 ## What is Sencilla?
 
-Sencilla is a **modular application framework** for .NET 10 that standardizes the way you build web applications. Instead of wiring up the same patterns project after project, Sencilla gives you:
+Sencilla is a **modular application framework** for .NET 11 that standardizes the way you build web applications. Instead of wiring up the same patterns project after project, Sencilla gives you:
 
 - **Repository pattern** with a clean interface hierarchy — read, create, update, delete, soft-delete, hide
 - **CQRS** — commands, queries, and events with built-in dispatchers and middleware
@@ -243,10 +243,10 @@ To build and test NuGet packages locally:
 
 ```powershell
 # PowerShell
-.\builds\local\create-local-packages.ps1 -Version "10.0.0-dev.1"
+.\builds\local\create-local-packages.ps1 -Version "11.0.0-dev.1"
 
 # macOS/Linux
-./builds/local/create-local-packages.sh --version "10.0.0-dev.1"
+./builds/local/create-local-packages.sh --version "11.0.0-dev.1"
 ```
 
 Packages are output to `~/local-nuget`. See [Local Development Guide](builds/local/README.md) for setup.

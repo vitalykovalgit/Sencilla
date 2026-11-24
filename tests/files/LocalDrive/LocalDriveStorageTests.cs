@@ -11,11 +11,17 @@ public class LocalDriveStorageTests : IDisposable
     private readonly string _testRoot;
     private readonly LocalDriveStorage _storage;
 
+    /// <summary>
+    /// The storage consults the resolver for one thing only: where a file's resolution variants live. The real
+    /// resolver is internal to the files component, so its naming rule is stood in for per test.
+    /// </summary>
+    private readonly Mock<IFilePathResolver> _pathResolver = new();
+
     public LocalDriveStorageTests()
     {
         _testRoot = Path.Combine(Path.GetTempPath(), $"sencilla_test_{Guid.NewGuid()}");
         Directory.CreateDirectory(_testRoot);
-        _storage = new LocalDriveStorage(new LocalDriveStorageOptions { RootPath = _testRoot });
+        _storage = new LocalDriveStorage(new LocalDriveStorageOptions { RootPath = _testRoot }, _pathResolver.Object);
     }
 
     private static File MakeFile(
@@ -234,6 +240,23 @@ public class LocalDriveStorageTests : IDisposable
 
         Assert.NotNull(result);
         Assert.Equal(file.Id, result.Id);
+    }
+
+    [Fact]
+    public async Task DeleteFileAsync_FileWithResolutions_DeletesTheVariantsToo()
+    {
+        var file = MakeFile(path: "none/photo.jpg");
+        file.Res = new Dictionary<string, ResolutionInfo> { ["100"] = new() { Ct = "image/webp" } };
+        _pathResolver.Setup(r => r.GetResolutionPath("none/photo.jpg", "100", "image/webp")).Returns("none/photo_100.webp");
+
+        await _storage.WriteFileAsync(file, "original"u8.ToArray());
+        var variantPath = Path.Combine(_testRoot, "none", "photo_100.webp");
+        await System.IO.File.WriteAllTextAsync(variantPath, "variant");
+
+        await _storage.DeleteFileAsync(file);
+
+        Assert.False(System.IO.File.Exists(Path.Combine(_testRoot, "none", "photo.jpg")));
+        Assert.False(System.IO.File.Exists(variantPath));
     }
 
     [Fact]

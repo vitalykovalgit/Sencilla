@@ -7,7 +7,7 @@
        Directory.Build.props / Directory.Build.targets are) — both siblings import it
        explicitly. -->
   <PropertyGroup>
-    <Version>10.0.0</Version>
+    <Version>11.0.0</Version>
     <Authors>Sencilla</Authors>
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

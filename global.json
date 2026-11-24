@@ -1,8 +1,8 @@
 {
   "sdk": {
-    "version": "10.0.402"
+    "version": "11.0.100"
   },
   "msbuild-sdks": {
-    "Microsoft.Build.Sql": "2.1.0"
+    "Microsoft.Build.Sql": "2.3.0"
   }
 }

@@ -6,7 +6,7 @@ This guide walks you through setting up a new .NET project with Sencilla, defini
 
 ## Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) or later
+- [.NET 11 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/11.0) or later
 - Any IDE — Visual Studio 2022, Rider, or VS Code with C# DevKit
 
 ---

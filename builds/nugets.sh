@@ -2,7 +2,7 @@
 
 # Version and build configuration
 build="Debug"
-version="10.0.13-dev"
+version="11.0.0"
 
 # Sencilla directories
 dirRoot="/Users/vitalykoval/Work"

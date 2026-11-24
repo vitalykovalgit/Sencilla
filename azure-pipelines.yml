@@ -22,9 +22,9 @@ pr:
 
 variables:
   buildConfiguration: 'Release'
-  dotnetVersion: '10.0.x'
+  dotnetVersion: '11.0.x'
   # Base version from libs/Directory.Build.props
-  baseVersion: '10.0.0'
+  baseVersion: '11.0.0'
   # Azure Artifacts feed name - create this feed in Azure DevOps before first run
   artifactsFeed: 'Photoboost/sencilla'
 

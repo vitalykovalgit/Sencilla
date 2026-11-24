@@ -99,7 +99,17 @@ public class DynamicDbContext([NotNull] DbContextOptions<DynamicDbContext> optio
                     );
 
                 if (isMapped && !isNavigationProperty)
-                    c.Property(p.Name).HasColumnName(na?.Name ?? p.Name);
+                {
+                    // A [Column]-annotated collection (List<string>, int[], ...) reaches this branch already
+                    // discovered by EF's conventions as a primitive collection. Since EF Core 11, Property()
+                    // always configures a SCALAR and would demote it to an opaque JSON blob that Contains can
+                    // no longer be translated against, so it has to be configured through PrimitiveCollection().
+                    var columnName = na?.Name ?? p.Name;
+                    if (c.Metadata.FindProperty(p.Name)?.IsPrimitiveCollection == true)
+                        c.PrimitiveCollection(p.Name).HasColumnName(columnName);
+                    else
+                        c.Property(p.Name).HasColumnName(columnName);
+                }
 
                 var joa = p.GetCustomAttribute<JsonObjectAttribute>();
                 if (joa is not null)

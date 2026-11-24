@@ -19,7 +19,7 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
 
         var entries = new List<File>();
 
-        await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix, cancellationToken: token))
+        await foreach (var blob in containerClient.GetBlobsAsync(new GetBlobsOptions { Prefix = prefix }, token))
         {
             var relativePath = "/" + blob.Name.Substring(prefix.Length);
             var fileName = Path.GetFileName(blob.Name);
@@ -111,7 +111,7 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
             using (var fileStream = new FileStream(tempZipPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous))
             using (var archive = new System.IO.Compression.ZipArchive(fileStream, System.IO.Compression.ZipArchiveMode.Create))
             {
-                await foreach (var blob in srcContainerClient.GetBlobsAsync(prefix: srcPrefix, cancellationToken: token))
+                await foreach (var blob in srcContainerClient.GetBlobsAsync(new GetBlobsOptions { Prefix = srcPrefix }, token))
                 {
                     var blobClient = srcContainerClient.GetBlobClient(blob.Name);
                     var entryName = blob.Name.Substring(srcPrefix.Length);
@@ -198,7 +198,7 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
 
         // List all blobs in source prefix
         var blobsToMove = new List<string>();
-        await foreach (var blob in srcContainerClient.GetBlobsAsync(prefix: srcPrefix, cancellationToken: token))
+        await foreach (var blob in srcContainerClient.GetBlobsAsync(new GetBlobsOptions { Prefix = srcPrefix }, token))
         {
             blobsToMove.Add(blob.Name);
         }
@@ -269,7 +269,7 @@ public class AzureBlobStorage(AzureBlobStorageOptions options, IFilePathResolver
         if (!prefix.EndsWith('/'))
             prefix += '/';
 
-        await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix))
+        await foreach (var blob in containerClient.GetBlobsAsync(new GetBlobsOptions { Prefix = prefix }))
         {
             var blobClient = containerClient.GetBlobClient(blob.Name);
             await blobClient.DeleteIfExistsAsync();

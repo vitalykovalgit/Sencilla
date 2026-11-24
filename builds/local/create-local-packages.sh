@@ -23,10 +23,10 @@
 #   ./create-local-packages.sh
 #
 #   # Specific version
-#   ./create-local-packages.sh --version 10.0.3 --suffix dev
+#   ./create-local-packages.sh --version 11.0.3 --suffix dev
 #
 #   # Exact version
-#   ./create-local-packages.sh --version 10.0.3-preview.1 --exact-version
+#   ./create-local-packages.sh --version 11.0.3-preview.1 --exact-version
 #
 #   # Custom directory + clean
 #   ./create-local-packages.sh --local-dir /tmp/nuget-feed --clean
@@ -75,7 +75,7 @@ if [[ -z "$VERSION" ]]; then
     if [[ -f "$BUILD_PROPS" ]]; then
         VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' "$BUILD_PROPS" 2>/dev/null || echo "")
     fi
-    VERSION="${VERSION:-10.0.0}"
+    VERSION="${VERSION:-11.0.0}"
 fi
 
 # ── Compute package version ───────────────────────────────────────────────────

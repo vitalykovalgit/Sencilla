@@ -1,6 +1,6 @@
 # Sencilla.Core
 
-Foundation package for the [Sencilla Framework](https://github.com/vitalykovalgit/Sencilla) — a modular .NET 10 application framework.
+Foundation package for the [Sencilla Framework](https://github.com/vitalykovalgit/Sencilla) — a modular .NET 11 application framework.
 
 ## What's Included
 

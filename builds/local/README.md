@@ -13,7 +13,7 @@ Use these scripts to build Sencilla packages and publish them to a local NuGet d
 ./builds/local/create-local-packages.sh
 
 # With specific version and suffix
-./builds/local/create-local-packages.sh --version 10.0.3 --suffix dev
+./builds/local/create-local-packages.sh --version 11.0.3 --suffix dev
 
 # Clean old versions before building
 ./builds/local/create-local-packages.sh --clean
@@ -26,7 +26,7 @@ Use these scripts to build Sencilla packages and publish them to a local NuGet d
 .\builds\local\create-local-packages.ps1
 
 # With specific version and suffix
-.\builds\local\create-local-packages.ps1 -Version "10.0.3" -Suffix "dev"
+.\builds\local\create-local-packages.ps1 -Version "11.0.3" -Suffix "dev"
 
 # Clean old versions before building
 .\builds\local\create-local-packages.ps1 -Clean
@@ -38,7 +38,7 @@ Use these scripts to build Sencilla packages and publish them to a local NuGet d
 
 | Parameter | Shell | PowerShell | Default | Description |
 | --------- | ----- | ---------- | ------- | ----------- |
-| Base version | `--version` | `-Version` | Read from `Directory.Build.props` | SemVer base (e.g. `10.0.3`) |
+| Base version | `--version` | `-Version` | Read from `Directory.Build.props` | SemVer base (e.g. `11.0.3`) |
 | Suffix | `--suffix` | `-Suffix` | `local` | Pre-release suffix |
 | Local dir | `--local-dir` | `-LocalNugetDir` | `~/local-nuget` | Local NuGet feed path |
 | Configuration | `--configuration` | `-Configuration` | `Release` | `Debug` or `Release` |
@@ -49,10 +49,10 @@ Use these scripts to build Sencilla packages and publish them to a local NuGet d
 
 | Command | Package version |
 | ------- | --------------- |
-| `--version 10.0.3` | `10.0.3-local.202502241130` |
-| `--version 10.0.3 --suffix dev` | `10.0.3-dev.202502241130` |
-| `--version 10.0.3-preview.1 --exact-version` | `10.0.3-preview.1` |
-| (no args) | `10.0.2-local.202502241130` |
+| `--version 11.0.3` | `11.0.3-local.202502241130` |
+| `--version 11.0.3 --suffix dev` | `11.0.3-dev.202502241130` |
+| `--version 11.0.3-preview.1 --exact-version` | `11.0.3-preview.1` |
+| (no args) | `11.0.2-local.202502241130` |
 
 ---
 
@@ -101,7 +101,7 @@ dotnet nuget remove source "Local Sencilla"
 
 ```bash
 # Add with a specific preview version
-dotnet add package Sencilla.Core --version "10.0.2-local.202502241130"
+dotnet add package Sencilla.Core --version "11.0.2-local.202502241130"
 
 # Or let NuGet pick the latest (including pre-release)
 dotnet add package Sencilla.Core --prerelease
@@ -109,7 +109,7 @@ dotnet add package Sencilla.Core --prerelease
 
 ```xml
 <!-- Or directly in .csproj -->
-<PackageReference Include="Sencilla.Core" Version="10.0.2-local.*" />
+<PackageReference Include="Sencilla.Core" Version="11.0.2-local.*" />
 ```
 
 ---

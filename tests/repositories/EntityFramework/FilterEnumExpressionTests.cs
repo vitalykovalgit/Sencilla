@@ -73,7 +73,9 @@ public class FilterEnumExpressionTests
     public void DynamicLinq_CastOfANullableEnum_ThrowsOnANullRow()
     {
         var ex = Assert.Throws<InvalidOperationException>(() => Rows.AsQueryable().Where("int(Source) in (1)").ToArray());
-        Assert.Contains("Nullable object must have a value", ex.Message);
+        // The runtime's wording, which .NET 11 changed ("Nullable object must have a value" became "Cannot read
+        // the Value property of a Nullable object that has no value") — so only the part both share is pinned.
+        Assert.Contains("Nullable object", ex.Message);
     }
 
     // ── What ToExpression renders ─────────────────────────────────────────────

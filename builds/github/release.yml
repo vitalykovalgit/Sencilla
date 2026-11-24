@@ -1,6 +1,6 @@
 name: Release NuGet Packages
 
-# Triggers on any tag that starts with "v" (e.g. v10.0.3, v10.0.3-rc.1)
+# Triggers on any tag that starts with "v" (e.g. v11.0.3, v11.0.3-rc.1)
 on:
   push:
     tags:
@@ -39,8 +39,8 @@ jobs:
           fetch-depth: 0  # full history for accurate versioning
 
       # ── Extract version from tag ──────────────────────────────────────────
-      # Tag "v10.0.3"      → VERSION = "10.0.3"
-      # Tag "v10.0.3-rc.1" → VERSION = "10.0.3-rc.1"
+      # Tag "v11.0.3"      → VERSION = "11.0.3"
+      # Tag "v11.0.3-rc.1" → VERSION = "11.0.3-rc.1"
       - name: Extract version from tag
         id: version
         run: |
@@ -54,7 +54,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.x"
+          dotnet-version: "11.0.x"
 
       # ── Restore ───────────────────────────────────────────────────────────
       - name: Restore NuGet packages

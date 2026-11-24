@@ -19,7 +19,7 @@ Runs on every push and pull request to main branches.
 **Steps:**
 1. Checkout code
 2. Compute a CI build version (`<base>-ci.<run_number>`)
-3. Setup .NET 10 SDK
+3. Setup .NET 11 SDK
 4. `dotnet restore`
 5. `dotnet build --configuration Release`
 6. `dotnet test` — publishes results via `dorny/test-reporter`
@@ -33,8 +33,8 @@ Triggered when you push a version tag. This is how you release.
 
 **Steps:**
 1. Checkout code
-2. Extract version from tag (strips leading `v`): `v10.0.3` → `10.0.3`
-3. Setup .NET 10 SDK
+2. Extract version from tag (strips leading `v`): `v11.0.3` → `11.0.3`
+3. Setup .NET 11 SDK
 4. `dotnet restore`
 5. `dotnet build --configuration Release /p:Version=<version>`
 6. `dotnet test`
@@ -52,17 +52,17 @@ Triggered when you push a version tag. This is how you release.
 ```bash
 # 1. Commit and push all your changes
 git add .
-git commit -m "Prepare release 10.0.3"
+git commit -m "Prepare release 11.0.3"
 git push
 
 # 2. Create an annotated tag
-git tag -a v10.0.3 -m "Release 10.0.3"
+git tag -a v11.0.3 -m "Release 11.0.3"
 
 # 3. Push the tag — this triggers the release workflow
-git push origin v10.0.3
+git push origin v11.0.3
 ```
 
-All NuGet packages in the solution are packed with version `10.0.3` and pushed to NuGet.org.
+All NuGet packages in the solution are packed with version `11.0.3` and pushed to NuGet.org.
 
 ---
 
@@ -72,10 +72,10 @@ Use SemVer pre-release suffixes in your tag:
 
 | Tag | Package version | Use case |
 | --- | --------------- | -------- |
-| `v10.0.3` | `10.0.3` | Stable release |
-| `v10.0.3-rc.1` | `10.0.3-rc.1` | Release candidate |
-| `v10.0.3-beta.2` | `10.0.3-beta.2` | Beta |
-| `v10.0.3-alpha.1` | `10.0.3-alpha.1` | Alpha |
+| `v11.0.3` | `11.0.3` | Stable release |
+| `v11.0.3-rc.1` | `11.0.3-rc.1` | Release candidate |
+| `v11.0.3-beta.2` | `11.0.3-beta.2` | Beta |
+| `v11.0.3-alpha.1` | `11.0.3-alpha.1` | Alpha |
 
 NuGet.org marks anything with a pre-release suffix as a pre-release package automatically.
 

@@ -17,7 +17,7 @@ namespace Sencilla.Repository.EntityFramework;
 ///     public void Configure(EntityTypeBuilder builder, Type entityType)
 ///     {
 ///         if (typeof(IEntityTaggableInline).IsAssignableFrom(entityType))
-///             builder.Property(nameof(IEntityTaggable.Tags)).HasMaxLength(TagName.MaxSetLength);
+///             builder.PrimitiveCollection(nameof(IEntityTaggable.Tags)).HasMaxLength(TagName.MaxSetLength);
 ///         else if (typeof(IEntityTaggable).IsAssignableFrom(entityType))
 ///             builder.Ignore(nameof(IEntityTaggable.Tags));
 ///     }

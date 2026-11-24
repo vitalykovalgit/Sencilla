@@ -3,7 +3,7 @@
 # Packs and publishes a single .sqlproj or .csproj package to NuGet.org.
 #
 # Usage:   ./builds/publish-package.sh <project-path> <version> [api-key]
-# Example: ./builds/publish-package.sh libs/components/Users/Database/Sencilla.Component.Users.Mssql.sqlproj 10.0.18
+# Example: ./builds/publish-package.sh libs/components/Users/Database/Sencilla.Component.Users.Mssql.sqlproj 11.0.18
 #
 # If api-key is omitted the script reads NUGET_API_KEY from the environment.
 
@@ -15,7 +15,7 @@ API_KEY="${3:-${NUGET_API_KEY:-}}"
 
 if [ -z "$PROJ" ] || [ -z "$VERSION" ]; then
     echo "Usage: ./builds/publish-package.sh <project-path> <version> [api-key]"
-    echo "Example: ./builds/publish-package.sh libs/components/Users/Database/Sencilla.Component.Users.Mssql.sqlproj 10.0.18"
+    echo "Example: ./builds/publish-package.sh libs/components/Users/Database/Sencilla.Component.Users.Mssql.sqlproj 11.0.18"
     exit 1
 fi
 

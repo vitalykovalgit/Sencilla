@@ -8,11 +8,11 @@
     from this directory for fast iteration without pushing to NuGet.org.
 
 .PARAMETER Version
-    The base version to use (default: reads from Directory.Build.props or "10.0.0").
+    The base version to use (default: reads from Directory.Build.props or "11.0.0").
     A "-local.<timestamp>" suffix is appended automatically unless -ExactVersion is set.
 
 .PARAMETER Suffix
-    Pre-release suffix to append (default: "local"). Results in versions like "10.0.0-local.1".
+    Pre-release suffix to append (default: "local"). Results in versions like "11.0.0-local.1".
     Common values: "local", "dev", "preview".
 
 .PARAMETER LocalNugetDir
@@ -34,12 +34,12 @@
 
 .EXAMPLE
     # Specific version with dev suffix
-    .\create-local-packages.ps1 -Version "10.0.3" -Suffix "dev"
-    # Produces: 10.0.3-dev.1
+    .\create-local-packages.ps1 -Version "11.0.3" -Suffix "dev"
+    # Produces: 11.0.3-dev.1
 
 .EXAMPLE
     # Exact version, custom directory
-    .\create-local-packages.ps1 -Version "10.0.3-preview.1" -ExactVersion -LocalNugetDir "C:\nuget-local"
+    .\create-local-packages.ps1 -Version "11.0.3-preview.1" -ExactVersion -LocalNugetDir "C:\nuget-local"
 
 .EXAMPLE
     # Clean old packages before building
@@ -73,7 +73,7 @@ if (-not $Version) {
         $xml = [xml](Get-Content $buildProps)
         $Version = $xml.Project.PropertyGroup.Version | Select-Object -First 1
     }
-    if (-not $Version) { $Version = "10.0.0" }
+    if (-not $Version) { $Version = "11.0.0" }
 }
 
 if (-not $ExactVersion) {

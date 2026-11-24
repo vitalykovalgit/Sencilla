@@ -1,7 +1,7 @@
 # Version and build configuration
 $build = "Debug"
 #$build = "Release"
-$version = "10.0.0"
+$version = "11.0.0"
 
 # Sencilla directories
 $dirRoot = "D:\work\"
